@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 import states.statesAllRequests as statesAllRequests
 import database.tableSetup as tableSetup
 import hooks.qtDesignerHooks as qtDesignerHooks
-
+import _5_ProcessRequests as _5_ProcessRequests
 def newRow(table_widget):
     """Add a new row to the table with default values"""
     # Get the current number of rows
@@ -299,11 +299,10 @@ def runRequests(table_widget):
     # Iterate through all rows (skipping header rows)
     for row in range(3, table_widget.rowCount()):
         # Check if row is selected
-        selected_col = tableSetup.RequestKeys.index("Selected")
-        checkbox = table_widget.cellWidget(row, selected_col)
-        if not checkbox or not checkbox.isChecked():
+        selected_col = tableSetup.RequestKeys.index("Run")
+        Run = table_widget.cellWidget(row, selected_col)
+        if Run.currentText() == "Run":
             continue
-            
         # Create a dictionary for this request
         request_data = {}
         
@@ -312,7 +311,6 @@ def runRequests(table_widget):
             widget = table_widget.cellWidget(row, j)
             if not widget:
                 continue
-                
             if key == "Selected":
                 request_data[key] = widget.isChecked()
             elif key in ["Run", "DataType", "Data", "LoadCase", "LoadStep", "ViewType", "GridSystem", "GroupName"]:
@@ -335,6 +333,6 @@ def runRequests(table_widget):
         selected_requests.append(request_data)
     
     # Return the list of selected requests
-    return selected_requests
+    _5_ProcessRequests.processRequests(selected_requests)
 
 

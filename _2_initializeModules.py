@@ -7,26 +7,42 @@ from PyQt5.QtGui import QStandardItem, QFontMetrics, QPalette
 import states.statesAllRequests as statesAllRequests
 import database.tableSetup as tableSetup
 import hooks.csiHooks as csiHooks
-import _3_WindowFeatures as _3_WindowFeatures
+import _4_WindowFeatures as _4_WindowFeatures
 import hooks.qtDesignerHooks as qtDesignerHooks
+import _3_FileFeatures as _3_FileFeatures
+import database.csiTables as csiTables
 
 class ModulesScreen(QMainWindow):
     def __init__(self):
         super(ModulesScreen, self).__init__()
         loadUi("qtDesigner/windowModules.ui",self)
+        self.setUnitsAndTolerances()
         self.setColumnsAndRows()
         self.setMainHeaders()
         self.helpIcons()
         self.setSubHeaders()
         self.MapRequestsToTable()
         
+        self.modelPath.setText(statesAllRequests.modelPath)
+        # Connect menu actions to file features
+        self.actionNew.triggered.connect(lambda: _3_FileFeatures.actionNew(self))
+        self.actionOpen.triggered.connect(lambda: _3_FileFeatures.actionOpen(self))
+        self.actionSave.triggered.connect(lambda: _3_FileFeatures.actionSave(self, self.mainTableWidget))
+        self.actionSaveAs.triggered.connect(lambda: _3_FileFeatures.actionSaveAs(self, self.mainTableWidget))
+        
         # Connect button signals to window features
-        self.newRowButton.clicked.connect(lambda: _3_WindowFeatures.newRow(self.mainTableWidget))
-        self.deleteRowsButton.clicked.connect(lambda: _3_WindowFeatures.deleteRows(self.mainTableWidget))
-        self.insertRowsBelowButton.clicked.connect(lambda: _3_WindowFeatures.insertRowsBelow(self.mainTableWidget))
-        self.insertRowsAboveButton.clicked.connect(lambda: _3_WindowFeatures.insertRowsAbove(self.mainTableWidget))
-        self.copyRowsButton.clicked.connect(lambda: _3_WindowFeatures.copyRows(self.mainTableWidget))
-        self.runRequestsButton.clicked.connect(lambda: _3_WindowFeatures.runRequests(self.mainTableWidget))
+        self.newRowButton.clicked.connect(lambda: _4_WindowFeatures.newRow(self.mainTableWidget))
+        self.deleteRowsButton.clicked.connect(lambda: _4_WindowFeatures.deleteRows(self.mainTableWidget))
+        self.insertRowsBelowButton.clicked.connect(lambda: _4_WindowFeatures.insertRowsBelow(self.mainTableWidget))
+        self.insertRowsAboveButton.clicked.connect(lambda: _4_WindowFeatures.insertRowsAbove(self.mainTableWidget))
+        self.copyRowsButton.clicked.connect(lambda: _4_WindowFeatures.copyRows(self.mainTableWidget))
+        self.runRequestsButton.clicked.connect(lambda: _4_WindowFeatures.runRequests(self.mainTableWidget))
+
+    def setUnitsAndTolerances(self):
+        unitsOptions = list(csiTables.UnitsKey.keys())
+        self.unitsComboBox.addItems(unitsOptions)
+        self.posViewToleranceSpinBox.setValue(6)
+        self.negViewToleranceSpinBox.setValue(6)
 
     def setColumnsAndRows(self):
         # Set the number of columns based on the total spans + 1 for checkbox column
@@ -144,6 +160,7 @@ class ModulesScreen(QMainWindow):
                     self.mainTableWidget.setCellWidget(i, j, checkbox)
 
     def handleDataTypeChange(self,data_type,row,col):
+        print(data_type,row,col)
         if data_type in tableSetup.dataOptions:
             values = tableSetup.dataOptions[data_type]
             value = tableSetup.dataOptions[data_type][0]

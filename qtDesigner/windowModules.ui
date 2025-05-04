@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>889</width>
-    <height>564</height>
+    <height>609</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -36,32 +36,100 @@ QMainWindow{
 }</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_5">
+   <layout class="QVBoxLayout" name="verticalLayout_6">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <layout class="QVBoxLayout" name="verticalLayout_5">
       <property name="leftMargin">
        <number>10</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
       </property>
       <property name="rightMargin">
        <number>10</number>
       </property>
       <item>
-       <widget class="QLabel" name="modelPath_2">
-        <property name="text">
-         <string>No model loaded</string>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout_11">
+        <item>
+         <widget class="QLabel" name="label_7">
+          <property name="minimumSize">
+           <size>
+            <width>70</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>70</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Request File:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="inputFilePath">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>No request file loaded</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
-       <widget class="QToolButton" name="reloadButton">
-        <property name="text">
-         <string>...</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>../images/reload.png</normaloff>../images/reload.png</iconset>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="minimumSize">
+           <size>
+            <width>70</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>70</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Model File:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="modelPath">
+          <property name="text">
+           <string>No model loaded</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="reloadButton">
+          <property name="text">
+           <string>...</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>../images/reload.png</normaloff>../images/reload.png</iconset>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>
@@ -179,7 +247,7 @@ QMainWindow{
                </widget>
               </item>
               <item>
-               <widget class="QComboBox" name="units">
+               <widget class="QComboBox" name="unitsComboBox">
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
@@ -216,7 +284,7 @@ QMainWindow{
                  </widget>
                 </item>
                 <item>
-                 <widget class="QSpinBox" name="posTolerance">
+                 <widget class="QSpinBox" name="posViewToleranceSpinBox">
                   <property name="minimumSize">
                    <size>
                     <width>0</width>
@@ -255,7 +323,7 @@ QMainWindow{
                  </widget>
                 </item>
                 <item>
-                 <widget class="QSpinBox" name="negTolerance">
+                 <widget class="QSpinBox" name="negViewToleranceSpinBox">
                   <property name="minimumSize">
                    <size>
                     <width>0</width>
@@ -389,9 +457,6 @@ QMainWindow{
               </row>
              </widget>
             </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_6"/>
-            </item>
            </layout>
           </item>
           <item>
@@ -462,7 +527,7 @@ QMainWindow{
     <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
-    <addaction name="actionSave_as"/>
+    <addaction name="actionSaveAs"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -482,7 +547,7 @@ QMainWindow{
     <string>Save</string>
    </property>
   </action>
-  <action name="actionSave_as">
+  <action name="actionSaveAs">
    <property name="text">
     <string>Save as</string>
    </property>

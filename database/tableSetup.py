@@ -26,10 +26,13 @@ subHeaderspans = [1,1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 runOptions = ["Run", "Do not run"]
 
 dataOptions = {
+            "Column Design Takedown": ["Steel Design 360-16"],
+            "Column Load Takedown": ["P", "V2", "V3", "T", "M2", "M3"],
             "Composite Beam Design": ["Moment and Axial Capacities"],
             "Diaphragm Forces": ["Applied Force", "Reactive Force", "Diaphragm Force"],
             "Diaphragm Brace Forces": ["Diaphragm Brace Forces"],
             "End Forces": ["P", "V2", "V3", "T", "M2", "M3"],
+            "End Forces-Rounded": ["P", "V2", "V3", "T", "M2", "M3"],
             "Framing": ["Sections"],
             "Frame Releases": ["P", "V2", "V3", "T", "M2", "M3","All"],
             "Frame Modifiers": ["Area", "As2", "As3", "J", "I2", "I3", "Mass", "Weight"],
