@@ -1,0 +1,55 @@
+UnitsKey={
+"lb_in_F":1,
+"lb_ft_F":2,
+"kip_in_F":3,
+"kip_ft_F":4
+}
+
+AvailableTables = {
+    "Area Assignments - Section Properties": {"DataType":["Framing Plan"],
+                                               "Views":"All"},
+    "Element Forces - Beams": {"DataType":["Max Frame Forces","End Forces"],
+                               "Views":"All"},
+    "Area Load Assignments - Uniform": {"DataType":["Load Assigns"],
+                               "Views":"All"},
+    "Element Forces - Braces": {"DataType":["Max Frame Forces","End Forces"],
+                                "Views":"All"},
+    "Element Forces - Columns": {"DataType":["Max Frame Forces","End Forces"],
+                                 "Views":"All"},
+    "Diaphragm Forces": {"DataType":["Diaphragm Forces"],
+                                     "Views":["Story-All","Story(s)-Specified"]},
+    "Element Joint Forces - Frame": {"DataType":["Diaphragm Brace Forces"],
+                                     "Views":["Story-All","Story(s)-Specified"]},
+    "Frame Assignments - Property Modifiers": {"DataType":["Frame Modifiers"],
+                                                        "Views":"All"},
+    "Frame Assignments - Releases and Partial Fixity": {"DataType":["Frame Releases"],
+                                                        "Views":"All"},
+    "Frame Assignments - Section Properties": {"DataType":["Max Frame Forces","End Forces","Framing Plan"],
+                                               "Views":"All"},
+    "Frame Assignments - Summary": {"DataType":[],
+                                    "Views":[]},
+    "Frame Loads Assignments - Distributed": {"DataType":["Load Assigns"],
+                                                        "Views":"All"},
+    "Frame Loads Assignments - Open Structure Wind Parameters": {"DataType":["Load Assigns"],
+                                                        "Views":"All"},
+    "Joint Reactions": {"DataType":["Joint Reactions"],
+                        "Views":"All"},
+    "Joint Displacements": {"DataType":["Joint Displacements"],
+                            "Views":"All"},
+    "Joint Drifts": {"DataType":["Joint Drifts"],
+                     "Views":"All"},
+    "Joint Loads Assignments - Force": {"DataType":["Load Assigns"],
+                                                        "Views":"All"},
+    "Steel Frame Design Summary - AISC 360-16": {"DataType":["Steel Design 360-16"],
+                                  "Views":"All"},
+    "Steel Beam Envelope - AISC 360-16": {"DataType":["Steel Design 360-16"],
+                                  "Views":"All"},
+    "Steel Brace Envelope - AISC 360-16": {"DataType":["Steel Design 360-16"],
+                                  "Views":"All"},
+    "Steel Column Envelope - AISC 360-16": {"DataType":["Steel Design 360-16"],
+                                  "Views":"All"},
+}
+
+RequestsThatDoNotRequireRunModel = ["Framing","Frame Releases","Frame Modifiers","Restraints","Load Assigns"]
+
+RequestsThatRequireSteelDesign = ["Steel Design 360-16"]
