@@ -1,2 +1,2 @@
-def processRequests():
+def processRequests(selected_requests):
     pass

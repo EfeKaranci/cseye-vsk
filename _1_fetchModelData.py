@@ -30,7 +30,6 @@ def getModelData():
             statesAllRequests.defaultRow["GridSystem"]=[tableSetup.GridSystemNames[0]["GridSystem"]]
             if len(statesAllRequests.defaultRow[0]["Gridlines"])>0:
                 statesAllRequests.defaultRow["ViewLabels"]=[tableSetup.GridSystemNames[0]["Gridlines"][0]]
-        statesAllRequests.Requests.append(statesAllRequests.defaultRow)
     
     moduleScreen=_2_initializeModules.ModulesScreen()
     statesUI.widget.addWidget(moduleScreen)

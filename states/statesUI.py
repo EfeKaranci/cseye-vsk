@@ -1,1 +1,2 @@
 widget=None
+tableWidget=None

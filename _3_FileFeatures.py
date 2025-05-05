@@ -6,6 +6,8 @@ import database.tableSetup as tableSetup
 import hooks.qtDesignerHooks as qtDesignerHooks
 import json
 import os
+import hooks.basicHooks as basicHooks
+import states.statesAllRequests as statesAllRequests
 # Track the current open file
 current_file = None
 
@@ -17,9 +19,31 @@ def update_window_title(main_window):
         else:
             main_window.inputFilePath.setText("")
 
+def create_styled_message_box(parent, title, message, buttons=None, default_button=None):
+    """Create a styled message box with wider buttons"""
+    msg_box = QtWidgets.QMessageBox(parent)
+    msg_box.setWindowTitle(title)
+    msg_box.setText(message)
+    
+    if buttons:
+        msg_box.setStandardButtons(buttons)
+        if default_button:
+            msg_box.setDefaultButton(default_button)
+    
+    # Set minimum width for all buttons
+    for button in msg_box.buttons():
+        button.setMinimumWidth(100)
+        button.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+    
+    return msg_box
+
 def actionSave(main_window, mainTableWidget):
     """Save the current state to a JSON file"""
     global current_file
+    if not main_window:
+        msg_box = create_styled_message_box(None, "Error", "Could not access main window")
+        msg_box.exec_()
+        return
     if not current_file:
         return actionSaveAs(main_window, mainTableWidget)
     # Get the data from the UI
@@ -56,9 +80,11 @@ def actionSave(main_window, mainTableWidget):
     try:
         with open(current_file, 'w') as f:
             json.dump(data, f, indent=4)
-        QtWidgets.QMessageBox.information(main_window, "Success", "File saved successfully!")
+        msg_box = create_styled_message_box(main_window, "Success", "File saved successfully!")
+        msg_box.exec_()
     except Exception as e:
-        QtWidgets.QMessageBox.critical(main_window, "Error", f"Failed to save file: {str(e)}")
+        msg_box = create_styled_message_box(main_window, "Error", f"Failed to save file: {str(e)}")
+        msg_box.exec_()
 
 def actionSaveAs(main_window, mainTableWidget):
     """Save the current state to a new JSON file"""
@@ -78,22 +104,24 @@ def actionNew(main_window):
     """Create a new file, prompting to save current file if needed"""
     global current_file
     if not main_window:
-        QtWidgets.QMessageBox.critical(None, "Error", "Could not access main window")
+        msg_box = create_styled_message_box(None, "Error", "Could not access main window")
+        msg_box.exec_()
         return
     if current_file:
-        reply = QtWidgets.QMessageBox.question(
+        msg_box = create_styled_message_box(
             main_window,
             "New File",
             "Do you want to save changes to the current file?",
             QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel,
             QtWidgets.QMessageBox.Save
         )
+        reply = msg_box.exec_()
         if reply == QtWidgets.QMessageBox.Save:
             actionSave(main_window, main_window.mainTableWidget)
         elif reply == QtWidgets.QMessageBox.Cancel:
             return
     current_file = None
-    statesAllRequests.Requests = [statesAllRequests.defaultRow.copy()]
+    basicHooks.resetDefaultRow()
     if hasattr(main_window, 'outputFilePath'):
         main_window.outputFilePath.clear()
     if hasattr(main_window, 'outputFolderPath'):
@@ -105,23 +133,26 @@ def actionNew(main_window):
     if hasattr(main_window, 'negViewToleranceSpinBox'):
         main_window.negViewToleranceSpinBox.setValue(6)
     main_window.mainTableWidget.setRowCount(3)
-    main_window.MapRequestsToTable()
+    basicHooks.resetDefaultRow()
+    main_window.MapRequestsToTable([statesAllRequests.defaultRow])
     update_window_title(main_window)
 
 def actionOpen(main_window):
     """Open an existing JSON file"""
     global current_file
     if not main_window:
-        QtWidgets.QMessageBox.critical(None, "Error", "Could not access main window")
+        msg_box = create_styled_message_box(None, "Error", "Could not access main window")
+        msg_box.exec_()
         return
     if current_file:
-        reply = QtWidgets.QMessageBox.question(
+        msg_box = create_styled_message_box(
             main_window,
             "Open File",
             "Do you want to save changes to the current file?",
             QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel,
             QtWidgets.QMessageBox.Save
         )
+        reply = msg_box.exec_()
         if reply == QtWidgets.QMessageBox.Save:
             actionSave(main_window, main_window.mainTableWidget)
         elif reply == QtWidgets.QMessageBox.Cancel:
@@ -149,15 +180,16 @@ def actionOpen(main_window):
                 main_window.posViewToleranceSpinBox.setValue(data.get("posViewTolerance", 6))
             if hasattr(main_window, 'negViewToleranceSpinBox'):
                 main_window.negViewToleranceSpinBox.setValue(data.get("negViewTolerance", 6))
-            statesAllRequests.Requests = []
-            for request_data in data.get("Requests", []):
-                statesAllRequests.Requests.append(request_data)
+            Requests = []
             while main_window.mainTableWidget.rowCount() > 3:
                 main_window.mainTableWidget.removeRow(3)
-            for request in statesAllRequests.Requests:
+            for request_data in data.get("Requests", []):
+                Requests.append(request_data)
                 main_window.mainTableWidget.insertRow(main_window.mainTableWidget.rowCount())
-            main_window.MapRequestsToTable()
+            main_window.MapRequestsToTable(Requests)
             update_window_title(main_window)
-            QtWidgets.QMessageBox.information(main_window, "Success", "File loaded successfully!")
+            msg_box = create_styled_message_box(main_window, "Success", "File loaded successfully!")
+            msg_box.exec_()
         except Exception as e:
-            QtWidgets.QMessageBox.critical(main_window, "Error", f"Failed to load file: {str(e)}")
+            msg_box = create_styled_message_box(main_window, "Error", f"Failed to load file: {str(e)}")
+            msg_box.exec_()
