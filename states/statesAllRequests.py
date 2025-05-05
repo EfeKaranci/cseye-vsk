@@ -8,6 +8,7 @@ TowerAndBaseDefinitions=[]
 GridDefinitions=[]
 GridSystems=[]
 LoadCombinationDefinitions=[]
+LoadCaseDefinitions=[]
 GroupDefinitions=[]
 
 defaultRow={tableSetup.RequestKeys[0]:False,

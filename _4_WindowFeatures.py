@@ -60,7 +60,6 @@ def copyRows(table_widget):
     """Copy all selected rows"""
     # Get rows where "Selected" is checked
     selectedRows,selected_Indices = tableWidgetHooks.getTableRequests(table_widget,"Selected","True")
-    print(selectedRows)
     if not selectedRows:
         return
     # Copy all selected rows in their original order

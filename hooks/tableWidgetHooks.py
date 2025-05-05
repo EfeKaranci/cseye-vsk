@@ -6,7 +6,6 @@ import database.tableSetup as tableSetup
 import hooks.qtDesignerHooks as qtDesignerHooks
 import _5_ProcessRequests as _5_ProcessRequests
 import hooks.viewLabelsDialogHook as viewLabelsDialogHook
-
 def newRow(table_widget,rowIndex,rowData):
     for j,key in enumerate(tableSetup.RequestKeys):
             value = rowData.get(key, False)
@@ -29,22 +28,32 @@ def newRow(table_widget,rowIndex,rowData):
             elif key == "LoadCase":
                 values = tableSetup.LoadCombinationNames
                 combo = qtDesignerHooks.GetComboBox(values,value)
+                if rowData.get("DataType") in tableSetup.DataThatDoNotRequireRunModel:
+                    combo.setCurrentText("")
+                    combo.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, combo)
             elif key == "LoadStep":
                 values = tableSetup.LoadSteps
                 combo = qtDesignerHooks.GetComboBox(values,value)
+                if rowData.get("DataType") in tableSetup.DataThatDoNotRequireRunModel:
+                    combo.setCurrentText("")
+                    combo.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, combo)
             elif key == "ViewType":
                 values = tableSetup.viewTypeOptions
                 combo = qtDesignerHooks.GetComboBox(values,value)
+                if rowData.get("DataType") in tableSetup.DataForStoryViewOnly:
+                    combo.setCurrentText("Story")
+                    combo.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, combo)
                 combo.currentTextChanged.connect(lambda text, row=rowIndex, col=j: handleViewTypeChange(table_widget,text, row, col))
             elif key == "GridSystem":
                 values = [list(grid.keys())[0] for grid in tableSetup.GridSystemNames]
                 combo = qtDesignerHooks.GetComboBox(values,value)
+                if rowData.get("ViewType") == "Story":
+                    combo.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, combo)
             elif key == "ViewLabels":
-                print(rowData.get("ViewLabels"))
                 values = rowData.get("ViewLabels", [])
                 valuesString =', '.join(map(str, values))
                 container = viewLabelsDialogHook.GetLabelAndButton(valuesString, rowIndex, j, table_widget,rowData)
@@ -55,34 +64,99 @@ def newRow(table_widget,rowIndex,rowData):
                 table_widget.setCellWidget(rowIndex, j, combo)
             elif key == "DecimalPlaces":
                 spinbox = qtDesignerHooks.GetSpinBox(value)
+                if rowData.get("DataType") in tableSetup.DatawithNoDecimalPlaces:
+                    spinbox.setValue(0)
+                    spinbox.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, spinbox)
             elif key == "TextScale":
                 spinbox = qtDesignerHooks.GetSpinBox(value)
                 table_widget.setCellWidget(rowIndex, j, spinbox)
             elif key == "MarkerScale":
                 spinbox = qtDesignerHooks.GetSpinBox(value)
+                if rowData.get("DataType") in tableSetup.DataWithNoMarkers:
+                    spinbox.setValue(0)
+                    spinbox.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, spinbox)
             elif key == "OutputPdf":
                 checkbox = qtDesignerHooks.GetCheckbox(value)
+                if rowData.get("DataType") in tableSetup.DataWithNoPdf:
+                    checkbox.setChecked(False)
+                    checkbox.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, checkbox)
             elif key == "OutputExcel":
                 checkbox = qtDesignerHooks.GetCheckbox(value)
+                if rowData.get("DataType") in tableSetup.DataWithNoExcel:
+                    checkbox.setChecked(False)
+                    checkbox.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, checkbox)
 
 
 def handleDataTypeChange(table_widget,data_type,row,col):
-        print(data_type,row,col)
-        if data_type in tableSetup.dataOptions:
-            values = tableSetup.dataOptions[data_type]
-            value = tableSetup.dataOptions[data_type][0]
-            combo = qtDesignerHooks.GetComboBox(values,value)
-            table_widget.setCellWidget(row, col+1, combo)
-            #Function to handle specific data types...
-            #Data types for Stories only
-            #Data types with no load needed
-            #Data types that run on all stories
-            #Data types with some formatting disabled
-            #data types with no pdf/excel output
+    if data_type in tableSetup.dataOptions:
+        values = tableSetup.dataOptions[data_type]
+        value = tableSetup.dataOptions[data_type][0]
+        combo = qtDesignerHooks.GetComboBox(values,value)
+        table_widget.setCellWidget(row, col+1, combo)
+        def dataTypeChange1(table_widget,row,col):
+            loadCaseCombo = table_widget.cellWidget(row, col+2)
+            loadStepCombo = table_widget.cellWidget(row, col+3)
+            if data_type in tableSetup.DataThatDoNotRequireRunModel:
+                loadCaseCombo.setCurrentText("")
+                loadCaseCombo.setEnabled(False)
+                loadStepCombo.setCurrentText("")
+                loadStepCombo.setEnabled(False)
+            else:
+                loadCaseCombo.setEnabled(True)
+                loadStepCombo.setEnabled(True)
+        def dataTypeChange2(table_widget,row,col):
+            markerScaleSpinBox = table_widget.cellWidget(row, col+10)
+            if data_type in tableSetup.DataWithNoMarkers:
+                markerScaleSpinBox.setValue(1)
+                markerScaleSpinBox.setEnabled(False)
+            if data_type in tableSetup.DatawithNoDecimalPlaces:
+                markerScaleSpinBox.setValue(1)
+                markerScaleSpinBox.setEnabled(True)
+        def dataTypeChange3(table_widget,row,col):
+            decimalPlacesSpinBox = table_widget.cellWidget(row, col+8)
+            if data_type in tableSetup.DatawithNoDecimalPlaces:
+                decimalPlacesSpinBox.setValue(1)
+                decimalPlacesSpinBox.setEnabled(False)
+            else:
+                decimalPlacesSpinBox.setValue(1)
+                decimalPlacesSpinBox.setEnabled(True)
+        def dataTypeChange4(table_widget,row,col):
+            viewTypeCombo = table_widget.cellWidget(row, col+4)
+            gridSystemCombo = table_widget.cellWidget(row, col+5)
+            if data_type in tableSetup.DataForStoryViewOnly:
+                viewTypeCombo.setCurrentText("Story")
+                viewTypeCombo.setEnabled(False)
+                gridSystemCombo.setEnabled(False)
+            else:
+                viewTypeCombo.setEnabled(True)
+                gridSystemCombo.setEnabled(True)
+        def dataTypeChange5(table_widget,row,col):
+            outputPdfCheckbox = table_widget.cellWidget(row, col+11)
+            if data_type in tableSetup.DataWithNoPdf:
+                outputPdfCheckbox.setChecked(False)
+                outputPdfCheckbox.setEnabled(False)
+            else:
+                outputPdfCheckbox.setChecked(True)
+                outputPdfCheckbox.setEnabled(True)
+        def dataTypeChange6(table_widget,row,col):
+            outputExcelCheckbox = table_widget.cellWidget(row, col+12)
+            if data_type in tableSetup.DataWithNoExcel:
+                outputExcelCheckbox.setChecked(False)
+                outputExcelCheckbox.setEnabled(False)
+            else:
+                outputExcelCheckbox.setChecked(True)
+                outputExcelCheckbox.setEnabled(True)
+        dataTypeChange1(table_widget,row,col)
+        dataTypeChange2(table_widget,row,col)
+        dataTypeChange3(table_widget,row,col)   
+        dataTypeChange4(table_widget,row,col)
+        dataTypeChange5(table_widget,row,col)
+        dataTypeChange6(table_widget,row,col)
+        #data types with no pdf/excel output
     
 def handleViewTypeChange(table_widget, viewType, row, col):
     # Get the grid system combo box from the next column

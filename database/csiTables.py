@@ -50,6 +50,3 @@ AvailableTables = {
                                   "Views":"All"},
 }
 
-RequestsThatDoNotRequireRunModel = ["Framing","Frame Releases","Frame Modifiers","Restraints","Load Assigns"]
-
-RequestsThatRequireSteelDesign = ["Steel Design 360-16"]

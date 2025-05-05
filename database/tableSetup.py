@@ -76,3 +76,17 @@ helpTexts = {
     "Output Pdf?": "PLACEHOLDER: Help text for Output Pdf?",
     "Output Excel?": "PLACEHOLDER: Help text for Output Excel?"
 }
+
+DataThatDoNotRequireRunModel = ["Framing","Frame Releases","Frame Modifiers","Restraints","Load Assigns"]
+
+DataThatRequireSteelDesign = ["Steel Design 360-16"]
+
+DataWithNoMarkers = ["Composite Beam Design","Framing","Frame Releases","Frame Modifiers","Restraints","Load Assigns","Steel Design 360-16"]
+
+DatawithNoDecimalPlaces = ["Composite Beam Design","Framing","Frame Releases","Frame Modifiers","Restraints","Steel Design 360-16"]
+
+DataForStoryViewOnly = ["Column Design Takedown","Diaphragm Forces","Diaphragm Brace Forces","Story Drift","Story Forces"]
+
+DataWithNoExcel = ["Framing"]
+
+DataWithNoPdf = []
