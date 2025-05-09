@@ -169,7 +169,7 @@ RequestDictionary={
     "Diaphragm Forces": DiaphragmForces,
     "Diaphragm Brace Forces": DiaphragmBraceFoces,
     "End Forces": EndForces,
-    "Framing Plan": FramingPlan,
+    "Framing": FramingPlan,
     "Frame Releases": FramingReleases,
     "Frame Modifiers": FramingModifiers,
     "Joint Displacements": JointDisplacements,

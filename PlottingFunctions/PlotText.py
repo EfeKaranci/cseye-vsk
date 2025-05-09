@@ -16,3 +16,4 @@ def PlotText():
         fig = ax.get_figure()
         plt.close(fig)
         statesAllRequests.figs.append(fig)
+        statesAllRequests.figsNames.append(statesAllRequests.RequestNameFormat1)

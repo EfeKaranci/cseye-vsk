@@ -37,9 +37,9 @@ def GetEndForcesSpreadsheet():
                     statesAllRequests.PlotTable.append({"Pt2d":PtJScaled,"Value":EndJForce,"Text":EndJText})
                     statesAllRequests.PlotTable.append({"Pt2d":MidPt,"Value":0,"Text":MidText})
 
-RequestedDataDict={"End Forces-P": {"Key":"P"},"End Forces-V2":{"Key":"V2"},
-                    "End Forces-V3":{"Key":"V3"},"End Forces-T":{"Key":"T"},
-                    "End Forces-M2":{"Key":"M2"},"End Forces-M3":{"Key":"M3"}}
+RequestedDataDict={"P": {"Key":"P"},"V2":{"Key":"V2"},
+                    "V3":{"Key":"V3"},"T":{"Key":"T"},
+                    "M2":{"Key":"M2"},"M3":{"Key":"M3"}}
 
 def GetResultsForFrame(FrameResults,RequestedDataKey):
     Forces = [x[RequestedDataKey] for x in FrameResults]

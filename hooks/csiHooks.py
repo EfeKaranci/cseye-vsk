@@ -1,6 +1,7 @@
 import states.statesAllRequests as statesAllRequests
 import Hooks.BasicHooks as BasicHooks
 import comtypes.client
+import re
 def GetAndProcessCSITable(tableName,groupName):
     table = statesAllRequests.SapModel.DatabaseTables.GetTableForDisplayArray(tableName, "", groupName, 21, "")
     NoOfColumns = len(table[2])
@@ -26,3 +27,21 @@ def getModel():
 def GetAvailableCSITables():
     Tables=statesAllRequests.SapModel.DatabaseTables.GetAvailableTables();
     return Tables[1]
+
+def SortAlphanumeric(lst):
+    """
+    Sorts a list of alphanumeric strings in natural (human-friendly) order.
+    
+    Example:
+        >>> SortAlphanumeric(["item2", "item10", "item1", "apple", "123", "20birds"])
+        ['123', '20birds', 'apple', 'item1', 'item2', 'item10']
+    """
+    def alphanum_key(s):
+        # Split into runs of digits and non-digits, convert digit runs to ints
+        return [
+            int(chunk) if chunk.isdigit() else chunk.lower()
+            for chunk in re.split(r'(\d+)', s)
+        ]
+    
+    return sorted(lst, key=alphanum_key)
+

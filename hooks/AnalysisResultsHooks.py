@@ -18,6 +18,20 @@ def GetLoadResultsForObject(ResultsTable,ObjectId,ResultsIdKey):
                        and x[ResultsIdKey] == ObjectId and x['OutputCase'] in statesAllRequests.RequestLoadCases and x['StepNumber'] == statesAllRequests.RequestLoadStep]
     return Results
 
+def GetResultsForLoadCase(ResultsTable):
+    if  (statesAllRequests.RequestLoadStep == ""):
+        Results = [x for x in ResultsTable if x['OutputCase'] in statesAllRequests.RequestLoadCases]
+        # if user requested results for load with max and min step but did not select envelope option
+    elif  (statesAllRequests.RequestLoadStep.lower() in ["max", "min"]):
+        if(statesAllRequests.RequestIsEnvelope=="No"):
+            Results = [x for x in ResultsTable if x['OutputCase'] in statesAllRequests.RequestLoadCases and x['StepType']!=None and x['StepType'].lower() == statesAllRequests.RequestLoadStep]
+        # if user requested results for load with max and min step but did not select envelope option
+        elif  (statesAllRequests.RequestIsEnvelope=="Yes"):
+            Results = [x for x in ResultsTable if x['OutputCase'] in statesAllRequests.RequestLoadCases]
+    else:
+        Results = [x for x in ResultsTable if x['OutputCase'] in statesAllRequests.RequestLoadCases and 'StepNumber' in x and x['StepNumber'] == statesAllRequests.RequestLoadStep]
+    return Results
+
 def GetGoverningResultForObject(Results,RequestedDataKey):
     if(statesAllRequests.RequestIsEnvelope=="No" and len(Results)==1):
         Result=Results[0]

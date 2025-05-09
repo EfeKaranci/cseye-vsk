@@ -58,6 +58,7 @@ EnvelopeComboKey={}
 ###OUTPUT
 OutputSheets={}
 figs=[]
+figsNames=[]
 ###UNITS
 ForceUnit=""
 DisplacementUnit=""

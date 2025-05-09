@@ -3,6 +3,9 @@ import states.statesAllRequests as statesAllRequests
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.colors as mcolors
 import database.tableSetup as tableSetup
+import io
+from matplotlib.backends.backend_pdf import PdfPages
+from PyPDF2 import PdfReader, PdfWriter
 def build_tables():
     tables = {}
     for sheet_name, dicts in statesAllRequests.OutputSheets.items():
@@ -10,7 +13,7 @@ def build_tables():
             rows = ConvertListOfDictionariesToListOfLists(dicts)
             # Prepend the units row
             units_row = [f"Units = {statesAllRequests.SelectedUnits}"]
-            # If rows isn’t empty, insert at top; otherwise make sure there’s at least header
+            # If rows isn't empty, insert at top; otherwise make sure there's at least header
             if len(rows)>0:
                 rows.insert(0, units_row)
             else:
@@ -35,6 +38,7 @@ def WriteDictionaryWithTables(tables, path):
         for sheet_name, data in tables.items():
             if not data:
                 continue
+            data.insert(0,[sheet_name])
             df = pd.DataFrame(data)
             df.to_excel(
                 writer,
@@ -46,10 +50,28 @@ def WriteDictionaryWithTables(tables, path):
         if not wrote_any:
             pd.DataFrame().to_excel(writer, sheet_name="Sheet1")
 
-def WritePdfPlot(figs,path):
-    with PdfPages(path) as pdf:
+def WritePdfPlot(figs, path):
+    # 1) Render all the Matplotlib figures into an in-memory PDF
+    buffer = io.BytesIO()
+    with PdfPages(buffer) as pdf:
         for fig in figs:
             pdf.savefig(fig, bbox_inches="tight")
+    buffer.seek(0)
+
+    # 2) Read that PDF back in
+    reader = PdfReader(buffer)
+    writer = PdfWriter()
+
+    # 3) Copy pages into the writer, adding a bookmark for each
+    for i, page in enumerate(reader.pages):
+        writer.add_page(page)
+        # Use the corresponding name from your list
+        title = statesAllRequests.figsNames[i]
+        writer.add_outline_item(title, i)  # bookmark at top‐level
+
+    # 4) Write out the final, bookmarked PDF
+    with open(path, "wb") as f:
+        writer.write(f)
 
 def WriteTable(Table,Path):
     df = pd.DataFrame(Table)

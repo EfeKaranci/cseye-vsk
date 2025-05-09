@@ -14,10 +14,11 @@ def getModelData():
 
     tableSetup.StoryNames=[x["Story"] for x in statesAllRequests.StoryDefinitions]+[x["BSName"] for x in statesAllRequests.TowerAndBaseDefinitions]
     tableSetup.GridSystemNames=[x["Name"] for x in statesAllRequests.GridSystems]
-    tableSetup.GridSystemNames=[{x:[y["ID"] for y in statesAllRequests.GridDefinitions if y["Name"]==x]} for x in tableSetup.GridSystemNames]
+    tableSetup.GridSystemNames=[{x:CSIHooks.SortAlphanumeric([y["ID"] for y in statesAllRequests.GridDefinitions if y["Name"]==x])} for x in tableSetup.GridSystemNames]
     tableSetup.GridSystemNames=tableSetup.GridSystemNames
     tableSetup.LoadCombinationNames=list(set([x["Name"] for x in statesAllRequests.LoadCombinationDefinitions]))
     tableSetup.LoadCombinationNames=tableSetup.LoadCombinationNames+[x["Name"] for x in statesAllRequests.LoadCaseDefinitions]
+    tableSetup.LoadCombinationNames=CSIHooks.SortAlphanumeric(tableSetup.LoadCombinationNames)
     tableSetup.GroupNames=[""]+[x["Name"] for x in statesAllRequests.GroupDefinitions]
     pass
 

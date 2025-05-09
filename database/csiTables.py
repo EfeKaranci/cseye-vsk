@@ -6,7 +6,7 @@ UnitsKey={
 }
 
 AvailableTables = {
-    "Area Assignments - Section Properties": {"DataType":["Framing Plan"],
+    "Area Assignments - Section Properties": {"DataType":["Framing"],
                                                "ViewTypes":["Story","Elevation"]},
     "Base Reactions": {"DataType":["Base Reactions"],
                         "ViewTypes":["Story","Elevation"]},
@@ -26,7 +26,7 @@ AvailableTables = {
                                                         "ViewTypes":["Story","Elevation"]},
     "Frame Assignments - Releases and Partial Fixity": {"DataType":["Frame Releases"],
                                                         "ViewTypes":["Story","Elevation"]},
-    "Frame Assignments - Section Properties": {"DataType":["Max Frame Forces","End Forces","Framing Plan"],
+    "Frame Assignments - Section Properties": {"DataType":["Max Frame Forces","End Forces","Framing"],
                                                "ViewTypes":["Story","Elevation"]},
     "Frame Assignments - Summary": {"DataType":[],
                                     "ViewTypes":[]},

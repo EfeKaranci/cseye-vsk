@@ -64,6 +64,7 @@ def ResetGeneralStates():
     ###OUTPUT
     statesAllRequests.OutputSheets = {}
     statesAllRequests.figs = []
+    statesAllRequests.figsNames = []
     ###UNITS
     statesAllRequests.ForceUnit = ""
     statesAllRequests.DisplacementUnit = ""

@@ -34,7 +34,7 @@ dataOptions = {
             "Diaphragm Brace Forces": ["Diaphragm Brace Forces"],
             "End Forces": ["P", "V2", "V3", "T", "M2", "M3"],
             "End Forces-Rounded": ["P", "V2", "V3", "T", "M2", "M3"],
-            "Framing": ["Sections"],
+            "Framing": ["Frames","Areas"],
             "Frame Releases": ["P", "V2", "V3", "T", "M2", "M3","All"],
             "Frame Modifiers": ["Area", "As2", "As3", "J", "I2", "I3", "Mass", "Weight"],
             "Joint Displacements": ["Ux", "Uy", "Uz", "Rx", "Ry", "Rz", "All", ""],
@@ -46,7 +46,7 @@ dataOptions = {
             "Load Assigns": ["Load Assigns"],
             "Steel Design 360-16": ["DCRs", "Design Combination", "PMM Breakdown"],
             "Story Drift": ["X", "Y"],
-            "Story Forces": ["Top", "Bottom"], #Excel Only
+            "Story Forces": ["Story Forces"], #Excel Only
             "Tributary Areas": ["Beams", "Columns"],
             "Uniform Load Sets": ["Uniform Load Sets"]
         }
@@ -90,7 +90,7 @@ DataWithNoMarkers = ["Base Reactions","Modal Properties","Story Forces","Composi
 
 DataWithNoLoads = ["Modal Properties","Composite Beam Design","Framing","Frame Releases","Frame Modifiers","Restraints","Steel Design 360-16"]
 
-DatawithNoDecimalPlaces = ["Modal Properties","Story Forces","Composite Beam Design","Framing","Frame Releases","Frame Modifiers","Restraints","Steel Design 360-16"]
+DatawithNoDecimalPlaces = ["Base Reactions","Modal Properties","Story Forces","Composite Beam Design","Framing","Frame Releases","Frame Modifiers","Restraints","Steel Design 360-16"]
 
 DataForStoryViewOnly = ["Base Reactions","Modal Properties","Story Forces","Column Design Takedown","Diaphragm Forces","Diaphragm Brace Forces","Story Drift","Story Forces"]
 

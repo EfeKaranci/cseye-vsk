@@ -3,7 +3,6 @@ import Hooks.BasicHooks as BasicHooks
 import Hooks.AnalysisResultsHooks as AnalysisResultsHooks
 
 def GetModalPropertiesSpreadsheet():
-    print(statesAllRequests.SelectedCSITables)
     if("Modal Periods And Frequencies" in statesAllRequests.SelectedCSITables):
         print("Modal Periods And Frequencies")
     OriginalSheetName=statesAllRequests.RequestNameFormat1
