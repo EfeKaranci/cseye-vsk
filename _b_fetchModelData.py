@@ -1,16 +1,16 @@
 import states.statesAllRequests as statesAllRequests
 import database.tableSetup as tableSetup
-import hooks.csiHooks as csiHooks
+import Hooks.CSIHooks as CSIHooks
 import states.statesUI as statesUI
-import _2_initializeModules as _2_initializeModules
+import _c_initializeModules as _c_initializeModules
 def getModelData():
-    statesAllRequests.StoryDefinitions=csiHooks.GetAndProcessCSITable('Story Definitions',"")
-    statesAllRequests.TowerAndBaseDefinitions=csiHooks.GetAndProcessCSITable('Tower and Base Story Definitions',"")
-    statesAllRequests.GridDefinitions=csiHooks.GetAndProcessCSITable("Grid Definitions - Grid Lines","")
-    statesAllRequests.GridSystems=csiHooks.GetAndProcessCSITable("Grid Definitions - General","")
-    statesAllRequests.LoadCombinationDefinitions=csiHooks.GetAndProcessCSITable('Load Combination Definitions',"")
-    statesAllRequests.LoadCaseDefinitions=csiHooks.GetAndProcessCSITable('Load Case Definitions - Summary',"")
-    statesAllRequests.GroupDefinitions=csiHooks.GetAndProcessCSITable('Group Definitions',"")
+    statesAllRequests.StoryDefinitions=CSIHooks.GetAndProcessCSITable('Story Definitions',"")
+    statesAllRequests.TowerAndBaseDefinitions=CSIHooks.GetAndProcessCSITable('Tower and Base Story Definitions',"")
+    statesAllRequests.GridDefinitions=CSIHooks.GetAndProcessCSITable("Grid Definitions - Grid Lines","")
+    statesAllRequests.GridSystems=CSIHooks.GetAndProcessCSITable("Grid Definitions - General","")
+    statesAllRequests.LoadCombinationDefinitions=CSIHooks.GetAndProcessCSITable('Load Combination Definitions',"")
+    statesAllRequests.LoadCaseDefinitions=CSIHooks.GetAndProcessCSITable('Load Case Definitions - Summary',"")
+    statesAllRequests.GroupDefinitions=CSIHooks.GetAndProcessCSITable('Group Definitions',"")
 
     tableSetup.StoryNames=[x["Story"] for x in statesAllRequests.StoryDefinitions]+[x["BSName"] for x in statesAllRequests.TowerAndBaseDefinitions]
     tableSetup.GridSystemNames=[x["Name"] for x in statesAllRequests.GridSystems]
@@ -31,6 +31,6 @@ def getModelData():
             if len(statesAllRequests.defaultRow[0]["Gridlines"])>0:
                 statesAllRequests.defaultRow["ViewLabels"]=[tableSetup.GridSystemNames[0]["Gridlines"][0]]
     
-    moduleScreen=_2_initializeModules.ModulesScreen()
+    moduleScreen=_c_initializeModules.ModulesScreen()
     statesUI.widget.addWidget(moduleScreen)
     statesUI.widget.setCurrentIndex(statesUI.widget.currentIndex()+1)

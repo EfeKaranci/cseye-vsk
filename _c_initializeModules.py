@@ -4,10 +4,10 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem
 import states.statesAllRequests as statesAllRequests
 import database.tableSetup as tableSetup
-import _4_WindowFeatures as _4_WindowFeatures
-import _3_FileFeatures as _3_FileFeatures
+import _e_WindowFeatures as _e_WindowFeatures
+import _d_FileFeatures as _d_FileFeatures
 import database.csiTables as csiTables
-import hooks.tableWidgetHooks as tableWidgetHooks
+import Hooks.tableWidgetHooks as tableWidgetHooks
 
 class ModulesScreen(QMainWindow):
     def __init__(self):
@@ -22,18 +22,25 @@ class ModulesScreen(QMainWindow):
         
         self.modelPath.setText(statesAllRequests.modelPath)
         # Connect menu actions to file features
-        self.actionNew.triggered.connect(lambda: _3_FileFeatures.actionNew(self))
-        self.actionOpen.triggered.connect(lambda: _3_FileFeatures.actionOpen(self))
-        self.actionSave.triggered.connect(lambda: _3_FileFeatures.actionSave(self, self.mainTableWidget))
-        self.actionSaveAs.triggered.connect(lambda: _3_FileFeatures.actionSaveAs(self, self.mainTableWidget))
+        self.actionNew.triggered.connect(lambda: _d_FileFeatures.actionNew(self))
+        self.actionOpen.triggered.connect(lambda: _d_FileFeatures.actionOpen(self))
+        self.actionSave.triggered.connect(lambda: _d_FileFeatures.actionSave(self, self.mainTableWidget))
+        self.actionSaveAs.triggered.connect(lambda: _d_FileFeatures.actionSaveAs(self, self.mainTableWidget))
         
         # Connect button signals to window features
-        self.newRowButton.clicked.connect(lambda: _4_WindowFeatures.newRow(self.mainTableWidget))
-        self.deleteRowsButton.clicked.connect(lambda: _4_WindowFeatures.deleteRows(self.mainTableWidget))
-        self.insertRowsBelowButton.clicked.connect(lambda: _4_WindowFeatures.insertRowsBelow(self.mainTableWidget))
-        self.insertRowsAboveButton.clicked.connect(lambda: _4_WindowFeatures.insertRowsAbove(self.mainTableWidget))
-        self.copyRowsButton.clicked.connect(lambda: _4_WindowFeatures.copyRows(self.mainTableWidget))
-        self.runRequestsButton.clicked.connect(lambda: _4_WindowFeatures.runRequests(self.mainTableWidget))
+        self.newRowButton.clicked.connect(lambda: _e_WindowFeatures.newRow(self.mainTableWidget))
+        self.deleteRowsButton.clicked.connect(lambda: _e_WindowFeatures.deleteRows(self.mainTableWidget))
+        self.insertRowsBelowButton.clicked.connect(lambda: _e_WindowFeatures.insertRowsBelow(self.mainTableWidget))
+        self.insertRowsAboveButton.clicked.connect(lambda: _e_WindowFeatures.insertRowsAbove(self.mainTableWidget))
+        self.copyRowsButton.clicked.connect(lambda: _e_WindowFeatures.copyRows(self.mainTableWidget))
+        self.runRequestsButton.clicked.connect(lambda: _e_WindowFeatures.runRequests(
+            self.mainTableWidget,
+            self.outputFilePath.toPlainText(),
+            self.outputFolderPath.toPlainText(),
+            self.unitsComboBox.currentText(),
+            self.posViewToleranceSpinBox.value(),
+            self.negViewToleranceSpinBox.value()
+        ))
 
     def setUnitsAndTolerances(self):
         unitsOptions = list(csiTables.UnitsKey.keys())

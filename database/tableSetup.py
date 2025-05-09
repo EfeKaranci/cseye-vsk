@@ -26,6 +26,7 @@ subHeaderspans = [1,1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 runOptions = ["Run", "Do not run"]
 
 dataOptions = {
+            "Base Reactions": ["Base Reactions"],#Excel Only
             "Column Design Takedown": ["Steel Design 360-16"],
             "Column Load Takedown": ["P", "V2", "V3", "T", "M2", "M3"],
             "Composite Beam Design": ["Moment and Axial Capacities"],
@@ -39,13 +40,15 @@ dataOptions = {
             "Joint Displacements": ["Ux", "Uy", "Uz", "Rx", "Ry", "Rz", "All", ""],
             "Joint Drifts": ["X", "Y"],
             "Joint Reactions": ["FX", "FY", "FZ", "MX", "MY", "MZ"],
-            "Max Frame Forces": ["P(Abs)", "P(Comp)", "P(Tens)", "V2(Abs)", "V3(Abs)", "T(Abs)", "M2(Abs)", "M3(Abs)", ""],
+            "Max Frame Forces": ["P(Abs)", "P(Comp)", "P(Tens)", "V2(Abs)", "V3(Abs)", "T(Abs)", "M2(Abs)", "M3(Abs)"],
+            "Modal Properties": ["Modal Properties"],#Excel Only
             "Restraints": ["All"],
             "Load Assigns": ["Load Assigns"],
             "Steel Design 360-16": ["DCRs", "Design Combination", "PMM Breakdown"],
             "Story Drift": ["X", "Y"],
-            "Story Forces": ["Top", "Bottom"],
-            "Tributary Areas": ["Beams", "Columns"]
+            "Story Forces": ["Top", "Bottom"], #Excel Only
+            "Tributary Areas": ["Beams", "Columns"],
+            "Uniform Load Sets": ["Uniform Load Sets"]
         }
 
 LoadCombinationNames=[]
@@ -81,12 +84,18 @@ DataThatDoNotRequireRunModel = ["Framing","Frame Releases","Frame Modifiers","Re
 
 DataThatRequireSteelDesign = ["Steel Design 360-16"]
 
-DataWithNoMarkers = ["Composite Beam Design","Framing","Frame Releases","Frame Modifiers","Restraints","Load Assigns","Steel Design 360-16"]
+DataWithNoText = ["Base Reactions","Modal Properties","Story Forces"]
 
-DatawithNoDecimalPlaces = ["Composite Beam Design","Framing","Frame Releases","Frame Modifiers","Restraints","Steel Design 360-16"]
+DataWithNoMarkers = ["Base Reactions","Modal Properties","Story Forces","Composite Beam Design","Framing","Frame Releases","Frame Modifiers","Restraints","Load Assigns","Steel Design 360-16"]
 
-DataForStoryViewOnly = ["Column Design Takedown","Diaphragm Forces","Diaphragm Brace Forces","Story Drift","Story Forces"]
+DataWithNoLoads = ["Modal Properties","Composite Beam Design","Framing","Frame Releases","Frame Modifiers","Restraints","Steel Design 360-16"]
+
+DatawithNoDecimalPlaces = ["Modal Properties","Story Forces","Composite Beam Design","Framing","Frame Releases","Frame Modifiers","Restraints","Steel Design 360-16"]
+
+DataForStoryViewOnly = ["Base Reactions","Modal Properties","Story Forces","Column Design Takedown","Diaphragm Forces","Diaphragm Brace Forces","Story Drift","Story Forces"]
 
 DataWithNoExcel = ["Framing"]
 
-DataWithNoPdf = []
+DataWithExcelOnly = ["Base Reactions","Modal Properties","Story Forces"]
+
+DataWithNoPdf = ["Base Reactions","Modal Properties","Story Forces"]

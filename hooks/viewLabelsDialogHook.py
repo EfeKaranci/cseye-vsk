@@ -4,9 +4,8 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 import states.statesAllRequests as statesAllRequests
 import database.tableSetup as tableSetup
-import hooks.csiHooks as csiHooks
-import _4_WindowFeatures as _4_WindowFeatures
-import _3_FileFeatures as _3_FileFeatures
+import _e_WindowFeatures as _e_WindowFeatures
+import _d_FileFeatures as _d_FileFeatures
 
 
 class ViewSelectionDialog(QtWidgets.QDialog):

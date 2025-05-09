@@ -3,10 +3,10 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 import states.statesAllRequests as statesAllRequests
 import database.tableSetup as tableSetup
-import hooks.qtDesignerHooks as qtDesignerHooks
+import Hooks.qtDesignerHooks as qtDesignerHooks
 import json
 import os
-import hooks.basicHooks as basicHooks
+import Hooks.BasicHooks as BasicHooks
 import states.statesAllRequests as statesAllRequests
 # Track the current open file
 current_file = None
@@ -121,7 +121,7 @@ def actionNew(main_window):
         elif reply == QtWidgets.QMessageBox.Cancel:
             return
     current_file = None
-    basicHooks.resetDefaultRow()
+    BasicHooks.resetDefaultRow()
     if hasattr(main_window, 'outputFilePath'):
         main_window.outputFilePath.clear()
     if hasattr(main_window, 'outputFolderPath'):
@@ -133,7 +133,7 @@ def actionNew(main_window):
     if hasattr(main_window, 'negViewToleranceSpinBox'):
         main_window.negViewToleranceSpinBox.setValue(6)
     main_window.mainTableWidget.setRowCount(3)
-    basicHooks.resetDefaultRow()
+    BasicHooks.resetDefaultRow()
     main_window.MapRequestsToTable([statesAllRequests.defaultRow])
     update_window_title(main_window)
 

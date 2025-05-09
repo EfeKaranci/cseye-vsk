@@ -3,9 +3,9 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 import states.statesAllRequests as statesAllRequests
 import database.tableSetup as tableSetup
-import hooks.qtDesignerHooks as qtDesignerHooks
-import _5_ProcessRequests as _5_ProcessRequests
-import hooks.tableWidgetHooks as tableWidgetHooks
+import Hooks.qtDesignerHooks as qtDesignerHooks
+import _f_ProcessRequests as _f_ProcessRequests
+import Hooks.tableWidgetHooks as tableWidgetHooks
 
 def newRow(table_widget):
     """Add a new row to the table with default values"""
@@ -85,11 +85,11 @@ def deleteRows(table_widget):
         table_widget.removeRow(row)
         # Adjust the index for the Requests array (subtract 3 for header rows)
 
-def runRequests(table_widget):
+def runRequests(table_widget,outputFilePath,outputFolderPath,units,posViewTolerance,negViewTolerance):
     """Run the selected requests"""
     # Initialize list to store selected requests
     selected_requests,selected_Indices = tableWidgetHooks.getTableRequests(table_widget,"Run","Run")
     # Return the list of selected requests
-    _5_ProcessRequests.processRequests(selected_requests)
+    _f_ProcessRequests.processRequests(selected_requests,outputFilePath,outputFolderPath,units,posViewTolerance,negViewTolerance)
 
 

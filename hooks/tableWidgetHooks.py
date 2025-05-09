@@ -3,9 +3,9 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 import states.statesAllRequests as statesAllRequests
 import database.tableSetup as tableSetup
-import hooks.qtDesignerHooks as qtDesignerHooks
-import _5_ProcessRequests as _5_ProcessRequests
-import hooks.viewLabelsDialogHook as viewLabelsDialogHook
+import Hooks.qtDesignerHooks as qtDesignerHooks
+import _f_ProcessRequests as _f_ProcessRequests
+import Hooks.viewLabelsDialogHook as viewLabelsDialogHook
 def newRow(table_widget,rowIndex,rowData):
     for j,key in enumerate(tableSetup.RequestKeys):
             value = rowData.get(key, False)
@@ -28,21 +28,21 @@ def newRow(table_widget,rowIndex,rowData):
             elif key == "LoadCase":
                 values = tableSetup.LoadCombinationNames
                 combo = qtDesignerHooks.GetComboBox(values,value)
-                if rowData.get("DataType") in tableSetup.DataThatDoNotRequireRunModel:
+                if rowData.get("DataType") in tableSetup.DataThatDoNotRequireRunModel or rowData.get("DataType") in tableSetup.DataWithNoLoads:
                     combo.setCurrentText("")
                     combo.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, combo)
             elif key == "LoadStep":
                 values = tableSetup.LoadSteps
                 combo = qtDesignerHooks.GetComboBox(values,value)
-                if rowData.get("DataType") in tableSetup.DataThatDoNotRequireRunModel:
+                if rowData.get("DataType") in tableSetup.DataThatDoNotRequireRunModel or rowData.get("DataType") in tableSetup.DataWithNoLoads:
                     combo.setCurrentText("")
                     combo.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, combo)
             elif key == "ViewType":
                 values = tableSetup.viewTypeOptions
                 combo = qtDesignerHooks.GetComboBox(values,value)
-                if rowData.get("DataType") in tableSetup.DataForStoryViewOnly:
+                if (rowData.get("DataType") in tableSetup.DataForStoryViewOnly) or (rowData.get("DataType") in tableSetup.DataWithExcelOnly):
                     combo.setCurrentText("Story")
                     combo.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, combo)
@@ -50,7 +50,7 @@ def newRow(table_widget,rowIndex,rowData):
             elif key == "GridSystem":
                 values = [list(grid.keys())[0] for grid in tableSetup.GridSystemNames]
                 combo = qtDesignerHooks.GetComboBox(values,value)
-                if rowData.get("ViewType") == "Story":
+                if (rowData.get("ViewType") == "Story") or (rowData.get("DataType") in tableSetup.DataWithExcelOnly):
                     combo.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, combo)
             elif key == "ViewLabels":
@@ -61,30 +61,37 @@ def newRow(table_widget,rowIndex,rowData):
             elif key == "GroupName":
                 values = tableSetup.GroupNames
                 combo = qtDesignerHooks.GetComboBox(values,value)
+                if (rowData.get("DataType") in tableSetup.DataWithExcelOnly):
+                    combo.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, combo)
             elif key == "DecimalPlaces":
                 spinbox = qtDesignerHooks.GetSpinBox(value)
-                if rowData.get("DataType") in tableSetup.DatawithNoDecimalPlaces:
+                if (rowData.get("DataType") in tableSetup.DatawithNoDecimalPlaces) or (rowData.get("DataType") in tableSetup.DataWithExcelOnly):
                     spinbox.setValue(0)
                     spinbox.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, spinbox)
             elif key == "TextScale":
                 spinbox = qtDesignerHooks.GetSpinBox(value)
+                if (rowData.get("DataType") in tableSetup.DataWithExcelOnly):
+                    spinbox.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, spinbox)
             elif key == "MarkerScale":
                 spinbox = qtDesignerHooks.GetSpinBox(value)
-                if rowData.get("DataType") in tableSetup.DataWithNoMarkers:
+                if (rowData.get("DataType") in tableSetup.DataWithNoMarkers) or (rowData.get("DataType") in tableSetup.DataWithExcelOnly):
                     spinbox.setValue(0)
                     spinbox.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, spinbox)
             elif key == "OutputPdf":
                 checkbox = qtDesignerHooks.GetCheckbox(value)
-                if rowData.get("DataType") in tableSetup.DataWithNoPdf:
+                if (rowData.get("DataType") in tableSetup.DataWithNoPdf) or (rowData.get("DataType") in tableSetup.DataWithExcelOnly):
                     checkbox.setChecked(False)
                     checkbox.setEnabled(False)
                 table_widget.setCellWidget(rowIndex, j, checkbox)
             elif key == "OutputExcel":
                 checkbox = qtDesignerHooks.GetCheckbox(value)
+                if (rowData.get("DataType") in tableSetup.DataWithExcelOnly):
+                    checkbox.setChecked(True)
+                    checkbox.setEnabled(False)
                 if rowData.get("DataType") in tableSetup.DataWithNoExcel:
                     checkbox.setChecked(False)
                     checkbox.setEnabled(False)
@@ -100,7 +107,7 @@ def handleDataTypeChange(table_widget,data_type,row,col):
         def dataTypeChange1(table_widget,row,col):
             loadCaseCombo = table_widget.cellWidget(row, col+2)
             loadStepCombo = table_widget.cellWidget(row, col+3)
-            if data_type in tableSetup.DataThatDoNotRequireRunModel:
+            if data_type in tableSetup.DataThatDoNotRequireRunModel or data_type in tableSetup.DataWithNoLoads:
                 loadCaseCombo.setCurrentText("")
                 loadCaseCombo.setEnabled(False)
                 loadStepCombo.setCurrentText("")
@@ -113,7 +120,7 @@ def handleDataTypeChange(table_widget,data_type,row,col):
             if data_type in tableSetup.DataWithNoMarkers:
                 markerScaleSpinBox.setValue(1)
                 markerScaleSpinBox.setEnabled(False)
-            if data_type in tableSetup.DatawithNoDecimalPlaces:
+            else:
                 markerScaleSpinBox.setValue(1)
                 markerScaleSpinBox.setEnabled(True)
         def dataTypeChange3(table_widget,row,col):
@@ -150,12 +157,26 @@ def handleDataTypeChange(table_widget,data_type,row,col):
             else:
                 outputExcelCheckbox.setChecked(True)
                 outputExcelCheckbox.setEnabled(True)
+        def dataTypeChange7(table_widget,row,col):
+            outputExcelCheckbox = table_widget.cellWidget(row, col+12)
+            if data_type in tableSetup.DataWithExcelOnly:
+                outputExcelCheckbox.setChecked(True)
+                outputExcelCheckbox.setEnabled(True)
+        def dataTypeChange8(table_widget,row,col):
+            textScaleSpinBox = table_widget.cellWidget(row, col+9)
+            if data_type in tableSetup.DataWithNoText:
+                textScaleSpinBox.setValue(1)
+                textScaleSpinBox.setEnabled(False)
+            else:
+                textScaleSpinBox.setEnabled(True)
         dataTypeChange1(table_widget,row,col)
         dataTypeChange2(table_widget,row,col)
         dataTypeChange3(table_widget,row,col)   
         dataTypeChange4(table_widget,row,col)
         dataTypeChange5(table_widget,row,col)
         dataTypeChange6(table_widget,row,col)
+        dataTypeChange7(table_widget,row,col)
+        dataTypeChange8(table_widget,row,col)
         #data types with no pdf/excel output
     
 def handleViewTypeChange(table_widget, viewType, row, col):
