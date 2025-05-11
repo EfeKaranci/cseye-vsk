@@ -1,19 +1,19 @@
 import sys
-from PyQt5.uic import loadUi
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 import states.statesAllRequests as statesAllRequests
 import database.tableSetup as tableSetup
 import _e_WindowFeatures as _e_WindowFeatures
 import _d_FileFeatures as _d_FileFeatures
-
+from qtDesigner.windowSelectViews import Ui_Dialog as Ui_WindowSelectViews
 
 class ViewSelectionDialog(QtWidgets.QDialog):
     def __init__(self, viewType, gridSystem, currentLabels, parent=None):
         super(ViewSelectionDialog, self).__init__(parent)
-        loadUi("qtDesigner/windowSelectViews.ui", self)
+        self.ui = Ui_WindowSelectViews()
+        self.ui.setupUi(self)
         # Set the label text based on view type
-        self.ViewsTypeLabel.setText("Select stories" if viewType == "Story" else "Select elevations")
+        self.ui.ViewsTypeLabel.setText("Select stories" if viewType == "Story" else "Select elevations")
         # Create a scroll area for the checkboxes
         scrollArea = QtWidgets.QScrollArea()
         scrollArea.setWidgetResizable(True)
@@ -47,10 +47,10 @@ class ViewSelectionDialog(QtWidgets.QDialog):
         scrollArea.setWidget(container)
         
         # Add the scroll area to the dialog's layout
-        self.verticalLayout2.addWidget(scrollArea)
+        self.ui.verticalLayout2.addWidget(scrollArea)
         
         # Connect the save button
-        self.SaveViewButton.clicked.connect(self.save_selection)
+        self.ui.SaveViewButton.clicked.connect(self.save_selection)
         
         # Store the current labels for comparison
         self.currentLabels = currentLabels

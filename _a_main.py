@@ -1,5 +1,5 @@
 import sys
-from PyQt5.uic import loadUi
+import os
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication,QMainWindow
 import comtypes.client
@@ -8,19 +8,30 @@ import states.statesAllRequests as statesAllRequests
 import _b_fetchModelData as _b_fetchModelData
 import states.statesUI as statesUI
 import Hooks.CSIHooks as CSIHooks
+from qtDesigner.windowLoadModel import Ui_MainWindow
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 class WelcomeScreen(QMainWindow):
     def __init__(self):
         super(WelcomeScreen, self).__init__()
-        loadUi("qtDesigner/windowLoadModel.ui",self)
-        self.loadModelButton.clicked.connect(self.loadModel)
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+        self.ui.loadModelButton.clicked.connect(self.loadModel)
 
     def loadModel(self):
         CSIHooks.getModel()
         if (statesAllRequests.SapModel!=None):
             _b_fetchModelData.getModelData()
         else:
-            self.modelPath.setText("No model open")
-            self.modelPath.setStyleSheet("color: red;")
+            self.ui.modelPath.setText("No model open")
+            self.ui.modelPath.setStyleSheet("color: red;")
 
 if __name__ == "__main__":
     app=QApplication(sys.argv)
