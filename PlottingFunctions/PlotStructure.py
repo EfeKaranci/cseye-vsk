@@ -1,5 +1,7 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from matplotlib.figure import Figure
 import states.statesAllRequests as statesAllRequests
 def GetFigureDimension():
     # 1) Compute data extents
@@ -71,8 +73,10 @@ def PlotStructure():
         (fig_width, fig_height, final_x_lim, final_y_lim,
          data_left_norm, data_bottom_norm, data_width_norm, data_height_norm,
          border_left_norm, border_bottom_norm, border_width_norm, border_height_norm) = GetFigureDimension()
-        # Create the overall figure.
-        fig = plt.figure(figsize=(fig_width, fig_height))
+        try:
+            fig = Figure(figsize=(fig_width, fig_height), dpi=100)
+        except Exception as e:
+            return None
         # Create the data (plot) axes using the normalized positions.
         ax = SetAx(fig, data_left_norm, data_bottom_norm, data_width_norm, data_height_norm, final_x_lim, final_y_lim)
         # Plot your structure lines (example loop; customize as needed).

@@ -3,8 +3,6 @@ import Hooks.BasicHooks as BasicHooks
 import Hooks.AnalysisResultsHooks as AnalysisResultsHooks
 
 def GetModalPropertiesSpreadsheet():
-    if("Modal Periods And Frequencies" in statesAllRequests.SelectedCSITables):
-        print("Modal Periods And Frequencies")
     OriginalSheetName=statesAllRequests.RequestNameFormat1
     FirstDelimiterIndex=OriginalSheetName.find('_')
     ModalPeriodsSheet=OriginalSheetName[:FirstDelimiterIndex] + "a" + "_" + "Modal Periods and Frequencies"

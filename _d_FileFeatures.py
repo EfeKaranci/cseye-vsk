@@ -15,9 +15,9 @@ def update_window_title(main_window):
     global current_file
     if main_window:
         if current_file:
-            main_window.inputFilePath.setText(current_file)
+            main_window.ui.inputFilePath.setText(current_file)
         else:
-            main_window.inputFilePath.setText("")
+            main_window.ui.inputFilePath.setText("")
 
 def create_styled_message_box(parent, title, message, buttons=None, default_button=None):
     """Create a styled message box with wider buttons"""
@@ -48,11 +48,11 @@ def actionSave(main_window, mainTableWidget):
         return actionSaveAs(main_window, mainTableWidget)
     # Get the data from the UI
     data = {
-        "outputFilePath": main_window.outputFilePath.toPlainText() if hasattr(main_window, 'outputFilePath') else "",
-        "outputFolderPath": main_window.outputFolderPath.toPlainText() if hasattr(main_window, 'outputFolderPath') else "",
-        "units": main_window.unitsComboBox.currentText() if hasattr(main_window, 'unitsComboBox') else "",
-        "posViewTolerance": main_window.posViewToleranceSpinBox.value() if hasattr(main_window, 'posViewToleranceSpinBox') else 6,
-        "negViewTolerance": main_window.negViewToleranceSpinBox.value() if hasattr(main_window, 'negViewToleranceSpinBox') else 6,
+        "outputFilePath": main_window.ui.outputFilePath.toPlainText() if hasattr(main_window.ui, 'outputFilePath') else "",
+        "outputFolderPath": main_window.ui.outputFolderPath.toPlainText() if hasattr(main_window.ui, 'outputFolderPath') else "",
+        "units": main_window.ui.unitsComboBox.currentText() if hasattr(main_window.ui, 'unitsComboBox') else "",
+        "posViewTolerance": main_window.ui.posViewToleranceSpinBox.value() if hasattr(main_window.ui, 'posViewToleranceSpinBox') else 6,
+        "negViewTolerance": main_window.ui.negViewToleranceSpinBox.value() if hasattr(main_window.ui, 'negViewToleranceSpinBox') else 6,
         "Requests": []
     }
     for row in range(3, mainTableWidget.rowCount()):
@@ -90,7 +90,7 @@ def actionSaveAs(main_window, mainTableWidget):
     """Save the current state to a new JSON file"""
     global current_file
     filename, _ = QtWidgets.QFileDialog.getSaveFileName(
-        main_window,
+        main_window.centralWidget().window(),  # Use the actual window widget as parent
         "Save File",
         "",
         "JSON Files (*.json);;All Files (*)"
@@ -117,22 +117,22 @@ def actionNew(main_window):
         )
         reply = msg_box.exec_()
         if reply == QtWidgets.QMessageBox.Save:
-            actionSave(main_window, main_window.mainTableWidget)
+            actionSave(main_window, main_window.ui.mainTableWidget)
         elif reply == QtWidgets.QMessageBox.Cancel:
             return
     current_file = None
     BasicHooks.resetDefaultRow()
-    if hasattr(main_window, 'outputFilePath'):
-        main_window.outputFilePath.clear()
-    if hasattr(main_window, 'outputFolderPath'):
-        main_window.outputFolderPath.clear()
-    if hasattr(main_window, 'unitsComboBox'):
-        main_window.unitsComboBox.setCurrentIndex(0)
-    if hasattr(main_window, 'posViewToleranceSpinBox'):
-        main_window.posViewToleranceSpinBox.setValue(6)
-    if hasattr(main_window, 'negViewToleranceSpinBox'):
-        main_window.negViewToleranceSpinBox.setValue(6)
-    main_window.mainTableWidget.setRowCount(3)
+    if hasattr(main_window.ui, 'outputFilePath'):
+        main_window.ui.outputFilePath.clear()
+    if hasattr(main_window.ui, 'outputFolderPath'):
+        main_window.ui.outputFolderPath.clear()
+    if hasattr(main_window.ui, 'unitsComboBox'):
+        main_window.ui.unitsComboBox.setCurrentIndex(0)
+    if hasattr(main_window.ui, 'posViewToleranceSpinBox'):
+        main_window.ui.posViewToleranceSpinBox.setValue(6)
+    if hasattr(main_window.ui, 'negViewToleranceSpinBox'):
+        main_window.ui.negViewToleranceSpinBox.setValue(6)
+    main_window.ui.mainTableWidget.setRowCount(3)
     BasicHooks.resetDefaultRow()
     main_window.MapRequestsToTable([statesAllRequests.defaultRow])
     update_window_title(main_window)
@@ -153,39 +153,42 @@ def actionOpen(main_window):
             QtWidgets.QMessageBox.Save
         )
         reply = msg_box.exec_()
+        
         if reply == QtWidgets.QMessageBox.Save:
-            actionSave(main_window, main_window.mainTableWidget)
+            actionSave(main_window, main_window.ui.mainTableWidget)
         elif reply == QtWidgets.QMessageBox.Cancel:
             return
+    
     filename, _ = QtWidgets.QFileDialog.getOpenFileName(
-        main_window,
-        "Open File",
+        main_window.centralWidget().window(),  # Use the actual window widget as parent
+        "Open JSON File",
         "",
         "JSON Files (*.json);;All Files (*)"
     )
+    
     if filename:
         try:
             with open(filename, 'r') as f:
                 data = json.load(f)
             current_file = filename
-            if hasattr(main_window, 'outputFilePath'):
-                main_window.outputFilePath.setText(data.get("outputFilePath", ""))
-            if hasattr(main_window, 'outputFolderPath'):
-                main_window.outputFolderPath.setText(data.get("outputFolderPath", ""))
-            if hasattr(main_window, 'unitsComboBox'):
-                index = main_window.unitsComboBox.findText(data.get("units", ""))
+            if hasattr(main_window.ui, 'outputFilePath'):
+                main_window.ui.outputFilePath.setText(data.get("outputFilePath", ""))
+            if hasattr(main_window.ui, 'outputFolderPath'):
+                main_window.ui.outputFolderPath.setText(data.get("outputFolderPath", ""))
+            if hasattr(main_window.ui, 'unitsComboBox'):
+                index = main_window.ui.unitsComboBox.findText(data.get("units", ""))
                 if index >= 0:
-                    main_window.unitsComboBox.setCurrentIndex(index)
-            if hasattr(main_window, 'posViewToleranceSpinBox'):
-                main_window.posViewToleranceSpinBox.setValue(data.get("posViewTolerance", 6))
-            if hasattr(main_window, 'negViewToleranceSpinBox'):
-                main_window.negViewToleranceSpinBox.setValue(data.get("negViewTolerance", 6))
+                    main_window.ui.unitsComboBox.setCurrentIndex(index)
+            if hasattr(main_window.ui, 'posViewToleranceSpinBox'):
+                main_window.ui.posViewToleranceSpinBox.setValue(data.get("posViewTolerance", 6))
+            if hasattr(main_window.ui, 'negViewToleranceSpinBox'):
+                main_window.ui.negViewToleranceSpinBox.setValue(data.get("negViewTolerance", 6))
             Requests = []
-            while main_window.mainTableWidget.rowCount() > 3:
-                main_window.mainTableWidget.removeRow(3)
+            while main_window.ui.mainTableWidget.rowCount() > 3:
+                main_window.ui.mainTableWidget.removeRow(3)
             for request_data in data.get("Requests", []):
                 Requests.append(request_data)
-                main_window.mainTableWidget.insertRow(main_window.mainTableWidget.rowCount())
+                main_window.ui.mainTableWidget.insertRow(main_window.ui.mainTableWidget.rowCount())
             main_window.MapRequestsToTable(Requests)
             update_window_title(main_window)
             msg_box = create_styled_message_box(main_window, "Success", "File loaded successfully!")

@@ -22,7 +22,7 @@ class ModulesScreen(QMainWindow):
         self.MapRequestsToTable([statesAllRequests.defaultRow])
         
         self.ui.modelPath.setText(statesAllRequests.modelPath)
-        # Connect menu actions to file features
+        # Connect file menu actions
         self.ui.actionNew.triggered.connect(lambda: _d_FileFeatures.actionNew(self))
         self.ui.actionOpen.triggered.connect(lambda: _d_FileFeatures.actionOpen(self))
         self.ui.actionSave.triggered.connect(lambda: _d_FileFeatures.actionSave(self, self.ui.mainTableWidget))
