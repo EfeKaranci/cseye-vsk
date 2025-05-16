@@ -97,6 +97,9 @@ def GetLabelAndButton(value, row, col, table_widget,request):
         
         # Get current labels from the request data
         current_labels = request.get("ViewLabels", [])
+        if(len(current_labels) > 0):
+            current_labels = current_labels[0].split(';')
+            current_labels = [label.strip() for label in current_labels]
         
         # Create and show the dialog
         dialog = ViewSelectionDialog(view_type, grid_system, current_labels, table_widget)
