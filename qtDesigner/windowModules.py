@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'qtDesigner/windowModules.ui'
+# Form implementation generated from reading ui file 'c:\Users\vkanneh\Desktop\GitRepos\CSEYE\qtDesigner\windowModules.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -16,7 +16,7 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(889, 609)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("qtDesigner\\../images/icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../images/icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
         MainWindow.setStyleSheet("QPushButton{\n"
 "min-height:30px;\n"
@@ -66,7 +66,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addWidget(self.modelPath)
         self.reloadButton = QtWidgets.QToolButton(self.centralwidget)
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap("qtDesigner\\../images/reload.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap("../images/reload.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.reloadButton.setIcon(icon1)
         self.reloadButton.setObjectName("reloadButton")
         self.horizontalLayout.addWidget(self.reloadButton)
@@ -265,3 +265,13 @@ class Ui_MainWindow(object):
         self.actionOpen.setText(_translate("MainWindow", "Open"))
         self.actionSave.setText(_translate("MainWindow", "Save"))
         self.actionSaveAs.setText(_translate("MainWindow", "Save as"))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())

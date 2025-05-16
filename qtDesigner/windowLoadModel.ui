@@ -32,13 +32,13 @@
         <property name="minimumSize">
          <size>
           <width>75</width>
-          <height>75</height>
+          <height>100</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>75</width>
-          <height>75</height>
+          <height>100</height>
          </size>
         </property>
         <property name="styleSheet">

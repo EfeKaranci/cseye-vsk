@@ -120,5 +120,3 @@ def runRequests(table_widget,outputFilePath,outputFolderPath,units,posViewTolera
     finally:
         # Clear the status box reference
         statesUI.status_box = None
-
-

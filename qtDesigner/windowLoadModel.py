@@ -9,14 +9,42 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+import os
 
+def get_icon_path():
+    """Get the absolute path to the icon file"""
+    # Get the absolute path of the current file
+    current_file = os.path.abspath(__file__)
+    print(f"Current file: {current_file}")
+    
+    # Get the directory containing the current file
+    current_dir = os.path.dirname(current_file)
+    print(f"Current directory: {current_dir}")
+    
+    # Construct the path to the icon
+    icon_path = os.path.join(os.path.dirname(current_dir), "images", "icon.png")
+    print(f"Attempting to load icon from: {icon_path}")
+    
+    # Check if file exists
+    if os.path.exists(icon_path):
+        print(f"Icon file exists at: {icon_path}")
+    else:
+        print(f"Icon file does not exist at: {icon_path}")
+    
+    return icon_path
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(787, 664)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../images/icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon_path = get_icon_path()
+        print(f"Loading window icon from: {icon_path}")
+        icon.addPixmap(QtGui.QPixmap(icon_path), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        if icon.isNull():
+            print("Failed to load window icon - icon is null")
+        else:
+            print("Successfully loaded window icon")
         MainWindow.setWindowIcon(icon)
         MainWindow.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -27,11 +55,19 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.setContentsMargins(-1, -1, -1, 10)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
-        self.label_2.setMinimumSize(QtCore.QSize(75, 75))
-        self.label_2.setMaximumSize(QtCore.QSize(75, 75))
+        self.label_2.setMinimumSize(QtCore.QSize(75, 100))
+        self.label_2.setMaximumSize(QtCore.QSize(75, 100))
         self.label_2.setStyleSheet("margin-botton:10px;")
         self.label_2.setText("")
-        self.label_2.setPixmap(QtGui.QPixmap("../images/icon.png"))
+        # Load icon for label
+        icon_path = get_icon_path()
+        print(f"Loading label icon from: {icon_path}")
+        pixmap = QtGui.QPixmap(icon_path)
+        if pixmap.isNull():
+            print("Failed to load label icon - pixmap is null")
+        else:
+            print("Successfully loaded label icon")
+        self.label_2.setPixmap(pixmap)
         self.label_2.setScaledContents(True)
         self.label_2.setObjectName("label_2")
         self.verticalLayout_2.addWidget(self.label_2, 0, QtCore.Qt.AlignHCenter|QtCore.Qt.AlignBottom)

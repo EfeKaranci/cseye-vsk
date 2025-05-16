@@ -11,13 +11,33 @@ import states.statesUI as statesUI
 import Hooks.CSIHooks as CSIHooks
 from qtDesigner.windowLoadModel import Ui_MainWindow
 
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
+def get_icon_path():
+    """Get the absolute path to the icon file"""
+    # Get the absolute path of the current file
+    current_file = os.path.abspath(__file__)
+    print(f"Current file: {current_file}")
+    
+    # Get the directory containing the current file
+    current_dir = os.path.dirname(current_file)
+    print(f"Current directory: {current_dir}")
+    
+    # Construct the path to the icon
+    icon_path = os.path.join(current_dir, "images", "icon.png")
+    print(f"Attempting to load icon from: {icon_path}")
+    
+    # Check if file exists
+    if os.path.exists(icon_path):
+        print(f"Icon file exists at: {icon_path}")
+    else:
+        print(f"Icon file does not exist at: {icon_path}")
+        # Try alternative path
+        alt_path = os.path.join(os.path.dirname(current_dir), "images", "icon.png")
+        print(f"Trying alternative path: {alt_path}")
+        if os.path.exists(alt_path):
+            print(f"Icon file exists at alternative path: {alt_path}")
+            return alt_path
+    
+    return icon_path
 
 class WelcomeScreen(QMainWindow):
     def __init__(self):
@@ -26,12 +46,14 @@ class WelcomeScreen(QMainWindow):
         self.ui.setupUi(self)
         self.ui.loadModelButton.clicked.connect(self.loadModel)
         
-        # Set the window icon with absolute path
-        icon_path = os.path.abspath("images/icon.png")
-        print(f"Icon path: {icon_path}")
-        print(f"Icon file exists: {os.path.exists(icon_path)}")
+        # Set the window icon
+        icon_path = get_icon_path()
+        print(f"Loading icon from: {icon_path}")
         icon = QIcon(icon_path)
-        print(f"Icon is null: {icon.isNull()}")
+        if icon.isNull():
+            print("Failed to load icon - icon is null")
+        else:
+            print("Successfully loaded icon")
         self.setWindowIcon(icon)
 
     def loadModel(self):
@@ -49,12 +71,14 @@ if __name__ == "__main__":
     statesUI.widget.addWidget(welcomeScreen)
     statesUI.widget.resize(600, 600)
     
-    # Set the icon for the stacked widget with absolute path
-    icon_path = os.path.abspath("images/icon.png")
-    print(f"Stacked widget icon path: {icon_path}")
-    print(f"Stacked widget icon file exists: {os.path.exists(icon_path)}")
+    # Set the icon for the stacked widget
+    icon_path = get_icon_path()
+    print(f"Loading stacked widget icon from: {icon_path}")
     icon = QIcon(icon_path)
-    print(f"Stacked widget icon is null: {icon.isNull()}")
+    if icon.isNull():
+        print("Failed to load stacked widget icon - icon is null")
+    else:
+        print("Successfully loaded stacked widget icon")
     statesUI.widget.setWindowIcon(icon)
     
     statesUI.widget.show()
