@@ -2,8 +2,11 @@ import states.statesAllRequests as statesAllRequests
 import database.csiTables as csiTables
 import _f_ProcessRequests as _f_ProcessRequests
 import _k_ModifyRequests as _k_ModifyRequests
+import states.statesUI as statesUI
 
 def SetModelUnits():
+    statesUI.counter+=1
+    statesUI.update_status()
     statesAllRequests.SapModel.SetPresentUnits(csiTables.UnitsKey[statesAllRequests.SelectedUnits])
     Units= statesAllRequests.SelectedUnits.split("_")
     #deconstruct

@@ -2,17 +2,13 @@ import random
 import string
 alphabet = string.ascii_letters + string.digits
 import _p_GetCSITables as _p_GetCSITables
+import states.statesUI as statesUI
+import states.statesAllRequests as statesAllRequests
+
 def AssignSelectedObjectsToGroup():
-        #statesAllRequests.ObjectsGroupName=random_string()
-        #statesAllRequests.SapModel.GroupDef.SetGroup(statesAllRequests.ObjectsGroupName)
-        """
-        for PointName in statesAllRequests.SelectedPointNamesForAllRequests:
-                statesAllRequests.SapModel.PointObj.SetGroupAssign(PointName, statesAllRequests.ObjectsGroupName)
-        for FrameName in statesAllRequests.SelectedFrameNamesForAllRequests:
-                statesAllRequests.SapModel.FrameObj.SetGroupAssign(FrameName, statesAllRequests.ObjectsGroupName)
-        for FloorName in statesAllRequests.SelectedFloorNamesForAllRequests:
-                statesAllRequests.SapModel.AreaObj.SetGroupAssign(FloorName, statesAllRequests.ObjectsGroupName)
-        """
+        statesUI.counter+=1
+        statesUI.update_status()
+ 
         #Exceptional Cases When you need results from elements not in view
         #DIAPHRAGM FORCES
         print("o")

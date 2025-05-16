@@ -1,8 +1,11 @@
 import states.statesAllRequests as statesAllRequests
 import Planes.PlaneFunctionsHooks as PlaneFunctions
 import _m_GetAllSelectedPoints as _m_GetAllSelectedPoints
+import states.statesUI as statesUI  
 
-def GetPlanes():
+def GetPlanes():    
+    statesUI.counter+=1
+    statesUI.update_status()
     for Request in statesAllRequests.Requests:
         RequestViewType,RequestViewLabel,RequestGridSystem=Request['ViewType'],Request['ViewLabels'],Request['GridSystem']
         if not ViewHasAlreadyBeenProcessed(RequestViewType,RequestViewLabel,RequestGridSystem):

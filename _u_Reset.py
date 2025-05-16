@@ -1,4 +1,5 @@
 import states.statesAllRequests as statesAllRequests
+import states.statesUI as statesUI
 def ResetRequestSpecificStates():
     ###SPECIFIED INDIVIDUAL REQUEST PARAMETER
     statesAllRequests.RequestGridSystem = ""
@@ -12,6 +13,10 @@ def ResetRequestSpecificStates():
     statesAllRequests.RequestNameFormat2 = ""
     statesAllRequests.RequestData = ""
     statesAllRequests.RequestDataType = ""
+    statesAllRequests.RequestGroup = ""
+    statesAllRequests.RequestGroupPoints = []
+    statesAllRequests.RequestGroupFrames = []
+    statesAllRequests.RequestGroupAreas = []
     statesAllRequests.RequestDecimalPlaces = ""
     statesAllRequests.RequestTextScale = ""
     statesAllRequests.RequestCircleScale = ""
@@ -49,6 +54,7 @@ def ResetGeneralStates():
     statesAllRequests.FrameObjectConnectivity=[]
     statesAllRequests.FloorObjectConnectivity=[]
     statesAllRequests.LoadCombinationDefinitions=[]
+    statesAllRequests.GroupAssignments=[]
     statesAllRequests.AllElementForces = []
     statesAllRequests.SelectedPointsForAllRequests=[]
     statesAllRequests.SelectedFramesForAllRequests=[]
@@ -59,14 +65,55 @@ def ResetGeneralStates():
     # CSI
     statesAllRequests.SelectedCSITables = {}
     statesAllRequests.SapModel = None
-    statesAllRequests.ObjectsGroupName= ""
     statesAllRequests.EnvelopeComboKey={}
     ###OUTPUT
     statesAllRequests.OutputSheets = {}
     statesAllRequests.figs = []
     statesAllRequests.figsNames = []
     ###UNITS
-    statesAllRequests.ForceUnit = ""
     statesAllRequests.DisplacementUnit = ""
-    statesAllRequests.MomentUnit = ""
+    ##
+    statesUI.counter=0
+    print("u")
+
+def ResetGeneralStates2():
+    statesAllRequests.Requests = []
+    statesAllRequests.OutputName = ""
+    statesAllRequests.ModelPath = ""
+    statesAllRequests.OutputFolder = ""
+    # TYPES REQUESTED
+    statesAllRequests.DataTypesRequested = ""
+    statesAllRequests.ViewTypesRequested = ""
+    statesAllRequests.ViewLabelsRequested = ""
+    statesAllRequests.LoadResultsRequested = ""
+    #ALL GEOMETRY REQUESTED
+    statesAllRequests.ViewPlanesForAllRequests = []
+    statesAllRequests.GridDefinitions=[]
+    statesAllRequests.GridSystems=[]
+    statesAllRequests.StoryDefinitions=[]
+    statesAllRequests.TowerAndBaseDefinitions=[]
+    statesAllRequests.PointObjectConnectivity=[]
+    statesAllRequests.FrameObjectConnectivity=[]
+    statesAllRequests.FloorObjectConnectivity=[]
+    statesAllRequests.LoadCombinationDefinitions=[]
+    statesAllRequests.GroupAssignments=[]
+    statesAllRequests.AllElementForces = []
+    statesAllRequests.SelectedPointsForAllRequests=[]
+    statesAllRequests.SelectedFramesForAllRequests=[]
+    statesAllRequests.SelectedFloorsForAllRequests=[]
+    statesAllRequests.SelectedPointNamesForAllRequests=[]
+    statesAllRequests.SelectedFrameNamesForAllRequests=[]
+    statesAllRequests.SelectedFloorNamesForAllRequests=[]
+    # CSI
+    statesAllRequests.SelectedCSITables = {}
+    statesAllRequests.SapModel = None
+    statesAllRequests.EnvelopeComboKey={}
+    ###OUTPUT
+    statesAllRequests.OutputSheets = {}
+    statesAllRequests.figs = []
+    statesAllRequests.figsNames = []
+    ###UNITS
+    statesAllRequests.DisplacementUnit = ""
+    ##
+    statesUI.counter=0
     print("u")

@@ -1,7 +1,11 @@
 import states.statesAllRequests as statesAllRequests
 import copy
 import _l_GetPlanes as _l_GetPlanes
+import states.statesUI as statesUI
+
 def ModifyRequests():
+    statesUI.counter+=1
+    statesUI.update_status()
     NewRequests=[]
     for i,Request in enumerate(statesAllRequests.Requests):
         ViewLabels=Request['ViewLabels'][0].split(";")

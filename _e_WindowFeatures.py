@@ -6,6 +6,7 @@ import database.tableSetup as tableSetup
 import Hooks.qtDesignerHooks as qtDesignerHooks
 import _f_ProcessRequests as _f_ProcessRequests
 import Hooks.tableWidgetHooks as tableWidgetHooks
+import states.statesUI as statesUI
 
 def newRow(table_widget):
     """Add a new row to the table with default values"""
@@ -89,7 +90,35 @@ def runRequests(table_widget,outputFilePath,outputFolderPath,units,posViewTolera
     """Run the selected requests"""
     # Initialize list to store selected requests
     selected_requests,selected_Indices = tableWidgetHooks.getTableRequests(table_widget,"Run","Run")
-    # Return the list of selected requests
-    _f_ProcessRequests.processRequests(selected_requests,outputFilePath,outputFolderPath,units,posViewTolerance,negViewTolerance)
+    
+    # Create and show the status message box
+    status_box = QtWidgets.QMessageBox()
+    status_box.setWindowTitle("Processing Status")
+    status_box.setStandardButtons(QtWidgets.QMessageBox.NoButton)  # Remove buttons
+    status_box.show()
+    
+    # Set the status box in statesUI
+    statesUI.status_box = status_box
+    
+    try:
+        # Reset counter before starting
+        statesUI.counter = 0
+        
+        # Process the requests
+        _f_ProcessRequests.processRequests(selected_requests,outputFilePath,outputFolderPath,units,posViewTolerance,negViewTolerance)
+        
+        # Show completion message
+        status_box.setText("Requests completed successfully!")
+        status_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        status_box.exec_()
+        
+    except Exception as e:
+        # Show error message
+        status_box.setText(f"Error encountered: {str(e)}")
+        status_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        status_box.exec_()
+    finally:
+        # Clear the status box reference
+        statesUI.status_box = None
 
 

@@ -1,7 +1,10 @@
 import states.statesAllRequests as statesAllRequests
 import _o_AssignSelectedObjectsToGroup as _o_AssignSelectedObjectsToGroup
+import states.statesUI as statesUI
 
 def GetAllSelectedFramesAndFloors():
+    statesUI.counter+=1
+    statesUI.update_status()
     GetSelectedFrames()
     GetSelectedFloors()
     statesAllRequests.SelectedFrameNamesForAllRequests=[x['UniqueName'] for x in statesAllRequests.SelectedFramesForAllRequests]

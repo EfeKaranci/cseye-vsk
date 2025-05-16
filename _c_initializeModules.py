@@ -46,6 +46,8 @@ class ModulesScreen(QMainWindow):
     def setUnitsAndTolerances(self):
         unitsOptions = list(csiTables.UnitsKey.keys())
         self.ui.unitsComboBox.addItems(unitsOptions)
+        self.ui.posViewToleranceSpinBox.setMaximum(999999)
+        self.ui.negViewToleranceSpinBox.setMaximum(999999)
         self.ui.posViewToleranceSpinBox.setValue(6)
         self.ui.negViewToleranceSpinBox.setValue(6)
 

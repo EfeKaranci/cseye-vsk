@@ -3,15 +3,18 @@ import numpy as np
 import math
 import copy
 import _n_GetAllSelectedFramesAndFloors as _n_GetAllSelectedFramesAndFloors
-
+import states.statesUI as statesUI
+import states.statesAllRequests as statesAllRequests
 def GetAllSelectedPoints():
+    statesUI.counter+=1
+    statesUI.update_status()
     GetSelectedPointsForAllRequests()
     statesAllRequests.SelectedPointNamesForAllRequests=[x['UniqueName'] for x in statesAllRequests.SelectedPointsForAllRequests]
     print("m")
     _n_GetAllSelectedFramesAndFloors.GetAllSelectedFramesAndFloors()
 
 def GetSelectedPointsForAllRequests():
-    MaxAllowedDistanceFromPlane = GetMaxAllowedDistanceFromPlane()
+    PosDistanceFromPlane,NegDistanceFromPlane = GetMaxAllowedDistanceFromPlane()
     for Point in statesAllRequests.PointObjectConnectivity:
         UniqueName=Point['UniqueName']
         X=float(Point['X'])
@@ -21,7 +24,8 @@ def GetSelectedPointsForAllRequests():
         PlanesOnWhichThisPointAppears=[]
         for index,Plane in enumerate(statesAllRequests.ViewPlanesForAllRequests):
             DistanceToPlane = GetDistanceBetweenPointandPlane(X, Y, Z,Plane['PlaneEquation'])
-            if (abs(DistanceToPlane) < MaxAllowedDistanceFromPlane):
+            if ((DistanceToPlane < 0 and abs(DistanceToPlane) < NegDistanceFromPlane) or 
+                (DistanceToPlane > 0 and abs(DistanceToPlane) < PosDistanceFromPlane)):
                 if ("Origin" not in statesAllRequests.ViewPlanesForAllRequests[index]):
                     #initiate origin for plane
                     statesAllRequests.ViewPlanesForAllRequests[index]["Origin"]=np.array([X, Y, Z], dtype=float)
@@ -36,14 +40,14 @@ def GetSelectedPointsForAllRequests():
         if(len(PlanesOnWhichThisPointAppears)>0):
                 statesAllRequests.SelectedPointsForAllRequests.append({"UniqueName":UniqueName, "Story":Story, "PtPlanes":PlanesOnWhichThisPointAppears})
 
-def GetMaxAllowedDistanceFromPlane():
-    ToleranceinInches=6.0
-    DistanceFromPlane=""
+def GetMaxAllowedDistanceFromPlane():    
     if (statesAllRequests.DisplacementUnit== "in"):
-        DistanceFromPlane=ToleranceinInches
+        PosDistanceFromPlane=float(statesAllRequests.PosViewTolerance)
+        NegDistanceFromPlane=float(statesAllRequests.NegViewTolerance)
     elif (statesAllRequests.DisplacementUnit == "ft"):
-        DistanceFromPlane=ToleranceinInches / 12
-    return DistanceFromPlane
+        PosDistanceFromPlane=float(statesAllRequests.PosViewTolerance) / 12
+        NegDistanceFromPlane=float(statesAllRequests.NegViewTolerance) / 12
+    return PosDistanceFromPlane,NegDistanceFromPlane
 
 def GetDistanceBetweenPointandPlane(X,Y,Z,PlaneEquation):
     # Deconstruct plane
@@ -61,7 +65,7 @@ def to_plane_coords(Point,Origin,Plane):
     D = Plane["D"]
     n = np.array([A, B, C], dtype=float)
     n = n / np.linalg.norm(n)
-    # Compute vector from the plane’s origin to the point.
+    # Compute vector from the plane's origin to the point.
     diff = Point - Origin
     # Choose the local coordinate system for the plane.
     # If the plane is nearly horizontal:

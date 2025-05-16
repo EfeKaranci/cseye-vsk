@@ -10,7 +10,7 @@ def getModelData():
     statesAllRequests.GridSystems=CSIHooks.GetAndProcessCSITable("Grid Definitions - General","")
     statesAllRequests.LoadCombinationDefinitions=CSIHooks.GetAndProcessCSITable('Load Combination Definitions',"")
     statesAllRequests.LoadCaseDefinitions=CSIHooks.GetAndProcessCSITable('Load Case Definitions - Summary',"")
-    statesAllRequests.GroupDefinitions=CSIHooks.GetAndProcessCSITable('Group Definitions',"")
+    statesAllRequests.GroupAssignments=CSIHooks.GetAndProcessCSITable('Group Definitions',"")
 
     tableSetup.StoryNames=[x["Story"] for x in statesAllRequests.StoryDefinitions]+[x["BSName"] for x in statesAllRequests.TowerAndBaseDefinitions]
     tableSetup.GridSystemNames=[x["Name"] for x in statesAllRequests.GridSystems]
@@ -19,7 +19,7 @@ def getModelData():
     tableSetup.LoadCombinationNames=list(set([x["Name"] for x in statesAllRequests.LoadCombinationDefinitions]))
     tableSetup.LoadCombinationNames=tableSetup.LoadCombinationNames+[x["Name"] for x in statesAllRequests.LoadCaseDefinitions]
     tableSetup.LoadCombinationNames=CSIHooks.SortAlphanumeric(tableSetup.LoadCombinationNames)
-    tableSetup.GroupNames=[""]+[x["Name"] for x in statesAllRequests.GroupDefinitions]
+    tableSetup.GroupNames=[""]+[x["Name"] for x in statesAllRequests.GroupAssignments]
     pass
 
     if len(tableSetup.StoryNames)>0 or len(tableSetup.GridSystemNames)>0:

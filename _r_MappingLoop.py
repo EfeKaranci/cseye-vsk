@@ -23,7 +23,6 @@ import GetSelectedObjects.SelectedFrames as SelectedFrames
 import GetSelectedObjects.SelectedAreas as SelectedAreasForCurrentRequest
 #MAIN MODULES
 import _s_SetRequestStates as _s_SetRequestStates
-import _t_ResetRequestSpecificStates as _t_ResetRequestSpecificStates
 import _v_WriteFiles as _v_WriteFiles
 import _u_Reset as _u_Reset
 #PLOTTING
@@ -33,13 +32,19 @@ import PlottingFunctions.PlotColumnsAndBraces as PlotColumnsAndBraces
 import PlottingFunctions.PlotText as PlotText
 import PlottingFunctions.PlotVectors as PlotVectors
 import PlottingFunctions.PlotVectorsAndPointParameters as PlotVectorsAndPointParameters
-
+import states.statesUI as statesUI
 def MappingLoop():
+    statesUI.counter+=1
+    statesUI.update_status()
     for i,Request in enumerate(statesAllRequests.Requests):
         _s_SetRequestStates.SetRequestStates(Request,i)
         #initialize sheets
         statesAllRequests.OutputSheets[statesAllRequests.RequestNameFormat1] = []
         RequestDictionary[statesAllRequests.RequestDataType]()
+        if(Request["OutputPdf"]==False):
+            statesAllRequests.figs.pop(statesAllRequests.RequestNameFormat1)
+        if(Request["OutputExcel"]==False):
+            del statesAllRequests.OutputSheets[statesAllRequests.RequestNameFormat1]
         _u_Reset.ResetRequestSpecificStates()
         print("Request"+str(i+1))
     print("r")

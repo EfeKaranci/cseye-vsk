@@ -1,7 +1,11 @@
 import states.statesAllRequests as statesAllRequests
 import Hooks.BasicHooks as BasicHooks
 import _u_Reset as _u_Reset
+import states.statesUI as statesUI
+
 def WritePDfAndExcel():
+    statesUI.counter+=1
+    statesUI.update_status()
     OutputExcelPath= (statesAllRequests.OutputFolder.replace("\"", "")) + "\\" + statesAllRequests.OutputName + ".xlsx"
     OutputPdfPath= (statesAllRequests.OutputFolder.replace("\"", "")) + "\\" + statesAllRequests.OutputName + ".pdf"
     #Output

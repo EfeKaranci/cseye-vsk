@@ -1,6 +1,10 @@
 import states.statesAllRequests as statesAllRequests
 import _j_SetUnits as _j_SetUnits
+import states.statesUI as statesUI
+
 def CheckForEnvelopes():
+    statesUI.counter+=1
+    statesUI.update_status()
     CheckIfComboIsEnvelope()
     statesAllRequests.SapModel.DatabaseTables.SetLoadPatternsSelectedForDisplay(statesAllRequests.LoadResultsRequested);
     statesAllRequests.SapModel.DatabaseTables.SetLoadCasesSelectedForDisplay(statesAllRequests.LoadResultsRequested);

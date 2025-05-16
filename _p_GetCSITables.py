@@ -1,7 +1,11 @@
 import states.statesAllRequests as statesAllRequests
 import Hooks.CSIHooks as CSIHooks
 import _q_RequestValidation as _q_RequestValidation
+import states.statesUI as statesUI
+
 def GetRequestedTables():
+    statesUI.counter+=1
+    statesUI.update_status()
     for key, value in statesAllRequests.SelectedCSITables.items():
         #for some requests its easier to just get all the data
         if(key in ["Element Joint Forces - Frame"]):
@@ -10,14 +14,7 @@ def GetRequestedTables():
             TableData=CSIHooks.GetAndProcessCSITable(key,"")
         statesAllRequests.SelectedCSITables[key]=TableData
     PostProcessCertainTables()
-    """ 
-    for PointName in statesAllRequests.SelectedPointNamesForAllRequests:
-            ret=statesAllRequests.SapModel.PointObj.SetGroupAssign(PointName, statesAllRequests.ObjectsGroupName,Remove=True)
-    for FrameName in statesAllRequests.SelectedFrameNamesForAllRequests:
-            ret=statesAllRequests.SapModel.FrameObj.SetGroupAssign(FrameName, statesAllRequests.ObjectsGroupName,Remove=True)
-    for FloorName in statesAllRequests.SelectedFloorNamesForAllRequests:
-            ret=statesAllRequests.SapModel.AreaObj.SetGroupAssign(FloorName, statesAllRequests.ObjectsGroupName,Remove=True)
-    """
+ 
     print("p")
     _q_RequestValidation.RequestValidation()
 

@@ -3,8 +3,11 @@ import Hooks.CSIHooks as CSIHooks
 import database.tableSetup as tableSetup
 import comtypes.automation
 import _i_CheckforEnvelopes as _i_CheckforEnvelopes
+import states.statesUI as statesUI
 ProgramPath="C:\Program Files\Computers and Structures\ETABS 21\ETABS.exe"
 def RunModelAndGetPrelimTables():
+    statesUI.counter+=1
+    statesUI.update_status()
     if(not any(x in tableSetup.DataThatDoNotRequireRunModel for x in statesAllRequests.DataTypesRequested)):
         CSIHooks.RunModel()
     if("Steel Design 360-16" in statesAllRequests.DataTypesRequested):
@@ -24,6 +27,8 @@ def RunModelAndGetPrelimTables():
     statesAllRequests.GridDefinitions=CSIHooks.GetAndProcessCSITable("Grid Definitions - Grid Lines", "")
     statesAllRequests.GridSystems=CSIHooks.GetAndProcessCSITable("Grid Definitions - General", "")
     statesAllRequests.LoadCombinationDefinitions=CSIHooks.GetAndProcessCSITable('Load Combination Definitions', "")
+    statesAllRequests.GroupAssignments=CSIHooks.GetAndProcessCSITable('Group Assignments', "")
+    CSIHooks.GetAvailableCSITables()
     print("h")
     _i_CheckforEnvelopes.CheckForEnvelopes()
 
