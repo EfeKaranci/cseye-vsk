@@ -15,21 +15,15 @@ def get_icon_path():
     """Get the absolute path to the icon file"""
     # Get the absolute path of the current file
     current_file = os.path.abspath(__file__)
-    print(f"Current file: {current_file}")
     
     # Get the directory containing the current file
     current_dir = os.path.dirname(current_file)
-    print(f"Current directory: {current_dir}")
     
     # Construct the path to the icon
     icon_path = os.path.join(os.path.dirname(current_dir), "images", "icon.png")
-    print(f"Attempting to load icon from: {icon_path}")
     
     # Check if file exists
-    if os.path.exists(icon_path):
-        print(f"Icon file exists at: {icon_path}")
-    else:
-        print(f"Icon file does not exist at: {icon_path}")
+
     
     return icon_path
 
@@ -39,12 +33,8 @@ class Ui_Dialog(object):
         Dialog.resize(400, 300)
         icon = QtGui.QIcon()
         icon_path = get_icon_path()
-        print(f"Loading dialog icon from: {icon_path}")
         icon.addPixmap(QtGui.QPixmap(icon_path), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        if icon.isNull():
-            print("Failed to load dialog icon - icon is null")
-        else:
-            print("Successfully loaded dialog icon")
+
         Dialog.setWindowIcon(icon)
         Dialog.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(Dialog)

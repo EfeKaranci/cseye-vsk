@@ -81,19 +81,12 @@ def DiaphragmBraceFoces():
     PlotVectors.PlotVectors()
 
 def EndForces():
-    print("t1")
     SelectedPointsForCurrentRequest.GetSelectedPoints()
-    print("t2")
     SelectedFrames.GetSelectedFrames()
-    print("t3")
     SelectedAreasForCurrentRequest.GetSelectedAreas()
-    print("t4")
     EndForcesFunction.GetEndForcesSpreadsheet()
-    print("t5")
     PlotStructure.PlotStructure()
-    print("t6")
     PlotColumnsAndBraces.PlotColumnsAndBraces()
-    print("t7")
     PlotPointParameters.PlotPointParameters()
 
 def FramingPlan():

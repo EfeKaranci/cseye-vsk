@@ -24,8 +24,8 @@ def GetSelectedPointsForAllRequests():
         PlanesOnWhichThisPointAppears=[]
         for index,Plane in enumerate(statesAllRequests.ViewPlanesForAllRequests):
             DistanceToPlane = GetDistanceBetweenPointandPlane(X, Y, Z,Plane['PlaneEquation'])
-            if ((DistanceToPlane < 0 and abs(DistanceToPlane) < NegDistanceFromPlane) or 
-                (DistanceToPlane > 0 and abs(DistanceToPlane) < PosDistanceFromPlane)):
+            if ((DistanceToPlane <= 0 and abs(DistanceToPlane) < NegDistanceFromPlane) or 
+                (DistanceToPlane >= 0 and abs(DistanceToPlane) < PosDistanceFromPlane)):
                 if ("Origin" not in statesAllRequests.ViewPlanesForAllRequests[index]):
                     #initiate origin for plane
                     statesAllRequests.ViewPlanesForAllRequests[index]["Origin"]=np.array([X, Y, Z], dtype=float)
