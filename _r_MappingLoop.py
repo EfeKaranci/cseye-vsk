@@ -42,7 +42,10 @@ def MappingLoop():
         statesAllRequests.OutputSheets[statesAllRequests.RequestNameFormat1] = []
         RequestDictionary[statesAllRequests.RequestDataType]()
         if(Request["OutputPdf"]==False):
-            statesAllRequests.figs.pop(statesAllRequests.RequestNameFormat1)
+            if(len(statesAllRequests.figs)>0):
+                FigIndex=statesAllRequests.figsNames.index(statesAllRequests.RequestNameFormat1)
+                statesAllRequests.figs.pop(FigIndex)
+                statesAllRequests.figsNames.pop(FigIndex)
         if(Request["OutputExcel"]==False):
             del statesAllRequests.OutputSheets[statesAllRequests.RequestNameFormat1]
         _u_Reset.ResetRequestSpecificStates()
@@ -78,7 +81,7 @@ def DiaphragmBraceFoces():
     DiaphragmBraceForcesFunction.GetDiaphragmBraceFoces()
     PlotStructure.PlotStructure()
     PlotColumnsAndBraces.PlotColumnsAndBraces()
-    PlotVectors.PlotVectors()
+    PlotVectorsAndPointParameters.PlotVectorsAndPoints()
 
 def EndForces():
     SelectedPointsForCurrentRequest.GetSelectedPoints()

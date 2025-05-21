@@ -20,7 +20,7 @@ def PlotVectorsAndPoints():
         ax = statesAllRequests.ax
         MaxCircleRadius = 10
         TextScale = float(1) * float(statesAllRequests.RequestTextScale) 
-        VectorScale = 60*statesAllRequests.RequestCircleScale
+        VectorScale = 10*statesAllRequests.RequestCircleScale
         for Pointdata in statesAllRequests.PlotTable:
             Pt=Pointdata["Pt"]
             F1=copy.deepcopy(Pointdata["F1"])
@@ -32,10 +32,18 @@ def PlotVectorsAndPoints():
             F2=float(F2)
             TextPt=copy.deepcopy(Pt)
             vector = np.array([F1, F2], dtype=float)
-            TextPt = translate_point(TextPt, vector, VectorScale)
+            TextPt = translate_point(TextPt, vector, VectorScale*1.2)
+            CircleRadius = (abs(Resultant) / Range) * MaxCircleRadius * float(statesAllRequests.RequestCircleScale)
+            ax.plot(Pt[0], Pt[1],
+                    marker='o',
+                    markersize=CircleRadius,  # Adjust marker size as needed
+                    markerfacecolor=(0.0, 1.0, 1.0, 0.2),  # Fill color based on value
+                    markeredgecolor='none',  # Border color
+                    markeredgewidth=1)  # Border thickness
             ax.arrow(Pt[0], Pt[1], F1*VectorScale, F2*VectorScale,
-                     head_width=3*statesAllRequests.RequestCircleScale,  # adjust arrowhead width
-                     head_length=3*statesAllRequests.RequestCircleScale,  # adjust arrowhead length
+                     head_width=35,  # adjust arrowhead width
+                     head_length=50,  # adjust arrowhead length
+                     length_includes_head=True,
                      fc=Color,  # face Color of the arrow
                      ec=Color)
             ax.text(TextPt[0], TextPt[1], Text,
@@ -43,13 +51,6 @@ def PlotVectorsAndPoints():
                     color='black',
                     horizontalalignment='center',
                     verticalalignment='center')
-            CircleRadius = (abs(Resultant) / Range) * MaxCircleRadius * float(statesAllRequests.RequestCircleScale)
-            ax.plot(Pt[0], Pt[1],
-                    marker='o',
-                    markersize=CircleRadius,  # Adjust marker size as needed
-                    markerfacecolor=(0, 1, 1, 0.5),  # Fill color based on value
-                    markeredgecolor=(0, 1, 1, 0.5),  # Border color
-                    markeredgewidth=1)  # Border thickness
         fig = ax.get_figure()
         plt.close(fig)
         statesAllRequests.figs.append(fig)

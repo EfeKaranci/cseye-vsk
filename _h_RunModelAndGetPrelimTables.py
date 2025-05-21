@@ -8,10 +8,10 @@ ProgramPath="C:\Program Files\Computers and Structures\ETABS 21\ETABS.exe"
 def RunModelAndGetPrelimTables():
     statesUI.counter+=1
     statesUI.update_status()
-    if(not any(x in tableSetup.DataThatDoNotRequireRunModel for x in statesAllRequests.DataTypesRequested)):
+    if(not all(x in tableSetup.DataThatDoNotRequireRunModel for x in statesAllRequests.DataTypesRequested)):
         CSIHooks.RunModel()
     if("Steel Design 360-16" in statesAllRequests.DataTypesRequested):
-        statesAllRequests.SapModel.DesignSteel.StartDesign()
+        ret=statesAllRequests.SapModel.DesignSteel.StartDesign()
     #GetPreliminaryTables
     BeamConnectivity=CSIHooks.GetAndProcessCSITable('Beam Object Connectivity',"")
     for Beam in BeamConnectivity: Beam['FrameType']="Beam"

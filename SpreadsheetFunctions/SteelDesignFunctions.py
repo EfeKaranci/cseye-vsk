@@ -8,9 +8,9 @@ def GetSteelDesign360_16():
     FramesWithDesignResults=[x["UniqueName"] for x in BeamDesignResults]+[x["UniqueName"] for x in BraceDesignResults]+[x["UniqueName"] for x in ColumnDesignResults]
     OriginalSheetName=statesAllRequests.RequestNameFormat1
     FirstDelimiterIndex=OriginalSheetName.find('_')
-    NewBeamSheet=OriginalSheetName[:FirstDelimiterIndex] + "a" + OriginalSheetName[FirstDelimiterIndex:]
-    NewBraceSheet=OriginalSheetName[:FirstDelimiterIndex] + "b" + OriginalSheetName[FirstDelimiterIndex:]
-    NewColumnSheet=OriginalSheetName[:FirstDelimiterIndex] + "c" + OriginalSheetName[FirstDelimiterIndex:]
+    NewBeamSheet=OriginalSheetName[:FirstDelimiterIndex] + "a" + OriginalSheetName[FirstDelimiterIndex:] +"_Beams"
+    NewBraceSheet=OriginalSheetName[:FirstDelimiterIndex] + "b" + OriginalSheetName[FirstDelimiterIndex:] +"_Braces"
+    NewColumnSheet=OriginalSheetName[:FirstDelimiterIndex] + "c" + OriginalSheetName[FirstDelimiterIndex:] +"_Columns"
     statesAllRequests.OutputSheets[NewBeamSheet] = []
     statesAllRequests.OutputSheets[NewBraceSheet] = []
     statesAllRequests.OutputSheets[NewColumnSheet] = []

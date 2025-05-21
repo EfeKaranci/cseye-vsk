@@ -14,7 +14,7 @@ def translate_point(point, vector, magnitude):
 def PlotVectors():
     if (len(statesAllRequests.PlotTable) > 0):
         ax=statesAllRequests.ax
-        TextScale = float(1)*float (statesAllRequests.RequestTextScale)
+        TextScale = float (statesAllRequests.RequestTextScale)
         VectorScale = 60*statesAllRequests.RequestCircleScale
         for Pointdata in statesAllRequests.PlotTable:
             Pt=Pointdata["Pt"]
@@ -28,8 +28,8 @@ def PlotVectors():
             vector = np.array([F1, F2], dtype=float)
             TextPt = translate_point(TextPt, vector, VectorScale)
             ax.arrow(Pt[0], Pt[1], F1*VectorScale, F2*VectorScale,
-                     head_width=3*statesAllRequests.RequestCircleScale,  # adjust arrowhead width
-                     head_length=3*statesAllRequests.RequestCircleScale,  # adjust arrowhead length
+                     head_width=6*statesAllRequests.RequestCircleScale,  # adjust arrowhead width
+                     head_length=6*statesAllRequests.RequestCircleScale,  # adjust arrowhead length
                      fc=Color,  # face Color of the arrow
                      ec=Color)
             ax.text(TextPt[0], TextPt[1], Text,
