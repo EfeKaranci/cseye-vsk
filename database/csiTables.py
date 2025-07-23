@@ -10,6 +10,8 @@ AvailableTables = {
                                                "ViewTypes":["Story","Elevation"]},
     "Base Reactions": {"DataType":["Base Reactions"],
                         "ViewTypes":["Story","Elevation"]},
+    "Composite Beam Design Summary - AISC 360-16": {"DataType":["Composite Beam Design"],
+                                                    "ViewTypes":["Story","Elevation"]},
     "Element Forces - Beams": {"DataType":["Max Frame Forces","End Forces"],
                                "ViewTypes":["Story","Elevation"]},
     "Area Load Assignments - Uniform": {"DataType":["Load Assigns"],

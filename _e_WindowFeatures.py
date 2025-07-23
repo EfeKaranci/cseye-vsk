@@ -3,9 +3,9 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 import states.statesAllRequests as statesAllRequests
 import database.tableSetup as tableSetup
-import Hooks.qtDesignerHooks as qtDesignerHooks
+import hooks.qtDesignerHooks as qtDesignerHooks
 import _f_ProcessRequests as _f_ProcessRequests
-import Hooks.tableWidgetHooks as tableWidgetHooks
+import hooks.tableWidgetHooks as tableWidgetHooks
 import states.statesUI as statesUI
 
 def newRow(table_widget):

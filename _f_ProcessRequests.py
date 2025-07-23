@@ -1,6 +1,6 @@
 import states.statesAllRequests as statesAllRequests
 import _g_GetRequiredCSITablesList as getRequiredCSITablesList
-import Hooks.CSIHooks as CSIHooks
+import hooks.csiHooks as CSIHooks
 import states.statesUI as statesUI
 import _u_Reset as _u_Reset
 def processRequests(selected_requests,outputFilePath,outputFolderPath,units,posViewTolerance,negViewTolerance):

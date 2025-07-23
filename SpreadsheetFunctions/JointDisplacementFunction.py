@@ -1,7 +1,7 @@
 import states.statesAllRequests as statesAllRequests
-import Hooks.AnalysisResultsHooks as AnalysisResultsHooks
+import hooks.AnalysisResultsHooks as AnalysisResultsHooks
 
-import Hooks.BasicHooks as BasicHooks
+import hooks.basicHooks as BasicHooks
 
 def GetJointDisplacements():
     ModelDisplacements=statesAllRequests.SelectedCSITables["Joint Displacements"]

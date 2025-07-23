@@ -32,7 +32,7 @@ NegViewTolerance = ""
 DataTypesRequested =""
 ViewTypesRequested=""
 ViewLabelsRequested=""
-LoadResultsRequested=""
+LoadResultsRequested=[]
 #PRELIMINARY CSI DATA
 ViewPlanesForAllRequests=[]
 PointObjectConnectivity=[]

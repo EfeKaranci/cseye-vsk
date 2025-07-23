@@ -1,7 +1,10 @@
-widget=None
-tableWidget=None
-counter=0
-status_box=None
+from typing import Optional
+from PyQt5.QtWidgets import QStackedWidget, QTableWidget, QLabel
+
+widget: Optional[QStackedWidget] = None
+tableWidget: Optional[QTableWidget] = None
+counter: int = 0
+status_box: Optional[QLabel] = None
 counterMessages={
     1:"Processing Requests",
     2:"Getting Required CSITables",

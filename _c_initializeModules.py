@@ -6,7 +6,7 @@ import database.tableSetup as tableSetup
 import _e_WindowFeatures as _e_WindowFeatures
 import _d_FileFeatures as _d_FileFeatures
 import database.csiTables as csiTables
-import Hooks.tableWidgetHooks as tableWidgetHooks
+import hooks.tableWidgetHooks as tableWidgetHooks
 from qtDesigner.windowModules import Ui_MainWindow
 
 class ModulesScreen(QMainWindow):
@@ -21,7 +21,8 @@ class ModulesScreen(QMainWindow):
         self.setSubHeaders()
         self.MapRequestsToTable([statesAllRequests.defaultRow])
         
-        self.ui.modelPath.setText(statesAllRequests.modelPath)
+        if(statesAllRequests.modelPath):
+            self.ui.modelPath.setText(statesAllRequests.modelPath)
         # Connect file menu actions
         self.ui.actionNew.triggered.connect(lambda: _d_FileFeatures.actionNew(self))
         self.ui.actionOpen.triggered.connect(lambda: _d_FileFeatures.actionOpen(self))

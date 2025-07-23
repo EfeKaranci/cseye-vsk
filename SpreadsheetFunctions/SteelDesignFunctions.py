@@ -1,5 +1,5 @@
 import states.statesAllRequests as statesAllRequests
-import Hooks.BasicHooks as BasicHooks
+import hooks.basicHooks as BasicHooks
 
 def GetSteelDesign360_16():
     BeamDesignResults = statesAllRequests.SelectedCSITables["Steel Beam Envelope - AISC 360-16"]

@@ -1,5 +1,5 @@
 import states.statesAllRequests as statesAllRequests
-import Hooks.BasicHooks as BasicHooks
+import hooks.basicHooks as BasicHooks
 import comtypes.client
 import re
 def GetAndProcessCSITable(tableName,groupName):
@@ -26,6 +26,7 @@ def getModel():
 
 def GetAvailableCSITables():
     Tables=statesAllRequests.SapModel.DatabaseTables.GetAvailableTables();
+    print(Tables)
     return Tables[1]
 
 def SortAlphanumeric(lst):

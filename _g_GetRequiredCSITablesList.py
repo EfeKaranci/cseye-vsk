@@ -2,8 +2,9 @@ import database.csiTables as csiTables
 import states.statesAllRequests as statesAllRequests
 import _h_RunModelAndGetPrelimTables as _h_RunModelAndGetPrelimTables
 import states.statesUI as statesUI
+import hooks.csiHooks as CSIHooks
 
-def GetCSITablesList() -> dict:
+def GetCSITablesList():
     statesUI.counter+=1
     statesUI.update_status()
     for key, value in csiTables.AvailableTables.items():

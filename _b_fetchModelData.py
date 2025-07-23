@@ -1,8 +1,13 @@
 import states.statesAllRequests as statesAllRequests
 import database.tableSetup as tableSetup
-import Hooks.CSIHooks as CSIHooks
+import hooks.csiHooks as CSIHooks
 import states.statesUI as statesUI
 import _c_initializeModules as _c_initializeModules
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from PyQt5.QtWidgets import QStackedWidget
+
 def getModelData():
     statesAllRequests.StoryDefinitions=CSIHooks.GetAndProcessCSITable('Story Definitions',"")
     statesAllRequests.TowerAndBaseDefinitions=CSIHooks.GetAndProcessCSITable('Tower and Base Story Definitions',"")
@@ -29,9 +34,10 @@ def getModelData():
         else:
             statesAllRequests.defaultRow["ViewType"]="Elevation"
             statesAllRequests.defaultRow["GridSystem"]=[tableSetup.GridSystemNames[0]["GridSystem"]]
-            if len(statesAllRequests.defaultRow[0]["Gridlines"])>0:
+            if len(statesAllRequests.defaultRow["Gridlines"])>0:
                 statesAllRequests.defaultRow["ViewLabels"]=[tableSetup.GridSystemNames[0]["Gridlines"][0]]
     
     moduleScreen=_c_initializeModules.ModulesScreen()
+    assert statesUI.widget is not None, "Widget should be initialized by main"
     statesUI.widget.addWidget(moduleScreen)
     statesUI.widget.setCurrentIndex(statesUI.widget.currentIndex()+1)

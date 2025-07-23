@@ -7,7 +7,8 @@ import states.statesUI as statesUI
 def SetModelUnits():
     statesUI.counter+=1
     statesUI.update_status()
-    statesAllRequests.SapModel.SetPresentUnits(csiTables.UnitsKey[statesAllRequests.SelectedUnits])
+    if(statesAllRequests.SapModel):
+        statesAllRequests.SapModel.SetPresentUnits(csiTables.UnitsKey[statesAllRequests.SelectedUnits])
     Units= statesAllRequests.SelectedUnits.split("_")
     #deconstruct
     statesAllRequests.DisplacementUnit=Units[1]

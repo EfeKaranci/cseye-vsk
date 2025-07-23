@@ -3,9 +3,9 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 import states.statesAllRequests as statesAllRequests
 import database.tableSetup as tableSetup
-import Hooks.qtDesignerHooks as qtDesignerHooks
+import hooks.qtDesignerHooks as qtDesignerHooks
 import _f_ProcessRequests as _f_ProcessRequests
-import Hooks.viewLabelsDialogHook as viewLabelsDialogHook
+import hooks.viewLabelsDialogHook as viewLabelsDialogHook
 def newRow(table_widget,rowIndex,rowData):
     for j,key in enumerate(tableSetup.RequestKeys):
             value = rowData.get(key, False)

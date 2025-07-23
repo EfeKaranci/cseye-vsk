@@ -1,5 +1,5 @@
 import states.statesAllRequests as statesAllRequests
-import Hooks.BasicHooks as BasicHooks
+import hooks.basicHooks as BasicHooks
 import _u_Reset as _u_Reset
 import states.statesUI as statesUI
 

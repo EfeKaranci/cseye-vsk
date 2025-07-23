@@ -1,5 +1,5 @@
 import states.statesAllRequests as statesAllRequests
-import Hooks.CSIHooks as CSIHooks
+import hooks.csiHooks as CSIHooks
 import _q_RequestValidation as _q_RequestValidation
 import states.statesUI as statesUI
 
@@ -15,6 +15,7 @@ def GetRequestedTables():
         statesAllRequests.SelectedCSITables[key]=TableData
     PostProcessCertainTables()
  
+    CSIHooks.GetAvailableCSITables()
     print("p")
     _q_RequestValidation.RequestValidation()
 

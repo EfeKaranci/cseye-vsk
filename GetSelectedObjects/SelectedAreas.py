@@ -1,5 +1,5 @@
 import states.statesAllRequests as statesAllRequests
-import Hooks.BasicHooks as BasicHooks
+import hooks.basicHooks as BasicHooks
 def GetSelectedAreas():
     for floor in statesAllRequests.SelectedFloorsForAllRequests:
         UniqueName=floor['UniqueName']

@@ -1,5 +1,5 @@
 import states.statesAllRequests as statesAllRequests
-import Hooks.BasicHooks as BasicHooks
+import hooks.basicHooks as BasicHooks
 import states.statesUI as statesUI
 import database.tableSetup as tableSetup
 def SetRequestStates(Request,i):

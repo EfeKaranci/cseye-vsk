@@ -1,5 +1,5 @@
 import states.statesAllRequests as statesAllRequests
-import Hooks.CSIHooks as CSIHooks
+import hooks.csiHooks as CSIHooks
 import database.tableSetup as tableSetup
 import comtypes.automation
 import _i_CheckforEnvelopes as _i_CheckforEnvelopes
@@ -11,7 +11,13 @@ def RunModelAndGetPrelimTables():
     if(not all(x in tableSetup.DataThatDoNotRequireRunModel for x in statesAllRequests.DataTypesRequested)):
         CSIHooks.RunModel()
     if("Steel Design 360-16" in statesAllRequests.DataTypesRequested):
-        ret=statesAllRequests.SapModel.DesignSteel.StartDesign()
+        if(statesAllRequests.SapModel):
+            ret=statesAllRequests.SapModel.DesignSteel.StartDesign()
+    if("Composite Beam Design" in statesAllRequests.DataTypesRequested):
+        if(statesAllRequests.SapModel):
+            print(statesAllRequests.SapModel)
+            ret=statesAllRequests.SapModel.DesignCompositeBeam.StartDesign()
+            print(ret)
     #GetPreliminaryTables
     BeamConnectivity=CSIHooks.GetAndProcessCSITable('Beam Object Connectivity',"")
     for Beam in BeamConnectivity: Beam['FrameType']="Beam"
@@ -28,7 +34,6 @@ def RunModelAndGetPrelimTables():
     statesAllRequests.GridSystems=CSIHooks.GetAndProcessCSITable("Grid Definitions - General", "")
     statesAllRequests.LoadCombinationDefinitions=CSIHooks.GetAndProcessCSITable('Load Combination Definitions', "")
     statesAllRequests.GroupAssignments=CSIHooks.GetAndProcessCSITable('Group Assignments', "")
-    CSIHooks.GetAvailableCSITables()
     print("h")
     _i_CheckforEnvelopes.CheckForEnvelopes()
 

@@ -1,6 +1,6 @@
 import states.statesAllRequests as statesAllRequests
-import Hooks.BasicHooks as BasicHooks
-import Hooks.AnalysisResultsHooks as AnalysisResultsHooks
+import hooks.basicHooks as BasicHooks
+import hooks.AnalysisResultsHooks as AnalysisResultsHooks
 
 def GetDiaphragmBraceFoces():
     ModelJointForces = statesAllRequests.SelectedCSITables["Element Joint Forces - Frame"]

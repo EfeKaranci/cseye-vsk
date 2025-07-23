@@ -17,6 +17,7 @@ import SpreadsheetFunctions.SteelDesignFunctions as SteelDesignFunctions
 import SpreadsheetFunctions.ModalPropertiesFunction as ModalPropertiesFunction
 import SpreadsheetFunctions.BaseReactionFunction as BaseReactionFunction
 import SpreadsheetFunctions.StoryForcesFunction as StoryForcesFunction
+import SpreadsheetFunctions.CompositeBeamDesignFunction as CompositeBeamDesignFunction
 #HOOK MODULES
 import GetSelectedObjects.SelectedPoints as SelectedPointsForCurrentRequest
 import GetSelectedObjects.SelectedFrames as SelectedFrames
@@ -55,6 +56,9 @@ def MappingLoop():
 
 def BaseReactions():
     BaseReactionFunction.BaseReactionFunction()
+
+def CompositeBeamDesign():
+    CompositeBeamDesignFunction.CompositeBeamDesignFunction()
 
 def JointReactions():
     SelectedPointsForCurrentRequest.GetSelectedPoints()
@@ -174,6 +178,7 @@ def StoryForces():
 
 RequestDictionary={
     "Base Reactions": BaseReactions,
+    "Composite Beam Design": CompositeBeamDesign,
     "Diaphragm Forces": DiaphragmForces,
     "Diaphragm Brace Forces": DiaphragmBraceFoces,
     "End Forces": EndForces,

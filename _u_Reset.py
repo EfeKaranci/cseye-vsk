@@ -43,7 +43,7 @@ def ResetGeneralStates():
     statesAllRequests.DataTypesRequested = ""
     statesAllRequests.ViewTypesRequested = ""
     statesAllRequests.ViewLabelsRequested = ""
-    statesAllRequests.LoadResultsRequested = ""
+    statesAllRequests.LoadResultsRequested = []
     #ALL GEOMETRY REQUESTED
     statesAllRequests.ViewPlanesForAllRequests = []
     statesAllRequests.GridDefinitions=[]
@@ -85,7 +85,7 @@ def ResetGeneralStates2():
     statesAllRequests.DataTypesRequested = ""
     statesAllRequests.ViewTypesRequested = ""
     statesAllRequests.ViewLabelsRequested = ""
-    statesAllRequests.LoadResultsRequested = ""
+    statesAllRequests.LoadResultsRequested = []
     #ALL GEOMETRY REQUESTED
     statesAllRequests.ViewPlanesForAllRequests = []
     statesAllRequests.GridDefinitions=[]

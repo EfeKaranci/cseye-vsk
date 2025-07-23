@@ -1,5 +1,5 @@
 import states.statesAllRequests as statesAllRequests
-import Hooks.AnalysisResultsHooks as AnalysisResultsHooks
+import hooks.AnalysisResultsHooks as AnalysisResultsHooks
 
 def JointReactionFunction():
     ModelReactions=statesAllRequests.SelectedCSITables["Joint Reactions"]

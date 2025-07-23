@@ -3,10 +3,10 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 import states.statesAllRequests as statesAllRequests
 import database.tableSetup as tableSetup
-import Hooks.qtDesignerHooks as qtDesignerHooks
+import hooks.qtDesignerHooks as qtDesignerHooks
 import json
 import os
-import Hooks.BasicHooks as BasicHooks
+import hooks.basicHooks as BasicHooks
 import states.statesAllRequests as statesAllRequests
 # Track the current open file
 current_file = None

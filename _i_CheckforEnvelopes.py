@@ -6,9 +6,10 @@ def CheckForEnvelopes():
     statesUI.counter+=1
     statesUI.update_status()
     CheckIfComboIsEnvelope()
-    statesAllRequests.SapModel.DatabaseTables.SetLoadPatternsSelectedForDisplay(statesAllRequests.LoadResultsRequested);
-    statesAllRequests.SapModel.DatabaseTables.SetLoadCasesSelectedForDisplay(statesAllRequests.LoadResultsRequested);
-    statesAllRequests.SapModel.DatabaseTables.SetLoadCombinationsSelectedForDisplay(statesAllRequests.LoadResultsRequested);
+    if(statesAllRequests.SapModel):
+        statesAllRequests.SapModel.DatabaseTables.SetLoadPatternsSelectedForDisplay(statesAllRequests.LoadResultsRequested);
+        statesAllRequests.SapModel.DatabaseTables.SetLoadCasesSelectedForDisplay(statesAllRequests.LoadResultsRequested);
+        statesAllRequests.SapModel.DatabaseTables.SetLoadCombinationsSelectedForDisplay(statesAllRequests.LoadResultsRequested);
     print("i")
     _j_SetUnits.SetModelUnits()
 

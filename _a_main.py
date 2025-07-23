@@ -8,7 +8,7 @@ import _c_initializeModules as _c_initializeModules
 import states.statesAllRequests as statesAllRequests
 import _b_fetchModelData as _b_fetchModelData
 import states.statesUI as statesUI
-import Hooks.CSIHooks as CSIHooks
+import hooks.csiHooks as CSIHooks
 from qtDesigner.windowLoadModel import Ui_MainWindow
 
 def get_icon_path():
