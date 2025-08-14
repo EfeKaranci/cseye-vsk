@@ -4,7 +4,7 @@ import database.tableSetup as tableSetup
 import comtypes.automation
 import _i_CheckforEnvelopes as _i_CheckforEnvelopes
 import states.statesUI as statesUI
-ProgramPath="C:\Program Files\Computers and Structures\ETABS 21\ETABS.exe"
+ProgramPath=r"C:\Program Files\Computers and Structures\ETABS 21\ETABS.exe"
 def RunModelAndGetPrelimTables():
     statesUI.counter+=1
     statesUI.update_status()

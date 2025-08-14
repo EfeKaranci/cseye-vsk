@@ -1,6 +1,8 @@
 import states.statesAllRequests as statesAllRequests
 
 def GetLoadResultsForObject(ResultsTable,ObjectId,ResultsIdKey):
+    print(ResultsTable)
+    print(statesAllRequests.RequestLoadStep)
     if  (statesAllRequests.RequestLoadStep == ""):
         Results = [x for x in ResultsTable if ResultsIdKey in x
                     and x[ResultsIdKey] == ObjectId and x['OutputCase'] in statesAllRequests.RequestLoadCases]
@@ -15,7 +17,7 @@ def GetLoadResultsForObject(ResultsTable,ObjectId,ResultsIdKey):
                        and x[ResultsIdKey] == ObjectId and x['OutputCase'] in statesAllRequests.RequestLoadCases]
     else:
         Results = [x for x in ResultsTable if ResultsIdKey in x
-                       and x[ResultsIdKey] == ObjectId and x['OutputCase'] in statesAllRequests.RequestLoadCases and x['StepNumber'] == statesAllRequests.RequestLoadStep]
+                       and x[ResultsIdKey] == ObjectId and x['OutputCase'] in statesAllRequests.RequestLoadCases and 'StepNumber' in x and x['StepNumber'] == statesAllRequests.RequestLoadStep]
     return Results
 
 def GetResultsForLoadCase(ResultsTable):

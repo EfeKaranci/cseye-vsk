@@ -21,7 +21,7 @@ def JointReactionFunction():
                         statesAllRequests.OutputSheets[statesAllRequests.RequestNameFormat1].append(BaseReactionResult)
                         statesAllRequests.PlotTable.append({"Pt2d":Pt2d,"Value":RequestedRxn,"Text":Text})
 
-RequestedDataKeyDict={"FX":"FX","FY":"FX","FZ":"FZ","MX":"MX","MY":"MY","MZ":"MZ"}
+RequestedDataKeyDict={"FX":"FX","FY":"FY","FZ":"FZ","MX":"MX","MY":"MY","MZ":"MZ"}
 
 def GetMappedText(UniqueName,RequestedReaction,OutputCase):
     MappedReaction = round(RequestedReaction, statesAllRequests.RequestDecimalPlaces)
