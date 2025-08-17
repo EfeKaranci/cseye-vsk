@@ -26,7 +26,7 @@ def getModel():
 
 def GetAvailableCSITables():
     Tables=statesAllRequests.SapModel.DatabaseTables.GetAvailableTables();
-    print(Tables)
+    BasicHooks.WriteTable(Tables,"test.xlsx")
     return Tables[1]
 
 def SortAlphanumeric(lst):

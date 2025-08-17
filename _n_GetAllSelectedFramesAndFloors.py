@@ -9,6 +9,7 @@ def GetAllSelectedFramesAndFloors():
     GetSelectedFloors()
     statesAllRequests.SelectedFrameNamesForAllRequests=[x['UniqueName'] for x in statesAllRequests.SelectedFramesForAllRequests]
     statesAllRequests.SelectedFloorNamesForAllRequests=[x['UniqueName'] for x in statesAllRequests.SelectedFloorsForAllRequests]
+    statesAllRequests.SelectedNullAreaNamesForAllRequests=[x['UniqueName'] for x in statesAllRequests.SelectedNullAreasForAllRequests]
     print("n")
     _o_AssignSelectedObjectsToGroup.AssignSelectedObjectsToGroup()
 
@@ -35,3 +36,14 @@ def GetSelectedFloors():
             PtNames=[x for x in PtNames if x!=None]
             if all(item in statesAllRequests.SelectedPointNamesForAllRequests for item in PtNames):
                 statesAllRequests.SelectedFloorsForAllRequests.append({"UniqueName":UniqueName, "PtNames":PtNames})
+    for floor in statesAllRequests.NullAreaObjectConnectivity:
+        UniqueName=floor['UniqueName']
+        if(UniqueName not in Looped):
+            Looped.append(UniqueName)
+            PtNames=[]
+            floorAllRows=[x for x in statesAllRequests.NullAreaObjectConnectivity if x['UniqueName'] == UniqueName]
+            for row in floorAllRows:
+                PtNames.extend([row['UniquePt1'],row['UniquePt2'],row['UniquePt3'],row['UniquePt4']])
+            PtNames=[x for x in PtNames if x!=None]
+            if all(item in statesAllRequests.SelectedPointNamesForAllRequests for item in PtNames):
+                statesAllRequests.SelectedNullAreasForAllRequests.append({"UniqueName":UniqueName, "PtNames":PtNames})

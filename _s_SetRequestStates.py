@@ -47,19 +47,22 @@ def RequestNameProperties(Request,i):
                                            statesAllRequests.RequestLoadCase + "_" + "Step-" + statesAllRequests.RequestLoadStep
 
     if statesAllRequests.RequestDataType in tableSetup.DataWithNoLoads:
-        statesAllRequests.RequestNameFormat1 = str(i + 1) + "_" + statesAllRequests.RequestViewLabel + "_" + statesAllRequests.RequestDataType + "_" + statesAllRequests.RequestData
+        statesAllRequests.RequestNameFormat1 = str(i + 1) + "_" + statesAllRequests.RequestViewLabel + "_" + statesAllRequests.RequestDataType + "_" + statesAllRequests.RequestData + "_"+statesAllRequests.RequestGroup
         statesAllRequests.RequestNameFormat2 = "Request: " + str(i + 1) + "\n" \
                                                +"View: " + statesAllRequests.RequestViewLabel + "\n" \
-                                               +"Data: " + statesAllRequests.RequestDataType + "-" + statesAllRequests.RequestData
+                                               +"Data: " + statesAllRequests.RequestDataType + "-" + statesAllRequests.RequestData + "\n" \
+                                               +"Units: " + statesAllRequests.SelectedUnits + "\n" \
+                                               +"Group: " + statesAllRequests.RequestGroup
     elif statesAllRequests.RequestDataType not in tableSetup.DataWithNoLoads:
         statesAllRequests.RequestNameFormat1 = str(i + 1) + "_" + statesAllRequests.RequestViewLabel + "_" + statesAllRequests.RequestDataType + "_" + statesAllRequests.RequestData + "_" + \
-                                               statesAllRequests.RequestLoadCase + "_" + "Step-" + statesAllRequests.RequestLoadStep
+                                               statesAllRequests.RequestLoadCase + "_" + "Step-" + statesAllRequests.RequestLoadStep + "_" + statesAllRequests.RequestGroup
         statesAllRequests.RequestNameFormat2 = "Request: " + str(i + 1) + "\n" \
                                                +"View: " + statesAllRequests.RequestViewLabel + "\n" \
                                                +"Data: " + statesAllRequests.RequestDataType + "-" + statesAllRequests.RequestData + "\n" \
                                                +"Case: " + statesAllRequests.RequestLoadCase + "\n" \
                                                +"Step: " + statesAllRequests.RequestLoadStep + "\n" \
-                                               +"Units: " + statesAllRequests.SelectedUnits
+                                               +"Units: " + statesAllRequests.SelectedUnits + "\n" \
+                                               +"Group: " + statesAllRequests.RequestGroup
 
 def RequestFormatProperties(Request,i):
     statesAllRequests.RequestDecimalPlaces = int(Request['DecimalPlaces']) if BasicHooks.CheckForInteger(Request['DecimalPlaces']) else 1

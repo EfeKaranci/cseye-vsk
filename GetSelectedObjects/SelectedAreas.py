@@ -6,5 +6,20 @@ def GetSelectedAreas():
         PtNames=floor['PtNames']
         if(set(PtNames).issubset(statesAllRequests.SelectedPointNamesForCurrentRequest)):
             PtsData=[BasicHooks.GetPointByName(x) for x in PtNames]
-            Coords=[x["Coords"] for x in PtsData]
-            statesAllRequests.SelectedAreasForCurrentRequest.append({"UniqueName":UniqueName,"Coords":Coords})
+            if(PtsData!=None):
+                Coords=[x["Coords"] for x in PtsData]
+                statesAllRequests.SelectedAreasForCurrentRequest.append({"UniqueName":UniqueName,"Coords":Coords})
+    for floor in statesAllRequests.SelectedNullAreasForAllRequests:
+        UniqueName=floor['UniqueName']
+        AreaProperty = [x for x in statesAllRequests.AreaAssignments if x["UniqueName"]==UniqueName]
+        PropType=""
+        if len(AreaProperty)>0:
+            PropType=AreaProperty[0]["PropType"]
+        print(statesAllRequests.AreaAssignments[0])
+        PtNames=floor['PtNames']
+        print(floor)
+        if(set(PtNames).issubset(statesAllRequests.SelectedPointNamesForCurrentRequest)):
+            PtsData=[BasicHooks.GetPointByName(x) for x in PtNames]
+            if(PtsData!=None):
+                Coords=[x["Coords"] for x in PtsData]
+                statesAllRequests.SelectedNullAreasForCurrentRequest.append({"UniqueName":UniqueName,"Coords":Coords,"PropType":PropType})

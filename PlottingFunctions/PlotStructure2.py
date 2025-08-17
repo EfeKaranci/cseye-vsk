@@ -98,6 +98,14 @@ def PlotStructure():
             if("Color" in floor):
                 SurfaceColor=floor["Color"]
             ax.fill(xs, ys, facecolor=SurfaceColor, edgecolor='gray', alpha=0.3)
+        for floor in statesAllRequests.SelectedNullAreasForCurrentRequest:
+            SurfaceColor='white'
+            Pts = floor["Coords"]
+            xs = [p[0] for p in Pts]
+            ys = [p[1] for p in Pts]
+            if("Color" in floor):
+                SurfaceColor=floor["Color"]
+            ax.fill(xs, ys, facecolor=SurfaceColor, edgecolor='gray', alpha=0.3)
         statesAllRequests.ax = ax
         # Add the title in the title area (which lies in the content region,
         # beneath the data axes). The title region is the bottom part of the content region.

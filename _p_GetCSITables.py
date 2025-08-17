@@ -14,8 +14,7 @@ def GetRequestedTables():
             TableData=CSIHooks.GetAndProcessCSITable(key,"")
         statesAllRequests.SelectedCSITables[key]=TableData
     PostProcessCertainTables()
- 
-    CSIHooks.GetAvailableCSITables()
+    #CSIHooks.GetAvailableCSITables()
     print("p")
     _q_RequestValidation.RequestValidation()
 

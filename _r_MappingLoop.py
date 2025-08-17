@@ -58,7 +58,13 @@ def BaseReactions():
     BaseReactionFunction.BaseReactionFunction()
 
 def CompositeBeamDesign():
+    SelectedPointsForCurrentRequest.GetSelectedPoints()
+    SelectedFrames.GetSelectedFrames()
+    SelectedAreasForCurrentRequest.GetSelectedAreas()
     CompositeBeamDesignFunction.CompositeBeamDesignFunction()
+    PlotStructure.PlotStructure()
+    PlotColumnsAndBraces.PlotColumnsAndBraces()
+    PlotText.PlotText()
 
 def JointReactions():
     SelectedPointsForCurrentRequest.GetSelectedPoints()

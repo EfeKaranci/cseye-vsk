@@ -29,7 +29,13 @@ dataOptions = {
             "Base Reactions": ["Base Reactions"],#Excel Only
             #"Column Design Takedown": ["Steel Design 360-16"],
             #"Column Load Takedown": ["P", "V2", "V3", "T", "M2", "M3"],
-            "Composite Beam Design": ["Design","Percentage Composite","Design Reactions","Max Moment","Design Ratios"],
+            "Composite Beam Design": [
+                                    "Stud Layout",
+                                    "Effective Width",
+                                    "Composite Capacities",
+                                    "Design Reactions",
+                                    "Design Ratio",
+                                    ],
             "Diaphragm Forces": ["Applied Force", "Reactive Force", "Diaphragm Force"],
             "Diaphragm Brace Forces": ["Diaphragm Brace Forces"],
             "End Forces": ["P", "V2", "V3", "T", "M2", "M3"],

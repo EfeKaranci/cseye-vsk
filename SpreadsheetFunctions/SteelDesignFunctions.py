@@ -16,7 +16,7 @@ def GetSteelDesign360_16():
     statesAllRequests.OutputSheets[NewColumnSheet] = []
     for index,Frame in enumerate(statesAllRequests.SelectedFramesForCurrentRequest):
         UniqueName=str(Frame["UniqueName"])
-        if(statesAllRequests.RequestGroup=="" or UniqueName in FramesWithDesignResults):
+        if(statesAllRequests.RequestGroup=="" or UniqueName in statesAllRequests.RequestGroupFrames):
             if(UniqueName in FramesWithDesignResults):
                 FrameType=Frame["FrameType"]
                 if(FrameType=="Beam"): FrameDesginResult=next((x for x in BeamDesignResults if x["UniqueName"] == UniqueName), None)

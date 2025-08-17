@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.figure import Figure
 import states.statesAllRequests as statesAllRequests
+import numpy as np
+
 def GetFigureDimension():
     # 1) Compute data extents
     xs = [pt["Coords"][0] for pt in statesAllRequests.SelectedPointsForCurrentRequest]
@@ -101,6 +103,49 @@ def PlotStructure():
             if("Color" in floor):
                 SurfaceColor=floor["Color"]
             ax.fill(xs, ys, facecolor=SurfaceColor, edgecolor='gray', alpha=0.3)
+        for floor in statesAllRequests.SelectedNullAreasForCurrentRequest:
+            SurfaceColor = 'white'
+            Pts = floor["Coords"]            # list of [x, y]
+            PropType = floor["PropType"]
+
+            xs = [p[0] for p in Pts]
+            ys = [p[1] for p in Pts]
+            if "Color" in floor:
+                SurfaceColor = floor["Color"]
+
+            # Fill the area
+            ax.fill(xs, ys, facecolor=SurfaceColor, edgecolor='gray', alpha=0.3)
+
+            # If it's an opening, draw a large X centered at the polygon centroid
+            if PropType == "Opening":
+                pts_arr = np.asarray(Pts, dtype=float)
+                x = pts_arr[:, 0]
+                y = pts_arr[:, 1]
+
+                # Polygon centroid (shoelace); fall back to arithmetic mean if area ~ 0
+                x1 = np.roll(x, -1)
+                y1 = np.roll(y, -1)
+                cross = x * y1 - x1 * y
+                A = 0.5 * np.sum(cross)
+                if np.isclose(A, 0.0):
+                    cx, cy = np.mean(x), np.mean(y)
+                else:
+                    cx = np.sum((x + x1) * cross) / (6.0 * A)
+                    cy = np.sum((y + y1) * cross) / (6.0 * A)
+
+                # Bounding box extents
+                w = x.max() - x.min()
+                h = y.max() - y.min()
+
+                # Make the X cover ~75% of the extents (±0.375 on each side)
+                dx = 0.375 * (w if w > 0 else h)   # if w==0, use h to size something visible
+                dy = 0.375 * (h if h > 0 else w)   # if h==0, use w
+
+                # Two crossing lines
+                ax.plot([cx - dx, cx + dx], [cy - dy, cy + dy],
+                        color='gray', linewidth=1.5, solid_capstyle='round', zorder=5)
+                ax.plot([cx - dx, cx + dx], [cy + dy, cy - dy],
+                        color='gray', linewidth=1.5, solid_capstyle='round', zorder=5)
         statesAllRequests.ax = ax
         # Add the title in the title area (which lies in the content region,
         # beneath the data axes). The title region is the bottom part of the content region.

@@ -25,6 +25,7 @@ def ResetRequestSpecificStates():
     statesAllRequests.SelectedPointsForCurrentRequest = []
     statesAllRequests.SelectedFramesForCurrentRequest = []
     statesAllRequests.SelectedAreasForCurrentRequest = []
+    statesAllRequests.SelectedNullAreasForCurrentRequest = []
     statesAllRequests.SelectedPointNamesForCurrentRequest=[]
     statesAllRequests.SelectedFrameNamesForCurrentRequest=[]
     statesAllRequests.SelectedAreaNamesForCurrentRequest=[]
@@ -53,15 +54,19 @@ def ResetGeneralStates():
     statesAllRequests.PointObjectConnectivity=[]
     statesAllRequests.FrameObjectConnectivity=[]
     statesAllRequests.FloorObjectConnectivity=[]
+    statesAllRequests.NullAreaObjectConnectivity=[]
+    statesAllRequests.AreaAssignments=[]
     statesAllRequests.LoadCombinationDefinitions=[]
     statesAllRequests.GroupAssignments=[]
     statesAllRequests.AllElementForces = []
     statesAllRequests.SelectedPointsForAllRequests=[]
     statesAllRequests.SelectedFramesForAllRequests=[]
     statesAllRequests.SelectedFloorsForAllRequests=[]
+    statesAllRequests.SelectedNullAreasForAllRequests=[]
     statesAllRequests.SelectedPointNamesForAllRequests=[]
     statesAllRequests.SelectedFrameNamesForAllRequests=[]
     statesAllRequests.SelectedFloorNamesForAllRequests=[]
+    statesAllRequests.SelectedNullAreaNamesForAllRequests=[]
     # CSI
     statesAllRequests.SelectedCSITables = {}
     statesAllRequests.SapModel = None
@@ -95,6 +100,7 @@ def ResetGeneralStates2():
     statesAllRequests.PointObjectConnectivity=[]
     statesAllRequests.FrameObjectConnectivity=[]
     statesAllRequests.FloorObjectConnectivity=[]
+    statesAllRequests.NullAreaObjectConnectivity=[]
     statesAllRequests.LoadCombinationDefinitions=[]
     statesAllRequests.GroupAssignments=[]
     statesAllRequests.AllElementForces = []
@@ -104,6 +110,7 @@ def ResetGeneralStates2():
     statesAllRequests.SelectedPointNamesForAllRequests=[]
     statesAllRequests.SelectedFrameNamesForAllRequests=[]
     statesAllRequests.SelectedFloorNamesForAllRequests=[]
+    statesAllRequests.SelectedNullAreaNamesForAllRequests=[]
     # CSI
     statesAllRequests.SelectedCSITables = {}
     statesAllRequests.SapModel = None

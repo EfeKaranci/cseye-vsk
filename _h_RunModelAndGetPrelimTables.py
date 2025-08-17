@@ -15,9 +15,7 @@ def RunModelAndGetPrelimTables():
             ret=statesAllRequests.SapModel.DesignSteel.StartDesign()
     if("Composite Beam Design" in statesAllRequests.DataTypesRequested):
         if(statesAllRequests.SapModel):
-            print(statesAllRequests.SapModel)
             ret=statesAllRequests.SapModel.DesignCompositeBeam.StartDesign()
-            print(ret)
     #GetPreliminaryTables
     BeamConnectivity=CSIHooks.GetAndProcessCSITable('Beam Object Connectivity',"")
     for Beam in BeamConnectivity: Beam['FrameType']="Beam"
@@ -28,6 +26,8 @@ def RunModelAndGetPrelimTables():
     statesAllRequests.FrameObjectConnectivity= BeamConnectivity + BraceConnectivity + ColumnConnectivity
     statesAllRequests.PointObjectConnectivity=CSIHooks.GetAndProcessCSITable('Point Object Connectivity', "")
     statesAllRequests.FloorObjectConnectivity=CSIHooks.GetAndProcessCSITable('Floor Object Connectivity', "")
+    statesAllRequests.NullAreaObjectConnectivity=CSIHooks.GetAndProcessCSITable('Null Area Object Connectivity', "")
+    statesAllRequests.AreaAssignments=CSIHooks.GetAndProcessCSITable("Area Assignments - Section Properties", "")
     statesAllRequests.StoryDefinitions=CSIHooks.GetAndProcessCSITable('Story Definitions', "")
     statesAllRequests.TowerAndBaseDefinitions=CSIHooks.GetAndProcessCSITable('Tower and Base Story Definitions', "")
     statesAllRequests.GridDefinitions=CSIHooks.GetAndProcessCSITable("Grid Definitions - Grid Lines", "")
