@@ -40,7 +40,7 @@ dataOptions = {
             "Diaphragm Brace Forces": ["Diaphragm Brace Forces"],
             "End Forces": ["P", "V2", "V3", "T", "M2", "M3"],
             #"End Forces-Rounded": ["P", "V2", "V3", "T", "M2", "M3"],
-            "Framing": ["Frames","Areas"],
+            "Framing": ["Frames","Areas","Material Assignments"],
             "Frame Releases": ["P", "V2", "V3", "T", "M2", "M3","All"],
             "Frame Modifiers": ["Area", "As2", "As3", "J", "I2", "I3", "Mass", "Weight"],
             "Joint Displacements": ["Ux", "Uy", "Uz", "Rx", "Ry", "Rz", "All", ""],

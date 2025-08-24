@@ -1,17 +1,16 @@
-('C:\\Users\\vakanneh\\OneDrive - '
- 'Tesla\\Documents\\GitHub\\CSEYE\\build\\CSEYE\\PYZ-00.pyz',
+('C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\build\\CSEYE\\PYZ-00.pyz',
  [('GetSelectedObjects', '-', 'PYMODULE'),
   ('GetSelectedObjects.SelectedAreas',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\GetSelectedObjects\\SelectedAreas.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\GetSelectedObjects\\SelectedAreas.py',
    'PYMODULE'),
   ('GetSelectedObjects.SelectedFrames',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\GetSelectedObjects\\SelectedFrames.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\GetSelectedObjects\\SelectedFrames.py',
    'PYMODULE'),
   ('GetSelectedObjects.SelectedPoints',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\GetSelectedObjects\\SelectedPoints.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\GetSelectedObjects\\SelectedPoints.py',
    'PYMODULE'),
   ('PIL',
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PIL\\__init__.py',
@@ -243,33 +242,37 @@
    'PYMODULE'),
   ('Planes', '-', 'PYMODULE'),
   ('Planes.PlaneFunctionsHooks',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\Planes\\PlaneFunctionsHooks.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\Planes\\PlaneFunctionsHooks.py',
    'PYMODULE'),
   ('PlottingFunctions', '-', 'PYMODULE'),
   ('PlottingFunctions.PlotColumnsAndBraces',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\PlottingFunctions\\PlotColumnsAndBraces.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\PlottingFunctions\\PlotColumnsAndBraces.py',
    'PYMODULE'),
   ('PlottingFunctions.PlotPointParameters',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\PlottingFunctions\\PlotPointParameters.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\PlottingFunctions\\PlotPointParameters.py',
    'PYMODULE'),
   ('PlottingFunctions.PlotStructure',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\PlottingFunctions\\PlotStructure.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\PlottingFunctions\\PlotStructure.py',
+   'PYMODULE'),
+  ('PlottingFunctions.PlotStructure2',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\PlottingFunctions\\PlotStructure2.py',
    'PYMODULE'),
   ('PlottingFunctions.PlotText',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\PlottingFunctions\\PlotText.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\PlottingFunctions\\PlotText.py',
    'PYMODULE'),
   ('PlottingFunctions.PlotVectors',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\PlottingFunctions\\PlotVectors.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\PlottingFunctions\\PlotVectors.py',
    'PYMODULE'),
   ('PlottingFunctions.PlotVectorsAndPointParameters',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\PlottingFunctions\\PlotVectorsAndPointParameters.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\PlottingFunctions\\PlotVectorsAndPointParameters.py',
    'PYMODULE'),
   ('PyPDF2',
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyPDF2\\__init__.py',
@@ -370,75 +373,138 @@
   ('PyQt5',
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\__init__.py',
    'PYMODULE'),
+  ('PyQt5.uic',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\__init__.py',
+   'PYMODULE'),
+  ('PyQt5.uic.Compiler',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\Compiler\\__init__.py',
+   'PYMODULE'),
+  ('PyQt5.uic.Compiler.compiler',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\Compiler\\compiler.py',
+   'PYMODULE'),
+  ('PyQt5.uic.Compiler.indenter',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\Compiler\\indenter.py',
+   'PYMODULE'),
+  ('PyQt5.uic.Compiler.misc',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\Compiler\\misc.py',
+   'PYMODULE'),
+  ('PyQt5.uic.Compiler.proxy_metaclass',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\Compiler\\proxy_metaclass.py',
+   'PYMODULE'),
+  ('PyQt5.uic.Compiler.qobjectcreator',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\Compiler\\qobjectcreator.py',
+   'PYMODULE'),
+  ('PyQt5.uic.Compiler.qtproxies',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\Compiler\\qtproxies.py',
+   'PYMODULE'),
+  ('PyQt5.uic.Loader',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\Loader\\__init__.py',
+   'PYMODULE'),
+  ('PyQt5.uic.Loader.loader',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\Loader\\loader.py',
+   'PYMODULE'),
+  ('PyQt5.uic.Loader.qobjectcreator',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\Loader\\qobjectcreator.py',
+   'PYMODULE'),
+  ('PyQt5.uic.exceptions',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\exceptions.py',
+   'PYMODULE'),
+  ('PyQt5.uic.icon_cache',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\icon_cache.py',
+   'PYMODULE'),
+  ('PyQt5.uic.objcreator',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\objcreator.py',
+   'PYMODULE'),
+  ('PyQt5.uic.port_v3',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\port_v3\\__init__.py',
+   'PYMODULE'),
+  ('PyQt5.uic.port_v3.as_string',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\port_v3\\as_string.py',
+   'PYMODULE'),
+  ('PyQt5.uic.port_v3.ascii_upper',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\port_v3\\ascii_upper.py',
+   'PYMODULE'),
+  ('PyQt5.uic.port_v3.proxy_base',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\port_v3\\proxy_base.py',
+   'PYMODULE'),
+  ('PyQt5.uic.port_v3.string_io',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\port_v3\\string_io.py',
+   'PYMODULE'),
+  ('PyQt5.uic.properties',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\properties.py',
+   'PYMODULE'),
+  ('PyQt5.uic.uiparser',
+   'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\PyQt5\\uic\\uiparser.py',
+   'PYMODULE'),
   ('SpreadsheetFunctions', '-', 'PYMODULE'),
   ('SpreadsheetFunctions.BaseReactionFunction',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\BaseReactionFunction.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\BaseReactionFunction.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.CompositeBeamDesignFunction',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\CompositeBeamDesignFunction.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\CompositeBeamDesignFunction.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.DiaphragmBraceForcesFunction',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\DiaphragmBraceForcesFunction.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\DiaphragmBraceForcesFunction.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.DiaphragmForcesFunction',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\DiaphragmForcesFunction.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\DiaphragmForcesFunction.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.EndForcesFunction',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\EndForcesFunction.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\EndForcesFunction.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.FramingPlanFunctions',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\FramingPlanFunctions.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\FramingPlanFunctions.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.JointDisplacementFunction',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\JointDisplacementFunction.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\JointDisplacementFunction.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.JointDriftFunction',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\JointDriftFunction.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\JointDriftFunction.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.JointReactionFunction',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\JointReactionFunction.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\JointReactionFunction.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.LoadAssigns', '-', 'PYMODULE'),
   ('SpreadsheetFunctions.LoadAssigns.AreaLoadAssignmentsUniform',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\LoadAssigns\\AreaLoadAssignmentsUniform.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\LoadAssigns\\AreaLoadAssignmentsUniform.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.LoadAssigns.FrameLoadAssignmentsDistributed',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\LoadAssigns\\FrameLoadAssignmentsDistributed.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\LoadAssigns\\FrameLoadAssignmentsDistributed.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.MaxFrameForcesFunction',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\MaxFrameForcesFunction.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\MaxFrameForcesFunction.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.ModalPropertiesFunction',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\ModalPropertiesFunction.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\ModalPropertiesFunction.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.ModifierFunctions',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\ModifierFunctions.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\ModifierFunctions.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.ReleasesFunctions',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\ReleasesFunctions.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\ReleasesFunctions.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.SteelDesignFunctions',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\SteelDesignFunctions.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\SteelDesignFunctions.py',
    'PYMODULE'),
   ('SpreadsheetFunctions.StoryForcesFunction',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\SpreadsheetFunctions\\StoryForcesFunction.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\SpreadsheetFunctions\\StoryForcesFunction.py',
    'PYMODULE'),
   ('__future__',
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\__future__.py',
@@ -447,12 +513,10 @@
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\_aix_support.py',
    'PYMODULE'),
   ('_b_fetchModelData',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_b_fetchModelData.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\_b_fetchModelData.py',
    'PYMODULE'),
   ('_c_initializeModules',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_c_initializeModules.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\_c_initializeModules.py',
    'PYMODULE'),
   ('_colorize',
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\_colorize.py',
@@ -464,8 +528,7 @@
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\_compression.py',
    'PYMODULE'),
   ('_d_FileFeatures',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_d_FileFeatures.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\_d_FileFeatures.py',
    'PYMODULE'),
   ('_distutils_hack',
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\_distutils_hack\\__init__.py',
@@ -474,58 +537,51 @@
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\_distutils_hack\\override.py',
    'PYMODULE'),
   ('_e_WindowFeatures',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_e_WindowFeatures.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\_e_WindowFeatures.py',
    'PYMODULE'),
   ('_f_ProcessRequests',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_f_ProcessRequests.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\_f_ProcessRequests.py',
    'PYMODULE'),
   ('_g_GetRequiredCSITablesList',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_g_GetRequiredCSITablesList.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\_g_GetRequiredCSITablesList.py',
    'PYMODULE'),
   ('_h_RunModelAndGetPrelimTables',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_h_RunModelAndGetPrelimTables.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\_h_RunModelAndGetPrelimTables.py',
    'PYMODULE'),
   ('_i_CheckforEnvelopes',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_i_CheckforEnvelopes.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\_i_CheckforEnvelopes.py',
    'PYMODULE'),
   ('_ios_support',
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\_ios_support.py',
    'PYMODULE'),
   ('_j_SetUnits',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_j_SetUnits.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\_j_SetUnits.py',
    'PYMODULE'),
   ('_k_ModifyRequests',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_k_ModifyRequests.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\_k_ModifyRequests.py',
    'PYMODULE'),
   ('_l_GetPlanes',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_l_GetPlanes.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\_l_GetPlanes.py',
    'PYMODULE'),
   ('_m_GetAllSelectedPoints',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_m_GetAllSelectedPoints.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\_m_GetAllSelectedPoints.py',
    'PYMODULE'),
   ('_n_GetAllSelectedFramesAndFloors',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_n_GetAllSelectedFramesAndFloors.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\_n_GetAllSelectedFramesAndFloors.py',
    'PYMODULE'),
   ('_o_AssignSelectedObjectsToGroup',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_o_AssignSelectedObjectsToGroup.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\_o_AssignSelectedObjectsToGroup.py',
    'PYMODULE'),
   ('_opcode_metadata',
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\_opcode_metadata.py',
    'PYMODULE'),
   ('_p_GetCSITables',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_p_GetCSITables.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\_p_GetCSITables.py',
    'PYMODULE'),
   ('_py_abc',
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\_py_abc.py',
@@ -621,16 +677,13 @@
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\_pyrepl\\windows_eventqueue.py',
    'PYMODULE'),
   ('_q_RequestValidation',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_q_RequestValidation.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\_q_RequestValidation.py',
    'PYMODULE'),
   ('_r_MappingLoop',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_r_MappingLoop.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\_r_MappingLoop.py',
    'PYMODULE'),
   ('_s_SetRequestStates',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_s_SetRequestStates.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\_s_SetRequestStates.py',
    'PYMODULE'),
   ('_sitebuiltins',
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\_sitebuiltins.py',
@@ -642,12 +695,10 @@
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\_threading_local.py',
    'PYMODULE'),
   ('_u_Reset',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_u_Reset.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\_u_Reset.py',
    'PYMODULE'),
   ('_v_WriteFiles',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\_v_WriteFiles.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\_v_WriteFiles.py',
    'PYMODULE'),
   ('argparse',
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\argparse.py',
@@ -1026,12 +1077,10 @@
    'PYMODULE'),
   ('database', '-', 'PYMODULE'),
   ('database.csiTables',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\database\\csiTables.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\database\\csiTables.py',
    'PYMODULE'),
   ('database.tableSetup',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\database\\tableSetup.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\database\\tableSetup.py',
    'PYMODULE'),
   ('dataclasses',
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\dataclasses.py',
@@ -1809,28 +1858,26 @@
    'PYMODULE'),
   ('hooks', '-', 'PYMODULE'),
   ('hooks.AnalysisResultsHooks',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\hooks\\AnalysisResultsHooks.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\hooks\\AnalysisResultsHooks.py',
    'PYMODULE'),
   ('hooks.basicHooks',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\hooks\\basicHooks.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\hooks\\basicHooks.py',
    'PYMODULE'),
   ('hooks.csiHooks',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\hooks\\csiHooks.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\hooks\\csiHooks.py',
    'PYMODULE'),
   ('hooks.qtDesignerHooks',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\hooks\\qtDesignerHooks.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\hooks\\qtDesignerHooks.py',
    'PYMODULE'),
   ('hooks.tableWidgetHooks',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\hooks\\tableWidgetHooks.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\hooks\\tableWidgetHooks.py',
    'PYMODULE'),
   ('hooks.viewLabelsDialogHook',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\hooks\\viewLabelsDialogHook.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\hooks\\viewLabelsDialogHook.py',
    'PYMODULE'),
   ('html',
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\html\\__init__.py',
@@ -4331,17 +4378,21 @@
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\pytz\\tzinfo.py',
    'PYMODULE'),
   ('qtDesigner', '-', 'PYMODULE'),
+  ('qtDesigner.converter',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\qtDesigner\\converter.py',
+   'PYMODULE'),
   ('qtDesigner.windowLoadModel',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\qtDesigner\\windowLoadModel.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\qtDesigner\\windowLoadModel.py',
    'PYMODULE'),
   ('qtDesigner.windowModules',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\qtDesigner\\windowModules.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\qtDesigner\\windowModules.py',
    'PYMODULE'),
   ('qtDesigner.windowSelectViews',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\qtDesigner\\windowSelectViews.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\qtDesigner\\windowSelectViews.py',
    'PYMODULE'),
   ('queue',
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\queue.py',
@@ -4862,12 +4913,11 @@
    'PYMODULE'),
   ('states', '-', 'PYMODULE'),
   ('states.statesAllRequests',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\states\\statesAllRequests.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup '
+   'Repos\\CSEYE\\states\\statesAllRequests.py',
    'PYMODULE'),
   ('states.statesUI',
-   'C:\\Users\\vakanneh\\OneDrive - '
-   'Tesla\\Documents\\GitHub\\CSEYE\\states\\statesUI.py',
+   'C:\\Users\\vakanneh\\Desktop\\Githup Repos\\CSEYE\\states\\statesUI.py',
    'PYMODULE'),
   ('statistics',
    'C:\\Users\\vakanneh\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\statistics.py',
