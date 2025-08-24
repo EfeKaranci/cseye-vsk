@@ -18,6 +18,7 @@ def get_icon_path():
     
     # Get the directory containing the current file
     current_dir = os.path.dirname(current_file)
+    #...
     
     # Construct the path to the icon
     icon_path = os.path.join(current_dir, "images", "icon.png")
