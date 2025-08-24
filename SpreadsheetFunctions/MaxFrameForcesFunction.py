@@ -17,7 +17,7 @@ def GetMaxFrameForcesSpreadsheet():
                         SectProp=SectProp["SectProp"]
                         MaxForce=float(FrameResult[RequestedDataKey])
                         OutputCase=FrameResult["OutputCase"]
-                        mid,Text=GetMidpointsandTextforPlotting(Frame,UniqueName,MaxForce,OutputCase)
+                        mid,Text=GetMidpointsandTextforPlotting(Frame,UniqueName,MaxForce,OutputCase,SectProp)
                         statesAllRequests.OutputSheets[statesAllRequests.RequestNameFormat1].append(FrameResult)
                         statesAllRequests.PlotTable.append({"Pt2d":mid,"Value":MaxForce,"Text":Text})
                         Looped.append(UniqueName)
@@ -53,11 +53,11 @@ def GetResultsForFrame(FrameResults,RequestedDataKey):
     FrameResult=next((x for x in FrameResults if float(x[RequestedDataKey]) == MaxForce), None)
     return FrameResult
 
-def GetMidpointsandTextforPlotting(Frame,UniqueName,MaxForce,OutputCase):
+def GetMidpointsandTextforPlotting(Frame,UniqueName,MaxForce,OutputCase,SectProp):
     PtI, PtJ = Frame["Pt2dI"],Frame["Pt2dJ"]
     mid = (PtI + PtJ) / 2
     MaxForceRounded = round(MaxForce, statesAllRequests.RequestDecimalPlaces)
-    Text = "(" + UniqueName + ")" + "\n"+str(MaxForceRounded)
+    Text = SectProp  + "\n"+str(MaxForceRounded)
     if (statesAllRequests.RequestIsEnvelope == "Yes"):
         Text = Text + "\n" + OutputCase
     return mid, Text

@@ -56,6 +56,8 @@ AvailableTables = {
                         "ViewTypes":["Story","Elevation"]},
     "Modal Periods And Frequencies": {"DataType":["Modal Properties"],
                         "ViewTypes":["Story","Elevation"]},
+    'Steel Design Load Combination Data': {"DataType":["Steel Design 360-16"],
+                                  "ViewTypes":["Story","Elevation"]},
     "Steel Frame Design Summary - AISC 360-16": {"DataType":["Steel Design 360-16"],
                                   "ViewTypes":["Story","Elevation"]},
     "Steel Beam Envelope - AISC 360-16": {"DataType":["Steel Design 360-16"],

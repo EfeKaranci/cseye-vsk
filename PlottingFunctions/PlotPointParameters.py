@@ -13,6 +13,8 @@ def PlotPointParameters():
         for PointData in statesAllRequests.PlotTable:
             value = PointData["Value"]
             value = round(value,int (statesAllRequests.RequestDecimalPlaces))
+            if(statesAllRequests.RequestDecimalPlaces==0):
+                value = int(value)
             pt2d = PointData["Pt2d"]
             Text = PointData["Text"]
             CircleRadius = (abs(value)/Range)*MaxCircleRadius*float (statesAllRequests.RequestCircleScale)

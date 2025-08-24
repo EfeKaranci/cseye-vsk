@@ -48,7 +48,6 @@ def GetResultsForFrame(FrameResults,RequestedDataKey):
     if(statesAllRequests.RequestIsEnvelope=="No"):
         MaxForce = max(Forces, key=abs)
     elif(statesAllRequests.RequestIsEnvelope=="Yes"):
-        print(statesAllRequests.RequestLoadStep)
         if(statesAllRequests.RequestLoadStep=="max"):MaxForce = max(Forces)
         elif(statesAllRequests.RequestLoadStep=="min"):MaxForce = min(Forces)
     FrameResult=next((x for x in FrameResults if float(x[RequestedDataKey]) == MaxForce), None)

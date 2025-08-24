@@ -32,7 +32,7 @@ dataOptions = {
             "Composite Beam Design": [
                                     "Stud Layout",
                                     "Effective Width",
-                                    "Composite Capacities",
+                                    "Composite Capacities at Max DCR",
                                     "Design Reactions",
                                     "Design Ratio",
                                     ],
@@ -50,7 +50,12 @@ dataOptions = {
             "Modal Properties": ["Modal Properties"],#Excel Only
             #"Restraints": ["All"],
             #"Load Assigns": ["Load Assigns"],
-            "Steel Design 360-16": ["DCRs", "Design Combination", "PMM Breakdown"],
+            "Steel Design 360-16": [
+                "DCR", 
+                "Design Combination", 
+                "P Ratio", 
+                "M2 Ratio", 
+                "M3 Ratio"],
             #"Story Drift": ["X", "Y"],
             "Story Forces": ["Story Forces"], #Excel Only
             #"Tributary Areas": ["Beams", "Columns"],

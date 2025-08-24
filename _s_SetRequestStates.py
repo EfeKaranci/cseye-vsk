@@ -43,19 +43,16 @@ def RequestGroupProperties(Request,i):
         statesAllRequests.RequestGroupAreas = [x["UniqueName"] for x in statesAllRequests.GroupAssignments if x["GroupName"] == statesAllRequests.RequestGroup and x["ObjectType"] == "Area"]
 
 def RequestNameProperties(Request,i):
-    statesAllRequests.RequestNameFormat1 = str(i + 1) + "_" + statesAllRequests.RequestViewLabel + "_" + statesAllRequests.RequestDataType + "_" + statesAllRequests.RequestData + "_" + \
-                                           statesAllRequests.RequestLoadCase + "_" + "Step-" + statesAllRequests.RequestLoadStep
-
     if statesAllRequests.RequestDataType in tableSetup.DataWithNoLoads:
-        statesAllRequests.RequestNameFormat1 = str(i + 1) + "_" + statesAllRequests.RequestViewLabel + "_" + statesAllRequests.RequestDataType + "_" + statesAllRequests.RequestData + "_"+statesAllRequests.RequestGroup
+        statesAllRequests.RequestNameFormat1 = str(i + 1) + "_"+statesAllRequests.RequestGroup+ "_" + statesAllRequests.RequestViewLabel + "_" + statesAllRequests.RequestDataType + "_" + statesAllRequests.RequestData 
         statesAllRequests.RequestNameFormat2 = "Request: " + str(i + 1) + "\n" \
                                                +"View: " + statesAllRequests.RequestViewLabel + "\n" \
                                                +"Data: " + statesAllRequests.RequestDataType + "-" + statesAllRequests.RequestData + "\n" \
                                                +"Units: " + statesAllRequests.SelectedUnits + "\n" \
                                                +"Group: " + statesAllRequests.RequestGroup
     elif statesAllRequests.RequestDataType not in tableSetup.DataWithNoLoads:
-        statesAllRequests.RequestNameFormat1 = str(i + 1) + "_" + statesAllRequests.RequestViewLabel + "_" + statesAllRequests.RequestDataType + "_" + statesAllRequests.RequestData + "_" + \
-                                               statesAllRequests.RequestLoadCase + "_" + "Step-" + statesAllRequests.RequestLoadStep + "_" + statesAllRequests.RequestGroup
+        statesAllRequests.RequestNameFormat1 = str(i + 1) + "_" + statesAllRequests.RequestGroup+"_"+ statesAllRequests.RequestViewLabel + "_" + statesAllRequests.RequestDataType + "_" + statesAllRequests.RequestData + "_" + \
+                                               statesAllRequests.RequestLoadCase + "_" + "Step-" + statesAllRequests.RequestLoadStep 
         statesAllRequests.RequestNameFormat2 = "Request: " + str(i + 1) + "\n" \
                                                +"View: " + statesAllRequests.RequestViewLabel + "\n" \
                                                +"Data: " + statesAllRequests.RequestDataType + "-" + statesAllRequests.RequestData + "\n" \
@@ -65,7 +62,7 @@ def RequestNameProperties(Request,i):
                                                +"Group: " + statesAllRequests.RequestGroup
 
 def RequestFormatProperties(Request,i):
-    statesAllRequests.RequestDecimalPlaces = int(Request['DecimalPlaces']) if BasicHooks.CheckForInteger(Request['DecimalPlaces']) else 1
+    statesAllRequests.RequestDecimalPlaces = int(Request['DecimalPlaces'])
     statesAllRequests.RequestTextScale = Request['TextScale'] if BasicHooks.CheckforPositivefloat(Request['TextScale']) else 1
     statesAllRequests.RequestCircleScale = float(Request['MarkerScale']) if BasicHooks.CheckforPositivefloat(Request['MarkerScale']) else 1
 

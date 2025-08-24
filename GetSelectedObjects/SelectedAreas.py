@@ -15,9 +15,7 @@ def GetSelectedAreas():
         PropType=""
         if len(AreaProperty)>0:
             PropType=AreaProperty[0]["PropType"]
-        print(statesAllRequests.AreaAssignments[0])
         PtNames=floor['PtNames']
-        print(floor)
         if(set(PtNames).issubset(statesAllRequests.SelectedPointNamesForCurrentRequest)):
             PtsData=[BasicHooks.GetPointByName(x) for x in PtNames]
             if(PtsData!=None):

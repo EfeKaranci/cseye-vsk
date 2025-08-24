@@ -4,6 +4,8 @@ from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.colors as mcolors
 import database.tableSetup as tableSetup
 import io
+from matplotlib import colors as mcolors
+from matplotlib import cm
 from matplotlib.backends.backend_pdf import PdfPages
 from PyPDF2 import PdfReader, PdfWriter
 def build_tables():
@@ -144,3 +146,32 @@ def resetDefaultRow():
             tableSetup.RequestKeys[9]:"",
             tableSetup.RequestKeys[10]:1, tableSetup.RequestKeys[11]:1, tableSetup.RequestKeys[12]:1,
             tableSetup.RequestKeys[13]:True,tableSetup.RequestKeys[14]:True}
+
+def MapLabelsToColors(labels):
+    # preserve first-seen order
+    uniq = list(dict.fromkeys(labels))
+    n = len(uniq)
+
+    # 60 high-quality categorical colors (20 + 20 + 20)
+    base_maps = [cm.get_cmap('tab20'), cm.get_cmap('tab20b'), cm.get_cmap('tab20c')]
+    palette = []
+    for m in base_maps:
+        # ListedColormap has .colors as a list of RGBA tuples
+        palette.extend(m.colors)
+        if len(palette) >= n:
+            break
+
+    # If we still need more, generate evenly spaced HSV colors
+    if len(palette) < n:
+        needed = n - len(palette)
+        sat, val = 0.65, 0.9  # good readability on light backgrounds
+        # golden-ratio hue stepping for nicer spacing
+        phi = (1 + 5 ** 0.5) / 2
+        for i in range(needed):
+            h = (i / phi) % 1.0
+            rgb = mcolors.hsv_to_rgb((h, sat, val))
+            palette.append(rgb)
+
+    # convert to hex for convenient use with matplotlib
+    hex_colors = [mcolors.to_hex(c) for c in palette[:n]]
+    return dict(zip(uniq, hex_colors))
