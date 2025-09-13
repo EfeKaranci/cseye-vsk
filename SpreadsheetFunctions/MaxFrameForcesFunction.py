@@ -50,6 +50,8 @@ def GetResultsForFrame(FrameResults,RequestedDataKey):
                 MaxForce = max(Forces)
             if(statesAllRequests.RequestLoadStep=="min"):
                 MaxForce = min(Forces)
+            if(statesAllRequests.RequestLoadStep=="abs max"):
+                MaxForce = max(Forces, key=abs)
     FrameResult=next((x for x in FrameResults if float(x[RequestedDataKey]) == MaxForce), None)
     return FrameResult
 

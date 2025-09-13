@@ -30,7 +30,7 @@ def ModifyRequestsToSayIsOrIsNotEnvelope(EnvelopeCombosRequested):
     for index,Request in enumerate(statesAllRequests.Requests):
         if(Request['LoadCase'] in EnvelopeCombosRequested):
             statesAllRequests.Requests[index]['IsEnvelope']= "Yes"
-            if(Request['LoadStep'].lower() not in ["max","min"]):
+            if(Request['LoadStep'].lower() not in ["max","min","abs max"]):
                 statesAllRequests.Requests[index]['LoadStep']= "max"
         else:
             statesAllRequests.Requests[index]['IsEnvelope']= "No"

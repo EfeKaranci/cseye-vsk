@@ -15,6 +15,6 @@ def processRequests(selected_requests,outputFilePath,outputFolderPath,units,posV
     statesAllRequests.OutputName = outputFilePath
     statesAllRequests.OutputFolder = outputFolderPath
     statesAllRequests.SelectedUnits = units
-    statesAllRequests.PosViewTolerance = posViewTolerance
-    statesAllRequests.NegViewTolerance = negViewTolerance
+    statesAllRequests.PosViewTolerance = max(posViewTolerance,6)
+    statesAllRequests.NegViewTolerance = max(negViewTolerance,6)
     getRequiredCSITablesList.GetCSITablesList()

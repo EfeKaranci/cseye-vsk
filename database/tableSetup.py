@@ -70,7 +70,7 @@ GridSystemNames=[]
 
 StoryNames=[]
 
-LoadSteps=["","max", "min"]+[str(i) for i in range(1,100)]
+LoadSteps=["","max", "min", "abs max"]+[str(i) for i in range(1,100)]
 
 GroupNames=[]
 # Dictionary to store help text for each subheader

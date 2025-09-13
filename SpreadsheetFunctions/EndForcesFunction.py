@@ -4,14 +4,20 @@ import hooks.AnalysisResultsHooks as AnalysisResultsHooks
 def GetEndForcesSpreadsheet():
     #combine frame forces
     RequestedDataKey=RequestedDataDict[statesAllRequests.RequestData]["Key"]
+    print(RequestedDataKey)
     Looped=[]
+    print(statesAllRequests.SelectedFramesForCurrentRequest)
     for Frame in statesAllRequests.SelectedFramesForCurrentRequest:
         UniqueName,Story,FrameType=str(Frame["UniqueName"]),Frame["Story"],Frame["FrameType"]
+        print("0")
         if(UniqueName not in Looped):
+            print("1")
             Looped.append(UniqueName)
             if(statesAllRequests.RequestGroup=="" or UniqueName in statesAllRequests.RequestGroupFrames):
                 FrameResults = AnalysisResultsHooks.GetLoadResultsForObject(statesAllRequests.AllElementForces, UniqueName,"UniqueName")
+                print("2")
                 if(len(FrameResults)>0):
+                    print("3")
                     Stations=[float(x["Station"]) for x in FrameResults]
                     FirstStation=min(Stations)
                     LastStation=max(Stations)
@@ -50,6 +56,7 @@ def GetResultsForFrame(FrameResults,RequestedDataKey):
     elif(statesAllRequests.RequestIsEnvelope=="Yes"):
         if(statesAllRequests.RequestLoadStep=="max"):MaxForce = max(Forces)
         elif(statesAllRequests.RequestLoadStep=="min"):MaxForce = min(Forces)
+        elif(statesAllRequests.RequestLoadStep=="abs max"):MaxForce = max(Forces, key=abs)
     FrameResult=next((x for x in FrameResults if float(x[RequestedDataKey]) == MaxForce), None)
     return FrameResult
 
