@@ -12,9 +12,10 @@ def processRequests(selected_requests,outputFilePath,outputFolderPath,units,posV
     statesAllRequests.DataTypesRequested = list(set([row["DataType"] for row in selected_requests]))
     statesAllRequests.ViewTypesRequested = list(set([row["ViewType"] for row in selected_requests]))
     statesAllRequests.LoadResultsRequested = list(set([row["LoadCase"] for row in selected_requests]))
-    statesAllRequests.OutputName = outputFilePath
-    statesAllRequests.OutputFolder = outputFolderPath
+    statesAllRequests.OutputName = outputFilePath.strip()
+    statesAllRequests.OutputFolder = outputFolderPath.strip()
+    print(statesAllRequests.OutputFolder)
     statesAllRequests.SelectedUnits = units
-    statesAllRequests.PosViewTolerance = max(posViewTolerance,6)
-    statesAllRequests.NegViewTolerance = max(negViewTolerance,6)
+    statesAllRequests.PosViewTolerance = max(float(posViewTolerance),6)
+    statesAllRequests.NegViewTolerance = max(float(negViewTolerance),6)
     getRequiredCSITablesList.GetCSITablesList()

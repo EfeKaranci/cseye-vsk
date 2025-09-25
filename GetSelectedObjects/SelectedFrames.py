@@ -21,4 +21,3 @@ def GetSelectedFrames():
             if(not set([UniquePtI,UniquePtJ]).issubset(statesAllRequests.SelectedPointNamesForCurrentRequest)):
                 if(UniquePtI in statesAllRequests.SelectedPointNamesForCurrentRequest):statesAllRequests.PlanBraces.append({"Pt2d":Pt2dI})
                 if(UniquePtJ in statesAllRequests.SelectedPointNamesForCurrentRequest):statesAllRequests.PlanBraces.append({"Pt2d":Pt2dJ})
-    print(statesAllRequests.SelectedFramesForCurrentRequest)

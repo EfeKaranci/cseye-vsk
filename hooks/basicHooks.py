@@ -55,6 +55,8 @@ def WriteDictionaryWithTables(tables, path):
 
 def WritePdfPlot(figs, path):
     # 1) Render all the Matplotlib figures into an in-memory PDF
+    print(figs)
+    print(path)
     buffer = io.BytesIO()
     with PdfPages(buffer) as pdf:
         for fig in figs:

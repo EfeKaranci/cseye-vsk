@@ -20,6 +20,8 @@ def ResetRequestSpecificStates():
     statesAllRequests.RequestDecimalPlaces = ""
     statesAllRequests.RequestTextScale = ""
     statesAllRequests.RequestCircleScale = ""
+    statesAllRequests.RequestOutputPdf = ""
+    statesAllRequests.RequestOutputExcel = ""
     ###CALCULATED INDIVIDUAL REQUEST PARAMETERS
     statesAllRequests.ViewPlaneForCurrentRequest = {}
     statesAllRequests.SelectedPointsForCurrentRequest = []

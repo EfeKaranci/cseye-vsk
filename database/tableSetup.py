@@ -55,7 +55,8 @@ dataOptions = {
                 "Design Combination", 
                 "P Ratio", 
                 "M2 Ratio", 
-                "M3 Ratio"],
+                "M3 Ratio",
+                "All Ratios"],
             #"Story Drift": ["X", "Y"],
             "Story Forces": ["Story Forces"], #Excel Only
             #"Tributary Areas": ["Beams", "Columns"],

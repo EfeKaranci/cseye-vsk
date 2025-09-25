@@ -4,9 +4,7 @@ import hooks.AnalysisResultsHooks as AnalysisResultsHooks
 def GetEndForcesSpreadsheet():
     #combine frame forces
     RequestedDataKey=RequestedDataDict[statesAllRequests.RequestData]["Key"]
-    print(RequestedDataKey)
     Looped=[]
-    print(statesAllRequests.SelectedFramesForCurrentRequest)
     for Frame in statesAllRequests.SelectedFramesForCurrentRequest:
         UniqueName,Story,FrameType=str(Frame["UniqueName"]),Frame["Story"],Frame["FrameType"]
         print("0")

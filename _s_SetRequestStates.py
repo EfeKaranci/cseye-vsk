@@ -9,6 +9,7 @@ def SetRequestStates(Request,i):
     RequestGroupProperties(Request,i)
     RequestNameProperties(Request,i)
     RequestFormatProperties(Request,i)
+    RequestOutputProperties(Request,i)
     print("s")
 
 def RequestViewProperties(Request,i):
@@ -65,4 +66,8 @@ def RequestFormatProperties(Request,i):
     statesAllRequests.RequestDecimalPlaces = int(Request['DecimalPlaces'])
     statesAllRequests.RequestTextScale = Request['TextScale'] if BasicHooks.CheckforPositivefloat(Request['TextScale']) else 1
     statesAllRequests.RequestCircleScale = float(Request['MarkerScale']) if BasicHooks.CheckforPositivefloat(Request['MarkerScale']) else 1
+
+def RequestOutputProperties(Request,i):
+    statesAllRequests.RequestOutputPdf = Request['OutputPdf']
+    statesAllRequests.RequestOutputExcel = Request['OutputExcel']
 

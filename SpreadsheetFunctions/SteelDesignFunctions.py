@@ -30,7 +30,7 @@ def GetSteelDesign360_16():
                     PMMRatio=PMMSum.split(" ")[0]
                     PRatio=PMMSum.split(" ")[2]
                     M3Ratio=PMMSum.split(" ")[4]
-                    M2Ratio=PMMSum.split(" ")[5]
+                    M2Ratio=PMMSum.split(" ")[6]
                     Mid,Text=GetMidpointsandTextforPlotting(Frame,UniqueName,DesignSection,PMMCombo,PMMSum,PMMRatio,PRatio,M3Ratio,M2Ratio)
                     if(statesAllRequests.RequestData=="DCR"):
                         Color = BasicHooks.GetStressColor(float(PMMRatio))
@@ -42,6 +42,8 @@ def GetSteelDesign360_16():
                         Color = BasicHooks.GetStressColor(float(M2Ratio))
                     elif(statesAllRequests.RequestData=="M3 Ratio"):
                         Color = BasicHooks.GetStressColor(float(M3Ratio))
+                    elif(statesAllRequests.RequestData=="All Ratios"):
+                        Color = BasicHooks.GetStressColor(float(PMMRatio))
                     statesAllRequests.SelectedFramesForCurrentRequest[index]["Color"]=Color
                     if(FrameType=="Beam"):
                         statesAllRequests.OutputSheets[NewBeamSheet].append(FrameDesginResult)
@@ -50,12 +52,18 @@ def GetSteelDesign360_16():
                     if(FrameType=="Column"):
                         statesAllRequests.OutputSheets[NewColumnSheet].append(FrameDesginResult)
                     statesAllRequests.PlotTable.append({"Pt2d":Mid,"Text":Text})
+    if(statesAllRequests.RequestOutputExcel==False):
+        print("no")
+        del statesAllRequests.OutputSheets[NewBeamSheet]
+        del statesAllRequests.OutputSheets[NewBraceSheet]
+        del statesAllRequests.OutputSheets[NewColumnSheet]
 
 def GetMidpointsandTextforPlotting(Frame,UniqueName,DesignSection,PMMCombo,PMMSum,PMMRatio,PRatio,M3Ratio,M2Ratio):
     PtI=Frame["Pt2dI"]
     PtJ=Frame["Pt2dJ"]
     Mid = (PtI + PtJ) / 2
     Text = ""
+    print(M2Ratio)
     if(statesAllRequests.RequestData=="DCR"):
         Text+=DesignSection+"\n"+"DCR = "+str(PMMRatio)
     elif(statesAllRequests.RequestData=="Design Combination"):
@@ -66,5 +74,7 @@ def GetMidpointsandTextforPlotting(Frame,UniqueName,DesignSection,PMMCombo,PMMSu
         Text+=DesignSection+"\n"+"DCR(M2) = "+str(M2Ratio)
     elif(statesAllRequests.RequestData=="M3 Ratio"):
         Text+=DesignSection+"\n"+"DCR(M3) = "+str(M3Ratio)
+    elif(statesAllRequests.RequestData=="All Ratios"):
+        Text+=DesignSection+"\n"+"DCR(P) = "+str(PRatio)+"\n"+"DCR(M2) = "+str(M2Ratio)+"\n"+"DCR(M3) = "+str(M3Ratio)
     return Mid, Text
 

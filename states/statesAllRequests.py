@@ -79,6 +79,8 @@ RequestGroupAreas=[]
 RequestDecimalPlaces=[]
 RequestTextScale=""
 RequestCircleScale=""
+RequestOutputPdf=""
+RequestOutputExcel=""
 ###CALCULATED INDIVIDUAL REQUEST PARAMETERS
 ViewPlaneForCurrentRequest={}
 SelectedPointsForCurrentRequest=[]
