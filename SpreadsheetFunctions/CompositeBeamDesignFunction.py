@@ -4,7 +4,7 @@ import hooks.basicHooks as BasicHooks
 
 def CompositeBeamDesignFunction():
     BeamDesignResults = statesAllRequests.SelectedCSITables["Composite Beam Design Envelope - AISC 360-16"]
-    FramesWithDesignResults=[x["UniqueName"] for x in BeamDesignResults]
+    BeamDesignResultsEnvelope = statesAllRequests.SelectedCSITables["Composite Beam Design Envelope"]
     StudLayouts = [float(x["StudLayout"]) for x in BeamDesignResults]
     bEffs = [float(x["bEffLeft"])+float(x["bEffRight"]) for x in BeamDesignResults]
     StrPMCapacities = [float(x["StrPMCapacity"]) for x in BeamDesignResults]
@@ -13,7 +13,10 @@ def CompositeBeamDesignFunction():
         UniqueName=str(Frame["UniqueName"])
         if(statesAllRequests.RequestGroup=="" or UniqueName in statesAllRequests.RequestGroupFrames):
             FrameDesginResult=next((x for x in BeamDesignResults if x["UniqueName"] == UniqueName), None)
+            FrameDesginResultEnvelope=next((x for x in BeamDesignResultsEnvelope if x["UniqueName"] == UniqueName), None)
             if(FrameDesginResult!=None):
+                if(UniqueName=="266"):
+                    print(FrameDesginResultEnvelope)
                 DesignSect = FrameDesginResult["DesignSect"]
                 bEffLeft = FrameDesginResult["bEffLeft"]
                 bEffRight = FrameDesginResult["bEffRight"]
