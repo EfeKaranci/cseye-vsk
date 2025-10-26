@@ -64,6 +64,8 @@ AvailableTables = {
                                   "ViewTypes":["Story","Elevation"]},
     "Steel Beam Envelope - AISC 360-16": {"DataType":["Steel Design 360-16"],
                                   "ViewTypes":["Story","Elevation"]},
+    "Steel Beam Deflection Envelope - AISC 360-16": {"DataType":["Steel Design 360-16"],
+                                  "ViewTypes":["Story","Elevation"]},
     "Steel Brace Envelope - AISC 360-16": {"DataType":["Steel Design 360-16"],
                                   "ViewTypes":["Story","Elevation"]},
     "Steel Column Envelope - AISC 360-16": {"DataType":["Steel Design 360-16"],

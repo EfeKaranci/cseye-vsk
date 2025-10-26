@@ -35,6 +35,9 @@ dataOptions = {
                                     "Composite Capacities at Max DCR",
                                     "Design Reactions",
                                     "Design Ratio",
+                                    "Vibration Ratio",
+                                    "Shear Ratio",
+                                    "Deflection Ratio"
                                     ],
             "Diaphragm Forces": ["Applied Force", "Reactive Force", "Diaphragm Force"],
             "Diaphragm Brace Forces": ["Diaphragm Brace Forces"],
@@ -56,6 +59,8 @@ dataOptions = {
                 "P Ratio", 
                 "M2 Ratio", 
                 "M3 Ratio",
+                "V2 Ratio",
+                "Deflection Ratio",
                 "All Ratios"],
             #"Story Drift": ["X", "Y"],
             "Story Forces": ["Story Forces"], #Excel Only

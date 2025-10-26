@@ -7,15 +7,11 @@ def GetEndForcesSpreadsheet():
     Looped=[]
     for Frame in statesAllRequests.SelectedFramesForCurrentRequest:
         UniqueName,Story,FrameType=str(Frame["UniqueName"]),Frame["Story"],Frame["FrameType"]
-        print("0")
         if(UniqueName not in Looped):
-            print("1")
             Looped.append(UniqueName)
             if(statesAllRequests.RequestGroup=="" or UniqueName in statesAllRequests.RequestGroupFrames):
                 FrameResults = AnalysisResultsHooks.GetLoadResultsForObject(statesAllRequests.AllElementForces, UniqueName,"UniqueName")
-                print("2")
                 if(len(FrameResults)>0):
-                    print("3")
                     Stations=[float(x["Station"]) for x in FrameResults]
                     FirstStation=min(Stations)
                     LastStation=max(Stations)

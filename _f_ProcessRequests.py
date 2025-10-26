@@ -14,7 +14,6 @@ def processRequests(selected_requests,outputFilePath,outputFolderPath,units,posV
     statesAllRequests.LoadResultsRequested = list(set([row["LoadCase"] for row in selected_requests]))
     statesAllRequests.OutputName = outputFilePath.strip()
     statesAllRequests.OutputFolder = outputFolderPath.strip()
-    print(statesAllRequests.OutputFolder)
     statesAllRequests.SelectedUnits = units
     statesAllRequests.PosViewTolerance = max(float(posViewTolerance),6)
     statesAllRequests.NegViewTolerance = max(float(negViewTolerance),6)
