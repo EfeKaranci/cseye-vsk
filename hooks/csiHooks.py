@@ -16,6 +16,7 @@ def RunModel():
 
 def getModel():
     helper = comtypes.client.CreateObject("ETABSv1.Helper")
+    print(helper)
     helper = helper.QueryInterface(comtypes.gen.ETABSv1.cHelper)
     myETABSObject = helper.GetObject("CSI.ETABS.API.ETABSObject")
     if(myETABSObject!=None):
