@@ -14,8 +14,8 @@ const post = (path: string, body?: unknown) =>
 export const api = {
   health: () => j<{ ok: boolean; etabs: unknown }>("/health"),
   config: () => j<{ publish_enabled: boolean; share_viewer: string | null }>("/config"),
-  publish: (sid: string, label?: string) =>
-    post(`/m/${sid}/publish`, label ? { label } : {}) as Promise<{ token: string; share_url: string | null; results: string[]; public_base: string }>,
+  publish: (sid: string, body?: { label?: string; results?: string[] }) =>
+    post(`/m/${sid}/publish`, body ?? {}) as Promise<{ token: string; share_url: string | null; results: string[]; public_base: string }>,
   models: () => j<{ count: number; models: ModelInfo[] }>("/models"),
   attach: () => post("/session/attach") as Promise<{ snapshot: string; status: any }>,
   open: (path: string) => post("/session/open", { path }) as Promise<{ snapshot: string; status: any }>,

@@ -34,14 +34,15 @@ def ensure_bucket() -> None:
             raise
 
 
-def publish(sid: str, label: str | None = None, expires_days: int | None = None) -> dict:
+def publish(sid: str, label: str | None = None, expires_days: int | None = None,
+            results: list[str] | None = None) -> dict:
     url, key, bucket = config.SUPABASE_URL, config.SUPABASE_SERVICE_KEY, config.SUPABASE_BUCKET
     if not url or not key:
         raise RuntimeError("Supabase not configured. Set SUPABASE_URL and SUPABASE_SERVICE_KEY.")
     geom = store.export_geometry(sid)
-    forces = store.export_forces(sid)
+    forces = store.export_forces(sid, results)
     if not forces["result_sets"]:
-        raise RuntimeError("Nothing to publish yet — extract at least one result set first.")
+        raise RuntimeError("Nothing to publish — extract (or select) at least one result set first.")
 
     ensure_bucket()
     token = str(uuid.uuid4())

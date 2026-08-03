@@ -130,6 +130,8 @@ def do_publish(sid: str, payload: dict = Body(default={})):
     if not store.meta(sid):
         raise HTTPException(404, "unknown snapshot")
     try:
-        return publisher.publish(sid, label=payload.get("label"), expires_days=payload.get("expires_days"))
+        return publisher.publish(sid, label=payload.get("label"),
+                                 expires_days=payload.get("expires_days"),
+                                 results=payload.get("results"))
     except RuntimeError as e:
         raise HTTPException(400, str(e))

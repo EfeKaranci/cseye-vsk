@@ -121,24 +121,29 @@ def export_geometry(sid: str) -> dict:
             "frames": g["frames"], "grid_lines": g["grid_lines"], "result_sets": m["result_sets"]}
 
 
-def export_forces(sid: str) -> dict:
-    """Full per-step forces + reactions bundle (client aggregates level slices)."""
+def export_forces(sid: str, results: list[str] | None = None) -> dict:
+    """Full per-step forces + reactions bundle (client aggregates level slices).
+    If `results` is given, only those result sets are included."""
     c = con()
+    want = set(results) if results else None
+    keep = lambda rs: want is None or rs in want
     steps_map: dict = {}
     for r in c.execute("SELECT result_set,label FROM step WHERE sid=? ORDER BY idx", (sid,)):
-        steps_map.setdefault(r["result_set"], []).append(r["label"])
+        if keep(r["result_set"]): steps_map.setdefault(r["result_set"], []).append(r["label"])
     cf: dict = {}
     for r in c.execute("SELECT result_set,frame,step,p,v2,v3,m2,m3 FROM column_force WHERE sid=?", (sid,)):
+        if not keep(r["result_set"]): continue
         cf.setdefault(r["frame"], {}).setdefault(r["result_set"], {})[r["step"]] = {
             "P": r["p"], "V2": r["v2"], "V3": r["v3"], "M2": r["m2"], "M3": r["m3"]}
     rx: dict = {}
     for r in c.execute("SELECT result_set,joint,step,x,y,z,fx,fy,fz,mx,my,mz FROM reaction WHERE sid=?", (sid,)):
+        if not keep(r["result_set"]): continue
         d = rx.setdefault(r["joint"], {"x": r["x"], "y": r["y"], "z": r["z"], "results": {}})
         d["results"].setdefault(r["result_set"], {})[r["step"]] = {
             "Fx": r["fx"], "Fy": r["fy"], "Fz": r["fz"], "Mx": r["mx"], "My": r["my"], "Mz": r["mz"]}
     kinds = {r["name"]: r["kind"] for r in c.execute("SELECT name,kind FROM result_set WHERE sid=?", (sid,))}
-    results = sorted({rs for f in cf.values() for rs in f})
-    return {"result_sets": results, "result_kinds": {k: kinds.get(k, "case") for k in results},
+    resset = sorted({rs for f in cf.values() for rs in f})
+    return {"result_sets": resset, "result_kinds": {k: kinds.get(k, "case") for k in resset},
             "steps": steps_map, "col_forces": cf, "reactions": rx}
 
 

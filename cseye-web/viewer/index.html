@@ -89,6 +89,24 @@
     </div>
   </div>
   <div class="toast" id="toast"></div>
+
+  <div class="modal hide" id="pubModal">
+    <div class="sheet">
+      <h3>Publish a shareable link</h3>
+      <p class="note">Pick which load cases &amp; combinations to include in the shared bundle. Sets not yet extracted are pulled from ETABS first.</p>
+      <input class="pubinput" id="pubLabel" type="text" placeholder="Label (optional)" />
+      <div class="pubgrid" id="pubOpts"></div>
+      <div class="modbtns">
+        <button class="btn" id="pubSelExtracted" title="Select only already-extracted sets">Extracted only</button>
+        <button class="btn" id="pubSelAll">Select all</button>
+        <button class="btn" id="pubSelNone">Clear</button>
+        <span class="spring"></span>
+        <button class="btn" id="pubCancel">Cancel</button>
+        <button class="btn primary" id="pubGo">Publish</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

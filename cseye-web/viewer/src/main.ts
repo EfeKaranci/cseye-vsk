@@ -280,15 +280,47 @@ $("lyBeams").addEventListener("change", e => { R.showBeams = (e.target as HTMLIn
 $("lyGrids").addEventListener("change", e => { R.showGrids = (e.target as HTMLInputElement).checked; R.draw(); });
 $("lyLabels").addEventListener("change", e => { R.showLabels = (e.target as HTMLInputElement).checked; R.draw(); });
 $("pdfBtn").onclick = () => R.exportPDF(`CSEYE_${layer}_${level.replace(/\s+/g, "")}.pdf`);
-$("publishBtn").onclick = async () => {
-  if (!sid) return;
-  busy(true); status("Publishing to Supabase…");
+function openPublish() {
+  if (!sid || !meta) return;
+  ($("pubLabel") as HTMLInputElement).value = meta.model;
+  const host = $("pubOpts"); host.innerHTML = "";
+  const section = (title: string, kind: "case" | "combo") => {
+    const sets = meta!.result_sets.filter(r => r.kind === kind && (kind === "combo" || r.finished));
+    if (!sets.length) return;
+    const h = document.createElement("h4"); h.textContent = title; host.appendChild(h);
+    for (const r of sets) {
+      const row = document.createElement("label"); row.className = "row";
+      const cb = document.createElement("input"); cb.type = "checkbox"; cb.className = "pubchk"; cb.value = r.name; cb.checked = !!r.extracted;
+      const nm = document.createElement("span"); nm.textContent = r.name;
+      row.appendChild(cb); row.appendChild(nm);
+      if (r.extracted) { const t = document.createElement("span"); t.className = "tag"; t.textContent = "extracted"; row.appendChild(t); }
+      host.appendChild(row);
+    }
+  };
+  section("Load cases", "case"); section("Load combinations", "combo");
+  $("pubModal").classList.remove("hide");
+}
+const chks = () => [...document.querySelectorAll(".pubchk")] as HTMLInputElement[];
+$("publishBtn").onclick = openPublish;
+$("pubCancel").onclick = () => $("pubModal").classList.add("hide");
+$("pubSelAll").onclick = () => chks().forEach(c => c.checked = true);
+$("pubSelNone").onclick = () => chks().forEach(c => c.checked = false);
+$("pubSelExtracted").onclick = () => chks().forEach(c => c.checked = !!meta!.result_sets.find(r => r.name === c.value)?.extracted);
+$("pubGo").onclick = async () => {
+  const sel = chks().filter(c => c.checked).map(c => c.value);
+  if (!sel.length) { toast("Select at least one result set."); return; }
+  $("pubModal").classList.add("hide"); busy(true);
   try {
-    const r = await api.publish(sid);
+    const missing = sel.filter(n => !meta!.result_sets.find(r => r.name === n)?.extracted);
+    for (const n of missing) { status(`Extracting ${n} from ETABS…`); await api.extract(sid!, [n]); }
+    if (missing.length) meta = await api.meta(sid!);
+    status("Publishing to Supabase…");
+    const label = ($("pubLabel") as HTMLInputElement).value.trim() || undefined;
+    const r = await api.publish(sid!, { label, results: sel });
     const url = r.share_url ?? r.public_base;
     try { await navigator.clipboard.writeText(url); } catch { /* clipboard may be blocked */ }
     status("Published → " + url);
-    toast(r.share_url ? "Share link copied to clipboard" : "Published (set CSEYE_SHARE_URL for a viewer link)");
+    toast(r.share_url ? `Share link copied — ${sel.length} result sets` : "Published (set CSEYE_SHARE_URL for a link)");
   } catch (e: any) { toast("Publish failed: " + e.message); status(String(e.message)); }
   finally { busy(false); }
 };
