@@ -8,3 +8,6 @@ dist/
 .venv/
 # large local data dumps produced by dev tools
 tools/*.json
+
+# stray tsc output
+viewer/src/*.js
