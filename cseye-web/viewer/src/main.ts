@@ -21,7 +21,7 @@ let layer: Layer = "geom";
 let result = "";
 let allModels: ModelInfo[] = [];
 let publishEnabled = false;
-interface PdfState { pdf: any; page: number; pages: number; }
+interface PdfState { pdf: any; page: number; pages: number; data: Uint8Array; }
 const pdfByLevel = new Map<string, { u: Underlay; st: PdfState }>();
 let stepList: string[] = [];
 let curStep: string | null = null;   // null = envelope (aggregate across steps)
@@ -261,9 +261,9 @@ R.onMeasure = (text) => status(text ?? "");
 async function loadPdf(file: File) {
   busy(true); status("Rendering PDF…");
   try {
-    const buf = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
-    await renderPdfPage({ pdf, page: 1, pages: pdf.numPages }, false);
+    const data = new Uint8Array(await file.arrayBuffer());
+    const pdf = await pdfjsLib.getDocument({ data: data.slice() }).promise;
+    await renderPdfPage({ pdf, page: 1, pages: pdf.numPages, data }, false);
     R.setUnderlayMode("move"); syncPdfModeBtns();
     status("PDF placed — drag to position (Move/scale) or use 2-point align.");
   } catch (e: any) { toast("PDF load failed: " + e.message); }
@@ -315,6 +315,17 @@ $("pdfMove").onclick = () => { R.setUnderlayMode(R.underlayMode === "move" ? "of
 $("pdfAlign").onclick = () => { R.setUnderlayMode(R.underlayMode === "align" ? "off" : "align"); syncPdfModeBtns(); };
 $("pdfClear").onclick = () => { R.clearUnderlay(); pdfByLevel.delete(level); refreshPdfPanel(); };
 R.onUnderlay = (msg) => { status(msg); $("pdfHint").textContent = msg; syncPdfModeBtns(); };
+function u8ToB64(u8: Uint8Array): string {
+  let s = ""; const chunk = 0x8000;
+  for (let i = 0; i < u8.length; i += chunk) s += String.fromCharCode(...u8.subarray(i, i + chunk));
+  return btoa(s);
+}
+function gatherUnderlays(): Record<string, unknown> | undefined {
+  const out: Record<string, unknown> = {};
+  for (const [lvl, e] of pdfByLevel)
+    out[lvl] = { pdf: u8ToB64(e.st.data), page: e.st.page, tx: e.u.tx, ty: e.u.ty, s: e.u.s, rot: e.u.rot, opacity: e.u.opacity };
+  return Object.keys(out).length ? out : undefined;
+}
 
 // ---------- controls ----------
 $("connectBtn").onclick = connect;
@@ -381,7 +392,7 @@ $("pubGo").onclick = async () => {
     if (missing.length) meta = await api.meta(sid!);
     status("Publishing to Supabase…");
     const label = ($("pubLabel") as HTMLInputElement).value.trim() || undefined;
-    const r = await api.publish(sid!, { label, results: sel });
+    const r = await api.publish(sid!, { label, results: sel, underlays: gatherUnderlays() });
     const url = r.share_url ?? r.public_base;
     try { await navigator.clipboard.writeText(url); } catch { /* clipboard may be blocked */ }
     status("Published → " + url);

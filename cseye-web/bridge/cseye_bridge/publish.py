@@ -4,7 +4,7 @@ bundles to a public Storage bucket under a random token, and record a `share`
 row. The service_role key stays here — it never reaches the browser.
 """
 from __future__ import annotations
-import os, json, uuid, datetime, urllib.request, urllib.error
+import os, json, uuid, datetime, base64, hashlib, urllib.request, urllib.error
 from . import config
 from .db import store
 
@@ -56,7 +56,7 @@ def ensure_bucket() -> None:
 
 
 def publish(sid: str, label: str | None = None, expires_days: int | None = None,
-            results: list[str] | None = None) -> dict:
+            results: list[str] | None = None, underlays: dict | None = None) -> dict:
     url, key, bucket = config.SUPABASE_URL, config.SUPABASE_SERVICE_KEY, config.SUPABASE_BUCKET
     if not url or not key:
         raise RuntimeError("Supabase not configured. Set SUPABASE_URL and SUPABASE_SERVICE_KEY.")
@@ -71,6 +71,26 @@ def publish(sid: str, label: str | None = None, expires_days: int | None = None,
     up_hdr = {**_svc_headers(), "x-upsert": "true"}
     for name, obj in (("geometry.json", geom), ("forces.json", forces)):
         _req("POST", f"{base}/{name}", json.dumps(obj, separators=(",", ":")).encode(), up_hdr)
+
+    # per-level background-PDF underlays (upload each unique PDF + a metadata map)
+    if underlays:
+        umeta: dict = {}
+        uploaded: dict = {}
+        for lvl, u in underlays.items():
+            b64 = u.get("pdf")
+            if not b64:
+                continue
+            raw = base64.b64decode(b64)
+            h = hashlib.sha1(raw).hexdigest()[:12]
+            name = f"pdf_{h}.pdf"
+            if h not in uploaded:
+                _req("POST", f"{base}/{name}", raw,
+                     {**_svc_headers(), "Content-Type": "application/pdf", "x-upsert": "true"})
+                uploaded[h] = name
+            umeta[lvl] = {"pdf": name, "page": u.get("page", 1), "tx": u["tx"], "ty": u["ty"],
+                          "s": u["s"], "rot": u["rot"], "opacity": u.get("opacity", 0.55)}
+        if umeta:
+            _req("POST", f"{base}/underlays.json", json.dumps(umeta).encode(), up_hdr)
 
     # Best-effort share registry row (optional — the token path alone drives the viewer).
     share_recorded = False

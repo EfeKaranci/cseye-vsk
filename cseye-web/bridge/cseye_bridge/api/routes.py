@@ -132,6 +132,7 @@ def do_publish(sid: str, payload: dict = Body(default={})):
     try:
         return publisher.publish(sid, label=payload.get("label"),
                                  expires_days=payload.get("expires_days"),
-                                 results=payload.get("results"))
+                                 results=payload.get("results"),
+                                 underlays=payload.get("underlays"))
     except RuntimeError as e:
         raise HTTPException(400, str(e))

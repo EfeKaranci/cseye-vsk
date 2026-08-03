@@ -1,7 +1,7 @@
 // Share viewer — read-only. Loads a published bundle from Supabase public
 // Storage by token (?s=...) and drives the same PlanRenderer via client-side
 // aggregation. No bridge, no ETABS.
-import { PlanRenderer, type Layer, type ValMode, type Hit, type MeasureMode } from "./render";
+import { PlanRenderer, type Layer, type ValMode, type Hit, type MeasureMode, type Underlay } from "./render";
 import { planColumns, reactionSupports, stepsFor, type Bundle, type GeomBundle } from "./aggregate";
 import type { Frame, PlanColumn, Support } from "./types";
 
@@ -17,6 +17,29 @@ let geom!: GeomBundle;
 let forces!: Bundle;
 let colsByStory = new Map<string, Frame[]>();
 let level = "", layer: Layer = "geom", result = "", curStep: string | null = null, stepList: string[] = [];
+let underlaysMeta: Record<string, any> = {};
+const underlayCache = new Map<string, Underlay>();
+let shareBase = "";
+let pdfjs: any = null;
+async function ensurePdfjs() {
+  if (!pdfjs) { pdfjs = await import("pdfjs-dist"); pdfjs.GlobalWorkerOptions.workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default; }
+  return pdfjs;
+}
+async function applyUnderlay() {
+  const m = underlaysMeta[level];
+  if (!m) { if (R.underlay) { R.underlay = null; R.draw(); } return; }
+  if (underlayCache.has(level)) { R.underlay = underlayCache.get(level)!; R.draw(); return; }
+  try {
+    const lib = await ensurePdfjs();
+    const doc = await lib.getDocument({ url: `${shareBase}/${m.pdf}` }).promise;
+    const page = await doc.getPage(m.page || 1);
+    const vp = page.getViewport({ scale: 2 });
+    const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+    await page.render({ canvasContext: c.getContext("2d")!, viewport: vp }).promise;
+    const u: Underlay = { img: c, w: c.width, h: c.height, tx: m.tx, ty: m.ty, s: m.s, rot: m.rot, opacity: m.opacity ?? 0.55, visible: ($("lyPdf") as HTMLInputElement)?.checked ?? true };
+    underlayCache.set(level, u); R.underlay = u; R.draw();
+  } catch { /* underlay optional */ }
+}
 
 async function loadPicker(token: string | null) {
   try {
@@ -45,6 +68,7 @@ async function boot() {
   }
   if (!SUPA) { $("status").textContent = "Viewer misconfigured: no Supabase URL was baked in at build time."; toast("Misconfigured build"); return; }
   const base = `${SUPA}/storage/v1/object/public/${BUCKET}/snapshots/${token}`;
+  shareBase = base;
   busy(true);
   try {
     [geom, forces] = await Promise.all([
@@ -63,7 +87,8 @@ async function boot() {
   let best = geom.stories[0]?.name ?? "", bn = -1;
   for (const st of geom.stories) { const n = colsByStory.get(st.name)?.length ?? 0; if (n > bn) { bn = n; best = st.name; } }
   level = best;
-  R.resize(); refresh(); R.fit();
+  try { const ur = await fetch(`${base}/underlays.json`); if (ur.ok) underlaysMeta = await ur.json(); } catch { /* optional */ }
+  R.resize(); refresh(); R.fit(); applyUnderlay();
   $("status").textContent = `Shared read-only view · ${forces.result_sets.length} result sets`;
   busy(false);
 }
@@ -79,7 +104,7 @@ function buildLevels() {
     const n = colsByStory.get(st.name)?.length ?? 0;
     const el = document.createElement("div"); el.className = "lv";
     el.innerHTML = `<span class="nm">${st.name}</span><span class="lvr"><span class="el mono">${st.elev.toFixed(1)}'</span>${n ? `<span class="cnt mono">${n} col</span>` : ""}</span>`;
-    el.onclick = () => { level = st.name; markLevel(); refresh(); };
+    el.onclick = () => { level = st.name; markLevel(); refresh(); applyUnderlay(); };
     host.appendChild(el);
   }
   markLevel();
@@ -184,6 +209,7 @@ $("stepPrev").onclick = () => cycleStep(-1); $("stepNext").onclick = () => cycle
 $("lyBeams").addEventListener("change", e => { R.showBeams = (e.target as HTMLInputElement).checked; R.draw(); });
 $("lyGrids").addEventListener("change", e => { R.showGrids = (e.target as HTMLInputElement).checked; R.draw(); });
 $("lyLabels").addEventListener("change", e => { R.showLabels = (e.target as HTMLInputElement).checked; R.draw(); });
+$("lyPdf").addEventListener("change", e => R.setUnderlayVisible((e.target as HTMLInputElement).checked));
 $("pdfBtn").onclick = () => R.exportPDF(`CSEYE_${layer}_${level.replace(/\s+/g, "")}.pdf`);
 $("themeBtn").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark"); R.draw(); updateLegend(); };
 
