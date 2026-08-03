@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="/favicon-local.svg" />
   <title>CSEYE — ETABS Model Viewer</title>
   <link rel="stylesheet" href="/src/style.css" />
 </head>
@@ -40,6 +40,7 @@
         <select class="sel" id="stepSel"></select>
         <button class="btn iconbtn" id="stepNext" title="Next step">▶</button>
       </div>
+      <button class="btn" id="measureBtn" title="Measure distance — click two points (snaps to columns)">Measure</button>
       <div class="sep"></div>
       <span class="note" id="status">Start the bridge (python run.py), then Connect.</span>
     </div>

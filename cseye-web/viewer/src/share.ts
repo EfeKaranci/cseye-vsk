@@ -152,6 +152,17 @@ R.onPick = (h: Hit | null) => {
 };
 R.onCursor = (x, y) => { $("cursor").textContent = `x ${x.toFixed(1)}, y ${y.toFixed(1)}`; };
 R.onNotify = (m) => toast(m);
+let measuring = false;
+$("measureBtn").onclick = () => {
+  measuring = !measuring; R.setMeasure(measuring);
+  $("measureBtn").classList.toggle("active", measuring);
+  $("status").textContent = measuring ? "Measure: click first point, then second (snaps to columns/supports)." : "Read-only shared view — no ETABS required.";
+};
+R.onMeasure = (info) => {
+  $("status").textContent = info
+    ? `Distance ${info.len.toFixed(2)} ft   (Δx ${info.dx.toFixed(2)}, Δy ${info.dy.toFixed(2)})`
+    : (measuring ? "Measure: click first point, then second." : "Read-only shared view — no ETABS required.");
+};
 
 $("zin").onclick = () => R.zoomAt(R.W() / 2, R.H() / 2, 1.2);
 $("zout").onclick = () => R.zoomAt(R.W() / 2, R.H() / 2, 1 / 1.2);

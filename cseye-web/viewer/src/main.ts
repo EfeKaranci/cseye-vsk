@@ -246,6 +246,16 @@ R.onPick = (h: Hit | null) => {
 };
 R.onCursor = (x, y) => { $("cursor").textContent = `x ${x.toFixed(1)}, y ${y.toFixed(1)}`; };
 R.onNotify = (m) => toast(m);
+let measuring = false;
+$("measureBtn").onclick = () => {
+  measuring = !measuring; R.setMeasure(measuring);
+  $("measureBtn").classList.toggle("active", measuring);
+  status(measuring ? "Measure: click first point, then second (snaps to columns/supports)." : "");
+};
+R.onMeasure = (info) => {
+  if (info) status(`Distance ${info.len.toFixed(2)} ft   (Δx ${info.dx.toFixed(2)}, Δy ${info.dy.toFixed(2)})`);
+  else if (measuring) status("Measure: click first point, then second (snaps to columns/supports).");
+};
 
 // ---------- controls ----------
 $("connectBtn").onclick = connect;

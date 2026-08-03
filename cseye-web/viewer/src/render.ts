@@ -18,9 +18,13 @@ export class PlanRenderer {
   layer: Layer = "geom"; vmode: ValMode = "gov";
   showLabels = true; showBeams = true; showGrids = true;
   hover: Hit["data"] | null = null; pick: Hit["data"] | null = null;
+  measureMode = false;
+  private mA: { x: number; y: number } | null = null;
+  private mB: { x: number; y: number } | null = null;
   onPick?: (h: Hit | null) => void;
   onCursor?: (x: number, y: number) => void;
   onNotify?: (m: string) => void;
+  onMeasure?: (info: { len: number; dx: number; dy: number } | null) => void;
   title = "";
 
   constructor(cv: HTMLCanvasElement) {
@@ -84,7 +88,46 @@ export class PlanRenderer {
     if (this.showBeams) this.drawBeams();
     if (this.layer === "react") this.drawReactions();
     else this.drawColumns();
+    if (this.measureMode) this.drawMeasure();
     this.drawScaleBar();
+  }
+
+  // ---- measure tool ----
+  setMeasure(on: boolean) {
+    this.measureMode = on;
+    if (!on) { this.mA = this.mB = null; this.onMeasure?.(null); }
+    this.cv.style.cursor = on ? "crosshair" : "default";
+    this.draw();
+  }
+  private snapPoint(px: number, py: number) {
+    const cand = this.layer === "react" ? this.supports.map(s => ({ x: s.x, y: s.y })) : this.columns.map(c => ({ x: c.ix, y: c.iy }));
+    let best: { x: number; y: number } | null = null, bd = 13 * 13;
+    for (const c of cand) { const dx = this.wx(c.x) - px, dy = this.wy(c.y) - py, d = dx * dx + dy * dy; if (d < bd) { bd = d; best = c; } }
+    return best ?? this.inv(px, py);
+  }
+  private placeMeasure(px: number, py: number) {
+    const p = this.snapPoint(px, py);
+    if (!this.mA || this.mB) { this.mA = p; this.mB = null; this.onMeasure?.(null); }
+    else { this.mB = p; this.onMeasure?.({ len: Math.hypot(this.mB.x - this.mA.x, this.mB.y - this.mA.y), dx: this.mB.x - this.mA.x, dy: this.mB.y - this.mA.y }); }
+    this.draw();
+  }
+  private drawMeasure() {
+    const { ctx } = this;
+    const dot = (p: { x: number; y: number }) => { ctx.beginPath(); ctx.fillStyle = css("--amber"); ctx.arc(this.wx(p.x), this.wy(p.y), 4, 0, 7); ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = css("--ink"); ctx.stroke(); };
+    if (this.mA) dot(this.mA);
+    if (this.mA && this.mB) {
+      dot(this.mB);
+      const ax = this.wx(this.mA.x), ay = this.wy(this.mA.y), bx = this.wx(this.mB.x), by = this.wy(this.mB.y);
+      ctx.save(); ctx.strokeStyle = css("--amber"); ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke(); ctx.setLineDash([]);
+      const len = Math.hypot(this.mB.x - this.mA.x, this.mB.y - this.mA.y);
+      const mx = (ax + bx) / 2, my = (ay + by) / 2, txt = len.toFixed(2) + " ft";
+      ctx.font = "700 12px " + css("--font-mono"); const w = ctx.measureText(txt).width + 12;
+      ctx.fillStyle = css("--panel"); ctx.strokeStyle = css("--amber"); ctx.lineWidth = 1;
+      ctx.beginPath(); (ctx as any).roundRect(mx - w / 2, my - 10, w, 19, 5); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = css("--ink"); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(txt, mx, my);
+      ctx.restore();
+    }
   }
   private drawBeams() {
     const { ctx } = this; ctx.save(); ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1; ctx.globalAlpha = .8; ctx.beginPath();
@@ -92,16 +135,27 @@ export class PlanRenderer {
     ctx.stroke(); ctx.restore();
   }
   private drawGrids() {
-    const { ctx } = this, e = this.extents; ctx.save(); ctx.lineWidth = 1; ctx.setLineDash([7, 5]);
-    ctx.strokeStyle = css("--grid"); ctx.globalAlpha = .8; ctx.font = "600 11px " + css("--font-mono");
-    for (const g of this.grids) { if (!g.visible) continue; ctx.beginPath(); ctx.moveTo(this.wx(g.x1), this.wy(g.y1)); ctx.lineTo(this.wx(g.x2), this.wy(g.y2)); ctx.stroke(); }
-    ctx.setLineDash([]);
+    // Grid lines span the whole viewport (stay visible at any zoom/pan) and the
+    // labelled bubbles are pinned to the top/left edge so they never scroll away.
+    const { ctx } = this, W = this.W(), H = this.H();
+    ctx.save(); ctx.lineWidth = 1; ctx.font = "600 11px " + css("--font-mono");
     for (const g of this.grids) {
       if (!g.visible) continue;
-      const px = this.wx(g.dir === "X" ? g.x1 : e.xmax), py = this.wy(g.dir === "X" ? e.ymax : g.y1);
-      const cx = g.dir === "X" ? px : px + 13, cy = g.dir === "X" ? py - 13 : py;
-      ctx.beginPath(); ctx.fillStyle = css("--canvas"); ctx.strokeStyle = css("--grid-strong"); ctx.arc(cx, cy, 10, 0, 7); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = css("--ink-soft"); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(g.id.slice(0, 4), cx, cy);
+      let bx: number, by: number;
+      ctx.setLineDash([7, 5]); ctx.strokeStyle = css("--grid"); ctx.globalAlpha = .8; ctx.beginPath();
+      if (g.dir === "X") {                 // constant X → vertical line across the view
+        const sx = this.wx(g.x1); if (sx < -1 || sx > W + 1) continue;
+        ctx.moveTo(sx, 0); ctx.lineTo(sx, H); ctx.stroke(); bx = sx; by = 13;
+      } else if (g.dir === "Y") {          // constant Y → horizontal line across the view
+        const sy = this.wy(g.y1); if (sy < -1 || sy > H + 1) continue;
+        ctx.moveTo(0, sy); ctx.lineTo(W, sy); ctx.stroke(); bx = 13; by = sy;
+      } else {                             // general segment
+        ctx.moveTo(this.wx(g.x1), this.wy(g.y1)); ctx.lineTo(this.wx(g.x2), this.wy(g.y2)); ctx.stroke();
+        bx = this.wx(g.x1); by = this.wy(g.y1);
+      }
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+      ctx.beginPath(); ctx.fillStyle = css("--canvas"); ctx.strokeStyle = css("--grid-strong"); ctx.arc(bx, by, 10, 0, 7); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = css("--ink-soft"); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(g.id.slice(0, 4), bx, by);
     }
     ctx.restore();
   }
@@ -177,7 +231,10 @@ export class PlanRenderer {
       if (h !== this.hover) { this.hover = h; cv.style.cursor = h ? "pointer" : "default"; if (!this.pick) this.emit(h); this.draw(); }
     });
     cv.addEventListener("pointerup", e => {
-      if (this.drag && !this.drag.moved) { const h = this.nearest(e.offsetX, e.offsetY); this.pick = h; this.emit(h); this.draw(); }
+      if (this.drag && !this.drag.moved) {
+        if (this.measureMode) this.placeMeasure(e.offsetX, e.offsetY);
+        else { const h = this.nearest(e.offsetX, e.offsetY); this.pick = h; this.emit(h); this.draw(); }
+      }
       this.drag = null;
     });
     cv.addEventListener("wheel", e => { e.preventDefault(); this.zoomAt(e.offsetX, e.offsetY, e.deltaY < 0 ? 1.12 : 1 / 1.12); }, { passive: false });

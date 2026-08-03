@@ -90,6 +90,18 @@ def result_sets(sm) -> list[dict]:
 def _select(sm, names):
     setup = sm.Results.Setup
     setup.DeselectAllCasesAndCombosForOutput()
+    # Return INDIVIDUAL steps for multi-step cases (e.g. multi-direction wind like
+    # W-user = Step 1..N) instead of only Max/Min envelopes. The envelope is then
+    # recovered as min/max across the stored steps. Combos stay as envelopes.
+    for setter, opt in (("SetOptionMultiStepStatic", 2),   # 2 = Step-by-Step
+                        ("SetOptionNLStatic", 2),
+                        ("SetOptionMultiValuedCombo", 1)):  # 1 = Envelopes (Max/Min)
+        fn = getattr(setup, setter, None)
+        if fn is not None:
+            try:
+                fn(opt)
+            except Exception:
+                pass
     cases = set(sm.LoadCases.GetNameList()[1]); combos = set(sm.RespCombo.GetNameList()[1])
     for n in names:
         if n in combos: setup.SetComboSelectedForOutput(n)
