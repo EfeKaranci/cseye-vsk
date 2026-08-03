@@ -1,0 +1,4 @@
+# Cloudflare Pages: the public site is the read-only share viewer.
+# The bridge app (needs a LOCAL bridge) is not usable here, so send root → /share.
+/            /share            302
+/index.html  /share            302

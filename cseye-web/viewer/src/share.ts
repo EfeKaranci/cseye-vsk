@@ -20,7 +20,14 @@ let level = "", layer: Layer = "geom", result = "", curStep: string | null = nul
 
 async function boot() {
   const token = new URLSearchParams(location.search).get("s");
-  if (!SUPA || !token) { $("status").textContent = "Missing ?s=<share-token> or build-time VITE_SUPABASE_URL."; toast("No share token"); return; }
+  if (!token) {
+    $("fileName").textContent = "CSEYE — Shared Viewer";
+    $("fileMeta").textContent = "read-only";
+    $("status").textContent = "Open a share link (…/share?s=<token>) to view a published model.";
+    $("selBody").innerHTML = '<p class="empty">This page shows a shared, read-only ETABS results snapshot — per-level column forces and base reactions.<br><br>Open a <b>/share?s=&lt;token&gt;</b> link generated with the CSEYE <b>Publish</b> button. The full interactive tool (browse models, attach ETABS, extract, publish) runs locally on a machine with ETABS.</p>';
+    return;
+  }
+  if (!SUPA) { $("status").textContent = "Viewer misconfigured: no Supabase URL was baked in at build time."; toast("Misconfigured build"); return; }
   const base = `${SUPA}/storage/v1/object/public/${BUCKET}/snapshots/${token}`;
   busy(true);
   try {
