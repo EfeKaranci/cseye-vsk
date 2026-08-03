@@ -35,6 +35,7 @@ header{display:flex;align-items:center;gap:16px;padding:0 16px;height:52px;backg
 .sel{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:6px 9px;font-size:12.5px;font-weight:600;font-family:inherit}
 .subbar{display:flex;align-items:center;gap:14px;padding:0 16px;height:40px;background:var(--panel-2);border-bottom:1px solid var(--line);font-size:12px}
 .subbar .grp{display:flex;align-items:center;gap:8px}.subbar .sep{width:1px;height:20px;background:var(--line)}.note{font-size:11.5px;color:var(--ink-soft)}
+.mgroup{display:flex;gap:3px}.mgroup .iconbtn svg{display:block}
 .work{display:grid;grid-template-columns:236px 1fr 280px;min-height:0}
 aside{background:var(--panel);overflow:hidden;display:flex;flex-direction:column;min-height:0}
 aside.left{border-right:1px solid var(--line)}aside.right{border-left:1px solid var(--line);overflow-y:auto}
@@ -51,9 +52,11 @@ aside.left{border-right:1px solid var(--line)}aside.right{border-left:1px solid 
 .model:hover{background:var(--panel-2)}.model.on{background:var(--accent-weak);color:var(--accent)}
 .model .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.model .dir{color:var(--ink-faint);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .levels{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column-reverse}
-.lv{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px;padding:0 9px;min-height:26px;border-left:2px solid transparent;border-radius:6px;cursor:pointer;color:var(--ink-soft)}
+.lv{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 9px;min-height:30px;border-left:2px solid transparent;border-radius:6px;cursor:pointer;color:var(--ink-soft)}
 .lv:hover{background:var(--panel-2);color:var(--ink)}.lv.on{background:var(--accent-weak);border-left-color:var(--accent);color:var(--accent)}
-.lv .nm{font-weight:650;font-size:12px}.lv .el{font-size:10.5px;color:var(--ink-faint)}.lv .cnt{grid-column:1;font-size:10px;color:var(--ink-faint)}
+.lv .nm{font-weight:650;font-size:12px;white-space:nowrap}
+.lv .lvr{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;flex:none}
+.lv .el{font-size:10.5px;color:var(--ink-faint)}.lv .cnt{font-size:9px;color:var(--ink-faint)}
 .stage{position:relative;background:var(--canvas);min-width:0;overflow:hidden}canvas{display:block;width:100%;height:100%;touch-action:none}
 .overlay{position:absolute;pointer-events:none;font-size:11px}
 .hud{left:14px;top:12px;display:flex;flex-direction:column;gap:3px}

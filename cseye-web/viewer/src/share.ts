@@ -1,7 +1,7 @@
 // Share viewer — read-only. Loads a published bundle from Supabase public
 // Storage by token (?s=...) and drives the same PlanRenderer via client-side
 // aggregation. No bridge, no ETABS.
-import { PlanRenderer, type Layer, type ValMode, type Hit } from "./render";
+import { PlanRenderer, type Layer, type ValMode, type Hit, type MeasureMode } from "./render";
 import { planColumns, reactionSupports, stepsFor, type Bundle, type GeomBundle } from "./aggregate";
 import type { Frame, PlanColumn, Support } from "./types";
 
@@ -62,7 +62,7 @@ function buildLevels() {
   for (const st of sorted) {
     const n = colsByStory.get(st.name)?.length ?? 0;
     const el = document.createElement("div"); el.className = "lv";
-    el.innerHTML = `<span class="nm">${st.name}</span><span class="el mono">${st.elev.toFixed(1)}'</span>` + (n ? `<span class="cnt mono">${n} col</span>` : "");
+    el.innerHTML = `<span class="nm">${st.name}</span><span class="lvr"><span class="el mono">${st.elev.toFixed(1)}'</span>${n ? `<span class="cnt mono">${n} col</span>` : ""}</span>`;
     el.onclick = () => { level = st.name; markLevel(); refresh(); };
     host.appendChild(el);
   }
@@ -152,17 +152,10 @@ R.onPick = (h: Hit | null) => {
 };
 R.onCursor = (x, y) => { $("cursor").textContent = `x ${x.toFixed(1)}, y ${y.toFixed(1)}`; };
 R.onNotify = (m) => toast(m);
-let measuring = false;
-$("measureBtn").onclick = () => {
-  measuring = !measuring; R.setMeasure(measuring);
-  $("measureBtn").classList.toggle("active", measuring);
-  $("status").textContent = measuring ? "Measure: click first point, then second (snaps to columns/supports)." : "Read-only shared view — no ETABS required.";
-};
-R.onMeasure = (info) => {
-  $("status").textContent = info
-    ? `Distance ${info.len.toFixed(2)} ft   (Δx ${info.dx.toFixed(2)}, Δy ${info.dy.toFixed(2)})`
-    : (measuring ? "Measure: click first point, then second." : "Read-only shared view — no ETABS required.");
-};
+const mBtns: [string, MeasureMode][] = [["mDist", "dist"], ["mPerim", "perim"], ["mArea", "area"], ["mAngle", "angle"]];
+const syncMeasureBtns = () => { for (const [id, mode] of mBtns) $(id).classList.toggle("active", R.measureMode === mode); };
+for (const [id, mode] of mBtns) $(id).onclick = () => { R.setMeasure(mode); syncMeasureBtns(); };
+R.onMeasure = (text) => { $("status").textContent = text ?? "Read-only shared view — no ETABS required."; };
 
 $("zin").onclick = () => R.zoomAt(R.W() / 2, R.H() / 2, 1.2);
 $("zout").onclick = () => R.zoomAt(R.W() / 2, R.H() / 2, 1 / 1.2);

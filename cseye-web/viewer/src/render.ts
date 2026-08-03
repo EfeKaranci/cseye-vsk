@@ -2,6 +2,8 @@ import type { Extents, Frame, GridLine, PlanColumn, Support } from "./types";
 
 export type Layer = "geom" | "axial" | "react";
 export type ValMode = "gov" | "comp" | "tens";
+export type MeasureMode = "dist" | "area" | "perim" | "angle" | null;
+type P = { x: number; y: number };
 
 const css = (v: string) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
@@ -18,13 +20,14 @@ export class PlanRenderer {
   layer: Layer = "geom"; vmode: ValMode = "gov";
   showLabels = true; showBeams = true; showGrids = true;
   hover: Hit["data"] | null = null; pick: Hit["data"] | null = null;
-  measureMode = false;
-  private mA: { x: number; y: number } | null = null;
-  private mB: { x: number; y: number } | null = null;
+  measureMode: MeasureMode = null;
+  private mPts: P[] = [];
+  private mCursor: P | null = null;
+  private mDone = false;
   onPick?: (h: Hit | null) => void;
   onCursor?: (x: number, y: number) => void;
   onNotify?: (m: string) => void;
-  onMeasure?: (info: { len: number; dx: number; dy: number } | null) => void;
+  onMeasure?: (text: string | null) => void;
   title = "";
 
   constructor(cv: HTMLCanvasElement) {
@@ -92,42 +95,76 @@ export class PlanRenderer {
     this.drawScaleBar();
   }
 
-  // ---- measure tool ----
-  setMeasure(on: boolean) {
-    this.measureMode = on;
-    if (!on) { this.mA = this.mB = null; this.onMeasure?.(null); }
-    this.cv.style.cursor = on ? "crosshair" : "default";
+  // ---- measure tools: distance / area / perimeter / angle ----
+  setMeasure(mode: MeasureMode) {
+    this.measureMode = (this.measureMode === mode) ? null : mode;   // click active icon to toggle off
+    this.mPts = []; this.mCursor = null; this.mDone = false;
+    this.cv.style.cursor = this.measureMode ? "crosshair" : "default";
+    this.onMeasure?.(this.measureReadout());
     this.draw();
   }
-  private snapPoint(px: number, py: number) {
-    const cand = this.layer === "react" ? this.supports.map(s => ({ x: s.x, y: s.y })) : this.columns.map(c => ({ x: c.ix, y: c.iy }));
-    let best: { x: number; y: number } | null = null, bd = 13 * 13;
+  private snapPoint(px: number, py: number): P {
+    const cand: P[] = this.layer === "react" ? this.supports.map(s => ({ x: s.x, y: s.y })) : this.columns.map(c => ({ x: c.ix, y: c.iy }));
+    let best: P | null = null, bd = 13 * 13;
     for (const c of cand) { const dx = this.wx(c.x) - px, dy = this.wy(c.y) - py, d = dx * dx + dy * dy; if (d < bd) { bd = d; best = c; } }
     return best ?? this.inv(px, py);
   }
-  private placeMeasure(px: number, py: number) {
-    const p = this.snapPoint(px, py);
-    if (!this.mA || this.mB) { this.mA = p; this.mB = null; this.onMeasure?.(null); }
-    else { this.mB = p; this.onMeasure?.({ len: Math.hypot(this.mB.x - this.mA.x, this.mB.y - this.mA.y), dx: this.mB.x - this.mA.x, dy: this.mB.y - this.mA.y }); }
-    this.draw();
+  private placePoint(px: number, py: number) {
+    if (this.mDone) { this.mPts = []; this.mDone = false; }
+    this.mPts.push(this.snapPoint(px, py));
+    if (this.measureMode === "dist" && this.mPts.length >= 2) this.mDone = true;
+    if (this.measureMode === "angle" && this.mPts.length >= 3) this.mDone = true;
+    this.onMeasure?.(this.measureReadout()); this.draw();
+  }
+  private finishPoly() {   // double-click ends area / perimeter (pops the dbl-click duplicate)
+    if (this.measureMode !== "area" && this.measureMode !== "perim") return;
+    const need = this.measureMode === "area" ? 3 : 2;
+    if (this.mPts.length > need) this.mPts.pop();
+    if (this.mPts.length >= need) { this.mDone = true; this.onMeasure?.(this.measureReadout()); this.draw(); }
+  }
+  private dist(a: P, b: P) { return Math.hypot(b.x - a.x, b.y - a.y); }
+  private polylen(p: P[]) { let s = 0; for (let i = 1; i < p.length; i++) s += this.dist(p[i - 1], p[i]); return s; }
+  private polyarea(p: P[]) { let s = 0; for (let i = 0; i < p.length; i++) { const q = p[(i + 1) % p.length]; s += p[i].x * q.y - q.x * p[i].y; } return Math.abs(s) / 2; }
+  private angleAt(a: P, b: P, c: P) { let d = Math.abs(Math.atan2(a.y - b.y, a.x - b.x) - Math.atan2(c.y - b.y, c.x - b.x)) * 180 / Math.PI; return d > 180 ? 360 - d : d; }
+  private effPts(): P[] {
+    if (this.mDone || !this.mCursor || !this.measureMode) return this.mPts;
+    if (this.measureMode === "dist") return this.mPts.length ? [this.mPts[0], this.mCursor] : [this.mCursor];
+    if (this.measureMode === "angle") return [...this.mPts, this.mCursor].slice(0, 3);
+    return [...this.mPts, this.mCursor];
+  }
+  private measureReadout(): string | null {
+    const m = this.measureMode; if (!m) return null;
+    const p = this.effPts();
+    if (m === "dist") { if (p.length < 2) return "Distance: click first point…"; const dx = p[1].x - p[0].x, dy = p[1].y - p[0].y; return `Distance ${Math.hypot(dx, dy).toFixed(2)} ft   (Δx ${dx.toFixed(2)}, Δy ${dy.toFixed(2)})`; }
+    if (m === "angle") { if (p.length < 3) return `Angle: pick ${3 - p.length} more point(s) — vertex is the 2nd`; return `Angle ${this.angleAt(p[0], p[1], p[2]).toFixed(1)}°`; }
+    if (m === "perim") { if (p.length < 2) return "Perimeter: click points, double-click to finish"; return `Perimeter ${this.polylen(p).toFixed(2)} ft   (${p.length} pts)`; }
+    if (p.length < 3) return "Area: click ≥3 points, double-click to finish";
+    return `Area ${this.polyarea(p).toFixed(1)} ft²   ·   Perimeter ${(this.polylen(p) + this.dist(p[p.length - 1], p[0])).toFixed(1)} ft`;
   }
   private drawMeasure() {
-    const { ctx } = this;
-    const dot = (p: { x: number; y: number }) => { ctx.beginPath(); ctx.fillStyle = css("--amber"); ctx.arc(this.wx(p.x), this.wy(p.y), 4, 0, 7); ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = css("--ink"); ctx.stroke(); };
-    if (this.mA) dot(this.mA);
-    if (this.mA && this.mB) {
-      dot(this.mB);
-      const ax = this.wx(this.mA.x), ay = this.wy(this.mA.y), bx = this.wx(this.mB.x), by = this.wy(this.mB.y);
-      ctx.save(); ctx.strokeStyle = css("--amber"); ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
-      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke(); ctx.setLineDash([]);
-      const len = Math.hypot(this.mB.x - this.mA.x, this.mB.y - this.mA.y);
-      const mx = (ax + bx) / 2, my = (ay + by) / 2, txt = len.toFixed(2) + " ft";
-      ctx.font = "700 12px " + css("--font-mono"); const w = ctx.measureText(txt).width + 12;
+    const m = this.measureMode; if (!m) return;
+    const p = this.effPts(); if (!p.length) return;
+    const { ctx } = this; const S = (pt: P) => ({ x: this.wx(pt.x), y: this.wy(pt.y) });
+    ctx.save();
+    if (m === "area" && p.length >= 3) { ctx.beginPath(); p.forEach((pt, i) => { const s = S(pt); i ? ctx.lineTo(s.x, s.y) : ctx.moveTo(s.x, s.y); }); ctx.closePath(); ctx.fillStyle = css("--amber"); ctx.globalAlpha = .14; ctx.fill(); ctx.globalAlpha = 1; }
+    ctx.strokeStyle = css("--amber"); ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+    ctx.beginPath(); p.forEach((pt, i) => { const s = S(pt); i ? ctx.lineTo(s.x, s.y) : ctx.moveTo(s.x, s.y); });
+    if (m === "area" && p.length >= 3) ctx.closePath();
+    ctx.stroke(); ctx.setLineDash([]);
+    for (const pt of p) { const s = S(pt); ctx.beginPath(); ctx.fillStyle = css("--amber"); ctx.arc(s.x, s.y, 3.5, 0, 7); ctx.fill(); ctx.lineWidth = 1.2; ctx.strokeStyle = css("--ink"); ctx.stroke(); }
+    const short =
+      m === "dist" && p.length >= 2 ? `${this.dist(p[0], p[1]).toFixed(2)} ft` :
+      m === "angle" && p.length >= 3 ? `${this.angleAt(p[0], p[1], p[2]).toFixed(1)}°` :
+      m === "perim" && p.length >= 2 ? `${this.polylen(p).toFixed(1)} ft` :
+      m === "area" && p.length >= 3 ? `${this.polyarea(p).toFixed(0)} ft²` : "";
+    if (short) {
+      let cx = 0, cy = 0; for (const pt of p) { const s = S(pt); cx += s.x; cy += s.y; } cx /= p.length; cy /= p.length;
+      ctx.font = "700 12px " + css("--font-mono"); const w = ctx.measureText(short).width + 12;
       ctx.fillStyle = css("--panel"); ctx.strokeStyle = css("--amber"); ctx.lineWidth = 1;
-      ctx.beginPath(); (ctx as any).roundRect(mx - w / 2, my - 10, w, 19, 5); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = css("--ink"); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(txt, mx, my);
-      ctx.restore();
+      ctx.beginPath(); (ctx as any).roundRect(cx - w / 2, cy - 10, w, 19, 5); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = css("--ink"); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(short, cx, cy);
     }
+    ctx.restore();
   }
   private drawBeams() {
     const { ctx } = this; ctx.save(); ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1; ctx.globalAlpha = .8; ctx.beginPath();
@@ -227,16 +264,18 @@ export class PlanRenderer {
     cv.addEventListener("pointermove", e => {
       const w = this.inv(e.offsetX, e.offsetY); this.onCursor?.(w.x, w.y);
       if (this.drag) { this.ox = this.drag.ox + (e.offsetX - this.drag.x); this.oy = this.drag.oy - (e.offsetY - this.drag.y); this.drag.moved = true; this.draw(); return; }
+      if (this.measureMode) { if (!this.mDone) { this.mCursor = this.snapPoint(e.offsetX, e.offsetY); this.onMeasure?.(this.measureReadout()); this.draw(); } return; }
       const h = this.nearest(e.offsetX, e.offsetY);
       if (h !== this.hover) { this.hover = h; cv.style.cursor = h ? "pointer" : "default"; if (!this.pick) this.emit(h); this.draw(); }
     });
     cv.addEventListener("pointerup", e => {
       if (this.drag && !this.drag.moved) {
-        if (this.measureMode) this.placeMeasure(e.offsetX, e.offsetY);
+        if (this.measureMode) this.placePoint(e.offsetX, e.offsetY);
         else { const h = this.nearest(e.offsetX, e.offsetY); this.pick = h; this.emit(h); this.draw(); }
       }
       this.drag = null;
     });
+    cv.addEventListener("dblclick", () => this.finishPoly());
     cv.addEventListener("wheel", e => { e.preventDefault(); this.zoomAt(e.offsetX, e.offsetY, e.deltaY < 0 ? 1.12 : 1 / 1.12); }, { passive: false });
     window.addEventListener("resize", () => this.resize());
   }

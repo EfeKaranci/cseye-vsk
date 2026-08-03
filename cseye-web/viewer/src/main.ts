@@ -1,5 +1,5 @@
 import { api } from "./api";
-import { PlanRenderer, type Layer, type ValMode, type Hit } from "./render";
+import { PlanRenderer, type Layer, type ValMode, type Hit, type MeasureMode } from "./render";
 import type { Meta, Geometry, PlanColumn, Frame, ModelInfo, Support } from "./types";
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -104,7 +104,7 @@ function buildLevels() {
   for (const st of sorted) {
     const n = colsByStory.get(st.name)?.length ?? 0;
     const el = document.createElement("div"); el.className = "lv";
-    el.innerHTML = `<span class="nm">${st.name}</span><span class="el mono">${st.elev.toFixed(1)}'</span>` + (n ? `<span class="cnt mono">${n} col</span>` : "");
+    el.innerHTML = `<span class="nm">${st.name}</span><span class="lvr"><span class="el mono">${st.elev.toFixed(1)}'</span>${n ? `<span class="cnt mono">${n} col</span>` : ""}</span>`;
     el.onclick = () => { level = st.name; markLevel(); refresh(); };
     host.appendChild(el);
   }
@@ -246,16 +246,10 @@ R.onPick = (h: Hit | null) => {
 };
 R.onCursor = (x, y) => { $("cursor").textContent = `x ${x.toFixed(1)}, y ${y.toFixed(1)}`; };
 R.onNotify = (m) => toast(m);
-let measuring = false;
-$("measureBtn").onclick = () => {
-  measuring = !measuring; R.setMeasure(measuring);
-  $("measureBtn").classList.toggle("active", measuring);
-  status(measuring ? "Measure: click first point, then second (snaps to columns/supports)." : "");
-};
-R.onMeasure = (info) => {
-  if (info) status(`Distance ${info.len.toFixed(2)} ft   (Δx ${info.dx.toFixed(2)}, Δy ${info.dy.toFixed(2)})`);
-  else if (measuring) status("Measure: click first point, then second (snaps to columns/supports).");
-};
+const mBtns: [string, MeasureMode][] = [["mDist", "dist"], ["mPerim", "perim"], ["mArea", "area"], ["mAngle", "angle"]];
+const syncMeasureBtns = () => { for (const [id, mode] of mBtns) $(id).classList.toggle("active", R.measureMode === mode); };
+for (const [id, mode] of mBtns) $(id).onclick = () => { R.setMeasure(mode); syncMeasureBtns(); };
+R.onMeasure = (text) => status(text ?? "");
 
 // ---------- controls ----------
 $("connectBtn").onclick = connect;
