@@ -1,10 +1,12 @@
 import { api } from "./api";
 import { PlanRenderer, type Layer, type ValMode, type Hit } from "./render";
-import type { Meta, Geometry, PlanColumn, Frame, ModelInfo } from "./types";
+import type { Meta, Geometry, PlanColumn, Frame, ModelInfo, Support } from "./types";
 
 const $ = (id: string) => document.getElementById(id)!;
 const toast = (m: string) => { const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout((t as any)._t); (t as any)._t = setTimeout(() => t.classList.remove("show"), 2400); };
 const status = (m: string) => { $("status").textContent = m; };
+let busyN = 0;
+const busy = (on: boolean) => { busyN = Math.max(0, busyN + (on ? 1 : -1)); $("progress").classList.toggle("hide", busyN === 0); };
 
 const R = new PlanRenderer($("cv") as HTMLCanvasElement);
 let sid: string | null = null;
@@ -15,6 +17,9 @@ let level = "";
 let layer: Layer = "geom";
 let result = "";
 let allModels: ModelInfo[] = [];
+let stepList: string[] = [];
+let curStep: string | null = null;   // null = envelope (aggregate across steps)
+const stepsCache = new Map<string, string[]>();
 
 // ---------- connect / models ----------
 function setConn(ok: boolean) {
@@ -35,6 +40,7 @@ function renderModels(q = "") {
   }
 }
 async function connect() {
+  busy(true);
   try {
     await api.health();
     setConn(true);
@@ -48,19 +54,21 @@ async function connect() {
     setConn(false);
     status("Cannot reach bridge at /api. Start the bridge (python run.py) and Reconnect.");
     toast("Bridge not reachable");
-  }
+  } finally { busy(false); }
 }
 
 async function openModel(path: string, el?: HTMLElement) {
   document.querySelectorAll(".model").forEach(m => m.classList.remove("on")); el?.classList.add("on");
-  status("Opening in ETABS…");
+  status("Opening in ETABS… (extracting geometry, ~15–30s)"); busy(true);
   try { const r = await api.open(path); await loadSnapshot(r.snapshot); }
   catch (e: any) { toast("Open failed: " + e.message); status(String(e.message)); }
+  finally { busy(false); }
 }
 async function attach() {
-  status("Attaching to open ETABS…");
+  status("Attaching to open ETABS… (extracting geometry, ~15–30s)"); busy(true);
   try { const r = await api.attach(); await loadSnapshot(r.snapshot); }
   catch (e: any) { toast("Attach failed: " + e.message); status(String(e.message)); }
+  finally { busy(false); }
 }
 
 // ---------- load a snapshot ----------
@@ -119,9 +127,36 @@ function buildResults() {
   cs.value = result;
 }
 
+// ---------- steps (multi-step cases / envelope combos) ----------
+async function loadSteps(res: string) {
+  if (!stepsCache.has(res)) {
+    try { const r = await api.steps(sid!, res); stepsCache.set(res, r.steps.filter(s => s !== "")); }
+    catch { stepsCache.set(res, []); }
+  }
+  stepList = stepsCache.get(res)!;
+  buildStepSel();
+}
+function buildStepSel() {
+  const sel = $("stepSel") as HTMLSelectElement; sel.innerHTML = "";
+  const opt = (v: string, t: string) => { const o = document.createElement("option"); o.value = v; o.textContent = t; sel.appendChild(o); };
+  opt("", "Envelope (all)");
+  for (const s of stepList) opt(s, s);
+  sel.value = curStep ?? "";
+  $("stepGrp").classList.toggle("hide", !(layer !== "geom" && stepList.length > 1));
+}
+function cycleStep(dir: number) {
+  const opts: (string | null)[] = [null, ...stepList];
+  let i = opts.indexOf(curStep); if (i < 0) i = 0;
+  curStep = opts[(i + dir + opts.length) % opts.length];
+  ($("stepSel") as HTMLSelectElement).value = curStep ?? "";
+  refresh();
+}
+
 // ---------- refresh current view ----------
 async function refresh() {
   if (!sid || !meta) return;
+  busy(true);
+  try {
   R.layer = layer;
   R.beams = geom!.frames.filter(f => f.type === "beam" && f.story === level);
   markLevel();
@@ -130,14 +165,18 @@ async function refresh() {
     R.supports = [];
   } else {
     await ensureExtracted(result);
+    await loadSteps(result);
+    const stepArg = curStep ?? undefined;
     if (layer === "axial") {
-      const r = await api.plan(sid, level, result); R.columns = r.columns; R.supports = [];
+      const r = await api.plan(sid, level, result, stepArg); R.columns = r.columns; R.supports = [];
     } else {
-      const r = await api.reactions(sid, result); R.supports = r.supports; R.columns = [];
+      const r = await api.reactions(sid, result, stepArg); R.supports = r.supports; R.columns = [];
     }
   }
-  R.title = layer === "react" ? `Base Reactions — ${result}` : layer === "axial" ? `Column Axial (base) — ${level} — ${result}` : `Column Plan — ${level}`;
+  const stepSfx = curStep && layer !== "geom" ? ` · ${curStep}` : "";
+  R.title = (layer === "react" ? `Base Reactions — ${result}` : layer === "axial" ? `Column Axial (base) — ${level} — ${result}` : `Column Plan — ${level}`) + stepSfx;
   R.draw(); updateSummary(); updateLegend();
+  } finally { busy(false); }
 }
 function frameToPlan(f: Frame): PlanColumn {
   return { name: f.name, label: f.label, section: f.section, ix: f.ix, iy: f.iy, iz: f.iz, jx: f.jx, jy: f.jy, jz: f.jz, pmin: null, pmax: null, v2: null, v3: null, m2: null, m3: null };
@@ -186,9 +225,13 @@ R.onPick = (h: Hit | null) => {
   const el = $("selBody");
   if (!h) { el.innerHTML = '<p class="empty">Hover or click an element.</p>'; return; }
   if (h.kind === "support") {
-    const s = h.data as any;
+    const s = h.data as Support;
+    const env = curStep == null && s.fzmax != null && Math.abs((s.fzmax ?? 0) - (s.fzmin ?? 0)) > 0.05;
     el.innerHTML = `<dl class="kv"><dt>Support</dt><dd>${s.joint}</dd><dt>Plan X,Y</dt><dd>${s.x.toFixed(1)}, ${s.y.toFixed(1)}</dd>
-      <dt>Fz</dt><dd>${s.fz.toFixed(1)} k</dd><dt>Fx</dt><dd>${s.fx.toFixed(1)} k</dd><dt>Fy</dt><dd>${s.fy.toFixed(1)} k</dd>
+      <dt>Result</dt><dd style="font-size:11px">${result}${curStep ? " · " + curStep : ""}</dd>
+      <dt>${env ? "Fz gov" : "Fz"}</dt><dd>${s.fz.toFixed(1)} k</dd>
+      ${env ? `<dt>Fz max</dt><dd style="color:var(--up)">${s.fzmax!.toFixed(1)} k</dd><dt>Fz min</dt><dd style="color:var(--tens)">${s.fzmin!.toFixed(1)} k</dd>` : ""}
+      <dt>Fx</dt><dd>${s.fx.toFixed(1)} k</dd><dt>Fy</dt><dd>${s.fy.toFixed(1)} k</dd>
       <dt>Mx</dt><dd>${s.mx.toFixed(1)}</dd><dt>My</dt><dd>${s.my.toFixed(1)}</dd></dl>`;
   } else {
     const c = h.data as PlanColumn; const P = c.pmin == null ? null : (Math.abs(c.pmin) >= Math.abs(c.pmax!) ? c.pmin : c.pmax!);
@@ -205,6 +248,11 @@ R.onNotify = (m) => toast(m);
 $("connectBtn").onclick = connect;
 $("attachBtn").onclick = attach;
 ($("modelSearch") as HTMLInputElement).addEventListener("input", e => renderModels((e.target as HTMLInputElement).value));
+$("modelsHdr").onclick = () => {
+  const c = $("modelsWrap").classList.toggle("hide");
+  $("modelsCaret").textContent = c ? "▸" : "▾";
+  $("modelsHdr").setAttribute("aria-expanded", String(!c));
+};
 $("zin").onclick = () => R.zoomAt(R.W() / 2, R.H() / 2, 1.2);
 $("zout").onclick = () => R.zoomAt(R.W() / 2, R.H() / 2, 1 / 1.2);
 $("zfit").onclick = () => R.fit();
@@ -212,10 +260,14 @@ $("zfit").onclick = () => R.fit();
   layer = (e.target as HTMLSelectElement).value as Layer;
   $("caseGrp").classList.toggle("hide", layer === "geom");
   $("valGrp").classList.toggle("hide", layer !== "axial");
+  if (layer === "geom") $("stepGrp").classList.add("hide");
   $("hudTag").textContent = layer === "react" ? "Reactions" : "Plan @";
   refresh();
 };
-($("caseSel") as HTMLSelectElement).onchange = e => { result = (e.target as HTMLSelectElement).value; refresh(); };
+($("caseSel") as HTMLSelectElement).onchange = e => { result = (e.target as HTMLSelectElement).value; curStep = null; refresh(); };
+$("stepPrev").onclick = () => cycleStep(-1);
+$("stepNext").onclick = () => cycleStep(1);
+($("stepSel") as HTMLSelectElement).onchange = e => { curStep = (e.target as HTMLSelectElement).value || null; refresh(); };
 ($("valSel") as HTMLSelectElement).onchange = e => { R.vmode = (e.target as HTMLSelectElement).value as ValMode; R.draw(); updateSummary(); };
 $("lyBeams").addEventListener("change", e => { R.showBeams = (e.target as HTMLInputElement).checked; R.draw(); });
 $("lyGrids").addEventListener("change", e => { R.showGrids = (e.target as HTMLInputElement).checked; R.draw(); });

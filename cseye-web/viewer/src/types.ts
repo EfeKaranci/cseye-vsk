@@ -22,6 +22,7 @@ export interface PlanColumn {
 export interface Support {
   joint: string; x: number; y: number; z: number;
   fx: number; fy: number; fz: number; mx: number; my: number; mz: number;
+  fzmin?: number; fzmax?: number;
 }
 export interface ModelInfo {
   path: string; name: string; dir: string; size_mb: number; mtime: number; has_results_guess: boolean;

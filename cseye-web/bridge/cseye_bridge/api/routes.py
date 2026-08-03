@@ -93,17 +93,25 @@ def do_extract(sid: str, payload: dict = Body(default={})):
     if not names:
         names = [r["name"] for r in m["result_sets"] if r["kind"] == "case" and r["finished"]]
     sess = get_session()
-    forces, seen = sess.run(lambda sm: extract.column_forces(sm, names))
-    reacts = sess.run(lambda sm: extract.reactions(sm, list(seen)))
-    store.save_forces(sid, forces, reacts, list(seen))
-    return {"extracted": sorted(seen), "columns": len(forces), "supports": len(reacts)}
+    forces, steps = sess.run(lambda sm: extract.column_forces(sm, names))
+    seen = list(steps.keys())
+    reacts = sess.run(lambda sm: extract.reactions(sm, seen))
+    store.save_column_forces(sid, forces, steps, seen)
+    store.save_reactions(sid, reacts, seen)
+    return {"extracted": sorted(seen), "columns": len(forces), "supports": len(reacts),
+            "steps": {rs: len(labels) for rs, labels in steps.items() if len(labels) > 1}}
+
+
+@router.get("/m/{sid}/steps")
+def result_steps(sid: str, result: str):
+    return {"result": result, "steps": store.steps(sid, result)}
 
 
 @router.get("/m/{sid}/plan")
-def plan(sid: str, story: str, result: str):
-    return {"story": story, "result": result, "columns": store.plan(sid, story, result)}
+def plan(sid: str, story: str, result: str, step: str | None = None):
+    return {"story": story, "result": result, "step": step, "columns": store.plan(sid, story, result, step)}
 
 
 @router.get("/m/{sid}/reactions")
-def reactions(sid: str, result: str):
-    return {"result": result, "supports": store.reactions(sid, result)}
+def reactions(sid: str, result: str, step: str | None = None):
+    return {"result": result, "step": step, "supports": store.reactions(sid, result, step)}

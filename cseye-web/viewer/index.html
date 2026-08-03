@@ -33,20 +33,28 @@
       <div class="grp hide" id="valGrp"><span class="lbl">Value</span>
         <select class="sel" id="valSel"><option value="gov">Governing |P|</option><option value="comp">Compression</option><option value="tens">Tension</option></select>
       </div>
+      <div class="grp hide" id="stepGrp"><span class="lbl">Step</span>
+        <button class="btn iconbtn" id="stepPrev" title="Previous step">◀</button>
+        <select class="sel" id="stepSel"></select>
+        <button class="btn iconbtn" id="stepNext" title="Next step">▶</button>
+      </div>
       <div class="sep"></div>
       <span class="note" id="status">Start the bridge (python run.py), then Connect.</span>
     </div>
 
     <div class="work">
       <aside class="left">
-        <div class="rail-h"><span class="lbl">Models</span><span class="lbl mono" id="modelCount"></span></div>
-        <input id="modelSearch" class="msearch" type="search" placeholder="Filter models…" autocomplete="off" />
-        <div class="models" id="models"></div>
+        <button class="rail-h rail-toggle" id="modelsHdr" aria-expanded="true"><span class="caret" id="modelsCaret">▾</span><span class="lbl">Models</span><span class="spring"></span><span class="lbl mono" id="modelCount"></span></button>
+        <div id="modelsWrap">
+          <input id="modelSearch" class="msearch" type="search" placeholder="Filter models…" autocomplete="off" />
+          <div class="models" id="models"></div>
+        </div>
         <div class="rail-h"><span class="lbl">Level</span><span class="lbl mono" id="lvCount"></span></div>
         <div class="levels" id="levels"></div>
       </aside>
 
       <div class="stage" id="stage">
+        <div class="progress hide" id="progress"><div class="pbar"></div></div>
         <canvas id="cv"></canvas>
         <div class="overlay hud">
           <div class="pill"><span class="lbl" id="hudTag">Plan @</span> <span class="big mono" id="hudLevel">—</span></div>

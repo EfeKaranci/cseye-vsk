@@ -22,14 +22,18 @@ CREATE TABLE IF NOT EXISTS result_set(
   sid TEXT, name TEXT, kind TEXT, finished INTEGER
 );
 CREATE TABLE IF NOT EXISTS column_force(
-  sid TEXT, result_set TEXT, frame TEXT,
-  pmin REAL, pmax REAL, v2 REAL, v3 REAL, m2 REAL, m3 REAL,
-  PRIMARY KEY (sid, result_set, frame)
+  sid TEXT, result_set TEXT, frame TEXT, step TEXT,
+  p REAL, v2 REAL, v3 REAL, m2 REAL, m3 REAL,
+  PRIMARY KEY (sid, result_set, frame, step)
 );
 CREATE TABLE IF NOT EXISTS reaction(
-  sid TEXT, result_set TEXT, joint TEXT, x REAL, y REAL, z REAL,
+  sid TEXT, result_set TEXT, joint TEXT, step TEXT, x REAL, y REAL, z REAL,
   fx REAL, fy REAL, fz REAL, mx REAL, my REAL, mz REAL,
-  PRIMARY KEY (sid, result_set, joint)
+  PRIMARY KEY (sid, result_set, joint, step)
+);
+CREATE TABLE IF NOT EXISTS step(
+  sid TEXT, result_set TEXT, label TEXT, idx INTEGER,
+  PRIMARY KEY (sid, result_set, label)
 );
 CREATE INDEX IF NOT EXISTS ix_frame_slice ON frame(sid, story, type);
 CREATE INDEX IF NOT EXISTS ix_cf_slice ON column_force(sid, result_set);

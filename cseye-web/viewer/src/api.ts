@@ -20,9 +20,12 @@ export const api = {
   geometry: (sid: string) => j<Geometry>(`/m/${sid}/geometry`),
   extract: (sid: string, result_sets?: string[]) =>
     post(`/m/${sid}/extract`, result_sets ? { result_sets } : {}) as Promise<{ extracted: string[]; columns: number; supports: number }>,
-  plan: (sid: string, story: string, result: string) =>
+  steps: (sid: string, result: string) =>
+    j<{ result: string; steps: string[] }>(`/m/${sid}/steps?result=${encodeURIComponent(result)}`),
+  plan: (sid: string, story: string, result: string, step?: string) =>
     j<{ story: string; result: string; columns: PlanColumn[] }>(
-      `/m/${sid}/plan?story=${encodeURIComponent(story)}&result=${encodeURIComponent(result)}`),
-  reactions: (sid: string, result: string) =>
-    j<{ result: string; supports: Support[] }>(`/m/${sid}/reactions?result=${encodeURIComponent(result)}`),
+      `/m/${sid}/plan?story=${encodeURIComponent(story)}&result=${encodeURIComponent(result)}${step ? `&step=${encodeURIComponent(step)}` : ""}`),
+  reactions: (sid: string, result: string, step?: string) =>
+    j<{ result: string; supports: Support[] }>(
+      `/m/${sid}/reactions?result=${encodeURIComponent(result)}${step ? `&step=${encodeURIComponent(step)}` : ""}`),
 };

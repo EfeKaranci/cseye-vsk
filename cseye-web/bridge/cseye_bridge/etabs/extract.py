@@ -96,47 +96,76 @@ def _select(sm, names):
         elif n in cases: setup.SetCaseSelectedForOutput(n)
 
 
-def column_forces(sm, names) -> tuple[dict, set]:
-    """Base-station P/V/M per column for the selected result sets. Returns (forces, seen)."""
-    _select(sm, names)
-    zmap = {}
-    cols = []
+def step_label(st, sn) -> str:
+    """Human label for a result step: '' (single), 'Max'/'Min' (envelope), 'Mode 3', 'Step 2'."""
+    st = (str(st) or "").strip()
+    if not st:
+        return ""
+    if st in ("Max", "Min"):
+        return st
+    try:
+        return f"{st} {float(sn):g}"
+    except Exception:
+        return f"{st} {sn}"
+
+
+def _columns(sm) -> list[str]:
+    out = []
     for nm in sm.FrameObj.GetNameList()[1]:
         try:
             if sm.FrameObj.GetDesignOrientation(nm)[0] == 1:
-                cols.append(nm)
+                out.append(nm)
         except Exception:
             pass
-    forces = {}; seen = set()
-    for nm in cols:
+    return out
+
+
+def column_forces(sm, names) -> tuple[dict, dict]:
+    """Base-station forces per column, per result set, PER STEP.
+    Returns (forces, steps) where
+      forces = { frame: { result: { step: {P,V2,V3,M2,M3} } } }
+      steps  = { result: [ordered step labels] }.
+    """
+    _select(sm, names)
+    forces: dict = {}
+    steps: dict = {}
+    for nm in _columns(sm):
         pts = sm.FrameObj.GetPoints(nm, "", "")
         zi = sm.PointObj.GetCoordCartesian(pts[0], 0., 0., 0.)[2]
         zj = sm.PointObj.GetCoordCartesian(pts[1], 0., 0., 0.)[2]
         ff = sm.Results.FrameForce(nm, 0); n = ff[0]
         if not n: continue
         sta = ff[2]; base = min(sta) if zi <= zj else max(sta)
-        per = defaultdict(lambda: {"Pmin": 1e30, "Pmax": -1e30, "V2": 0, "V3": 0, "M2": 0, "M3": 0})
+        d: dict = {}
         for r in range(n):
             if abs(sta[r] - base) > 1e-4: continue
-            cse = ff[5][r]; P = ff[8][r]; seen.add(cse); d = per[cse]
-            if P < d["Pmin"]: d["Pmin"] = P
-            if P > d["Pmax"]:
-                d["Pmax"] = P; d["V2"] = ff[9][r]; d["V3"] = ff[10][r]; d["M2"] = ff[12][r]; d["M3"] = ff[13][r]
-        forces[nm] = {c: {k: R3(v) for k, v in d.items()} for c, d in per.items()}
-    return forces, seen
+            rs = ff[5][r]; lab = step_label(ff[6][r], ff[7][r])
+            d.setdefault(rs, {})[lab] = {"P": R3(ff[8][r]), "V2": R3(ff[9][r]), "V3": R3(ff[10][r]),
+                                         "M2": R3(ff[12][r]), "M3": R3(ff[13][r])}
+            s = steps.setdefault(rs, [])
+            if lab not in s: s.append(lab)
+        forces[nm] = d
+    return forces, steps
 
 
 def reactions(sm, names) -> dict:
+    """Support reactions per result set, PER STEP.
+    Returns { joint: {x,y,z, results:{ result:{ step:{Fx..Mz} } } } } (supports only)."""
     _select(sm, names)
     jr = sm.Results.JointReact("All", 2); n = jr[0]
-    acc = defaultdict(dict)
+    acc: dict = {}
     for i in range(n):
-        acc[jr[1][i]][jr[3][i]] = {"Fx": R3(jr[6][i]), "Fy": R3(jr[7][i]), "Fz": R3(jr[8][i]),
-                                   "Mx": R3(jr[9][i]), "My": R3(jr[10][i]), "Mz": R3(jr[11][i])}
-    out = {}
-    for j, cs in acc.items():
-        if max((abs(v["Fz"]) for v in cs.values()), default=0) > 0.5 or \
-           max((max(abs(v["Fx"]), abs(v["Fy"])) for v in cs.values()), default=0) > 0.5:
+        j = jr[1][i]; rs = jr[3][i]; lab = step_label(jr[4][i], jr[5][i])
+        acc.setdefault(j, {}).setdefault(rs, {})[lab] = {
+            "Fx": R3(jr[6][i]), "Fy": R3(jr[7][i]), "Fz": R3(jr[8][i]),
+            "Mx": R3(jr[9][i]), "My": R3(jr[10][i]), "Mz": R3(jr[11][i])}
+    out: dict = {}
+    for j, per in acc.items():
+        mx = 0.0
+        for steps in per.values():
+            for v in steps.values():
+                mx = max(mx, abs(v["Fz"]), abs(v["Fx"]), abs(v["Fy"]))
+        if mx > 0.5:
             c = sm.PointObj.GetCoordCartesian(j, 0., 0., 0.)
-            out[j] = {"x": R3(c[0]), "y": R3(c[1]), "z": R3(c[2]), "cases": cs}
+            out[j] = {"x": R3(c[0]), "y": R3(c[1]), "z": R3(c[2]), "results": per}
     return out
