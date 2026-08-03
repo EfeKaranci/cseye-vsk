@@ -11,7 +11,7 @@ export interface Frame {
   name: string; label: string; story: string; type: string;
   ix: number; iy: number; iz: number; jx: number; jy: number; jz: number; section: string;
 }
-export interface GridLine { id: string; dir: string; x1: number; y1: number; x2: number; y2: number; visible: number; }
+export interface GridLine { id: string; dir: string; x1: number; y1: number; x2: number; y2: number; visible: number; sys?: string; }
 export interface Geometry { frames: Frame[]; grid_lines: GridLine[]; }
 
 export interface PlanColumn {

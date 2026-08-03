@@ -22,7 +22,9 @@ let result = "";
 let allModels: ModelInfo[] = [];
 let publishEnabled = false;
 interface PdfState { pdf: any; page: number; pages: number; data: Uint8Array; }
-const pdfByLevel = new Map<string, { u: Underlay; st: PdfState }>();
+interface UDoc { name: string; u: Underlay; st: PdfState; levels: Set<string>; }
+const uDocs: UDoc[] = [];
+let selDoc: UDoc | null = null;
 let stepList: string[] = [];
 let curStep: string | null = null;   // null = envelope (aggregate across steps)
 const stepsCache = new Map<string, string[]>();
@@ -81,9 +83,10 @@ async function attach() {
 // ---------- load a snapshot ----------
 async function loadSnapshot(s: string) {
   sid = s;
-  pdfByLevel.clear(); R.underlay = null;   // new model → drop any underlays
+  uDocs.length = 0; selDoc = null; R.underlays = []; R.active = null;   // new model → drop underlays
   meta = await api.meta(s);
   geom = await api.geometry(s);
+  buildGridSystems();
   R.extents = meta.extents; R.grids = geom.grid_lines;
   colsByStory = new Map();
   for (const f of geom.frames) {
@@ -257,74 +260,134 @@ const syncMeasureBtns = () => { for (const [id, mode] of mBtns) $(id).classList.
 for (const [id, mode] of mBtns) $(id).onclick = () => { R.setMeasure(mode); syncMeasureBtns(); };
 R.onMeasure = (text) => status(text ?? "");
 
-// ---------- background PDF underlay (per level) ----------
+// ---------- background PDF underlays (named, multiple, per level) ----------
+async function renderPage(st: PdfState): Promise<HTMLCanvasElement> {
+  const page = await st.pdf.getPage(st.page);
+  const vp = page.getViewport({ scale: 2 });
+  const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+  await page.render({ canvasContext: c.getContext("2d")!, viewport: vp }).promise;
+  return c;
+}
 async function loadPdf(file: File) {
   busy(true); status("Rendering PDF…");
   try {
     const data = new Uint8Array(await file.arrayBuffer());
     const pdf = await pdfjsLib.getDocument({ data: data.slice() }).promise;
-    await renderPdfPage({ pdf, page: 1, pages: pdf.numPages, data }, false);
-    R.setUnderlayMode("move"); syncPdfModeBtns();
-    status("PDF placed — drag to position (Move/scale) or use 2-point align.");
+    const st: PdfState = { pdf, page: 1, pages: pdf.numPages, data };
+    const img = await renderPage(st);
+    const nm = file.name.replace(/\.pdf$/i, "");
+    const doc: UDoc = { name: nm, u: R.makeUnderlay(nm, img, img.width, img.height), st, levels: new Set([level]) };
+    uDocs.push(doc); selDoc = doc;
+    applyLevelUnderlay(); R.setUnderlayMode("move"); syncPdfModeBtns();
+    status("PDF placed — drag to move, corner handles to scale, or 2-point align.");
   } catch (e: any) { toast("PDF load failed: " + e.message); }
   finally { busy(false); }
 }
-async function renderPdfPage(st: PdfState, keep: boolean) {
-  const page = await st.pdf.getPage(st.page);
-  const vp = page.getViewport({ scale: 2 });
-  const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
-  await page.render({ canvasContext: c.getContext("2d")!, viewport: vp }).promise;
-  const entry = pdfByLevel.get(level);
-  if (keep && entry) { entry.u.img = c; entry.u.w = c.width; entry.u.h = c.height; entry.st = st; R.underlay = entry.u; R.draw(); }
-  else { R.setUnderlay(c, c.width, c.height); pdfByLevel.set(level, { u: R.underlay!, st }); }
-  refreshPdfPanel();
-}
-function refreshPdfPanel() {
-  const entry = pdfByLevel.get(level);
-  $("pdfNone").classList.toggle("hide", !!entry);
-  $("pdfCtl").classList.toggle("hide", !entry);
-  if (!entry) return;
-  $("pdfPage").textContent = `${entry.st.page}/${entry.st.pages}`;
-  ($("pdfOpacity") as HTMLInputElement).value = String(Math.round(entry.u.opacity * 100));
-  const deg = Math.round(entry.u.rot * 180 / Math.PI);
-  ($("pdfRotate") as HTMLInputElement).value = String(deg); $("pdfRotVal").textContent = deg + "°";
-  ($("pdfVis") as HTMLInputElement).checked = entry.u.visible;
+async function changePage(delta: number) {
+  if (!selDoc) return;
+  const st = selDoc.st, np = st.page + delta;
+  if (np < 1 || np > st.pages) return;
+  st.page = np;
+  const img = await renderPage(st);
+  selDoc.u.img = img; selDoc.u.w = img.width; selDoc.u.h = img.height;
+  R.draw(); refreshPdfPanel();
 }
 function applyLevelUnderlay() {
-  const entry = pdfByLevel.get(level);
-  R.underlay = entry?.u ?? null;
-  if (R.underlayMode !== "off") { R.setUnderlayMode("off"); }
-  syncPdfModeBtns(); refreshPdfPanel();
+  const docs = uDocs.filter(d => d.levels.has(level));
+  R.underlays = docs.map(d => d.u);
+  if (!(selDoc && selDoc.levels.has(level))) selDoc = docs[docs.length - 1] ?? null;
+  R.active = selDoc?.u ?? null;
+  syncPdfModeBtns(); refreshPdfPanel(); R.draw();
 }
+function selectDoc(d: UDoc) { selDoc = d; R.active = d.u; refreshPdfPanel(); R.draw(); }
 function syncPdfModeBtns() {
   $("pdfMove").classList.toggle("active", R.underlayMode === "move");
   $("pdfAlign").classList.toggle("active", R.underlayMode === "align");
 }
+function refreshPdfPanel() {
+  const docs = uDocs.filter(d => d.levels.has(level));
+  const list = $("uList"); list.innerHTML = "";
+  for (const d of docs) {
+    const row = document.createElement("div"); row.className = "urow" + (d === selDoc ? " sel" : "");
+    const eye = document.createElement("input"); eye.type = "checkbox"; eye.checked = d.u.visible;
+    eye.onclick = ev => { ev.stopPropagation(); d.u.visible = eye.checked; R.draw(); };
+    const nm = document.createElement("span"); nm.className = "unm"; nm.textContent = d.name;
+    const lv = document.createElement("span"); lv.className = "ulv"; lv.textContent = d.levels.size > 1 ? `${d.levels.size} lv` : "";
+    row.appendChild(eye); row.appendChild(nm); row.appendChild(lv);
+    row.onclick = () => selectDoc(d);
+    list.appendChild(row);
+  }
+  const on = !!(selDoc && selDoc.levels.has(level));
+  $("uCtl").classList.toggle("hide", !on);
+  if (on && selDoc) {
+    ($("uName") as HTMLInputElement).value = selDoc.name;
+    $("pdfPage").textContent = `${selDoc.st.page}/${selDoc.st.pages}`;
+    ($("pdfOpacity") as HTMLInputElement).value = String(Math.round(selDoc.u.opacity * 100));
+    const deg = Math.round(selDoc.u.rot * 180 / Math.PI);
+    ($("pdfRotate") as HTMLInputElement).value = String(deg); $("pdfRotVal").textContent = deg + "°";
+  }
+}
 $("pdfLoad").onclick = () => ($("pdfFile") as HTMLInputElement).click();
-($("pdfFile") as HTMLInputElement).addEventListener("change", e => {
-  const f = (e.target as HTMLInputElement).files?.[0]; if (f) loadPdf(f); (e.target as HTMLInputElement).value = "";
-});
-$("pdfPrev").onclick = () => { const e = pdfByLevel.get(level); if (e && e.st.page > 1) { e.st.page--; renderPdfPage(e.st, true); } };
-$("pdfNext").onclick = () => { const e = pdfByLevel.get(level); if (e && e.st.page < e.st.pages) { e.st.page++; renderPdfPage(e.st, true); } };
+($("pdfFile") as HTMLInputElement).addEventListener("change", e => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) loadPdf(f); (e.target as HTMLInputElement).value = ""; });
+$("pdfPrev").onclick = () => changePage(-1);
+$("pdfNext").onclick = () => changePage(1);
+($("uName") as HTMLInputElement).addEventListener("change", e => { if (selDoc) { selDoc.name = (e.target as HTMLInputElement).value || selDoc.name; refreshPdfPanel(); } });
 ($("pdfOpacity") as HTMLInputElement).addEventListener("input", e => R.setUnderlayOpacity(+(e.target as HTMLInputElement).value / 100));
 ($("pdfRotate") as HTMLInputElement).addEventListener("input", e => { const d = +(e.target as HTMLInputElement).value; R.rotateUnderlay(d); $("pdfRotVal").textContent = d + "°"; });
-($("pdfVis") as HTMLInputElement).addEventListener("change", e => R.setUnderlayVisible((e.target as HTMLInputElement).checked));
 $("pdfPlus").onclick = () => R.scaleUnderlayBy(1.05);
 $("pdfMinus").onclick = () => R.scaleUnderlayBy(1 / 1.05);
 $("pdfMove").onclick = () => { R.setUnderlayMode(R.underlayMode === "move" ? "off" : "move"); syncPdfModeBtns(); };
 $("pdfAlign").onclick = () => { R.setUnderlayMode(R.underlayMode === "align" ? "off" : "align"); syncPdfModeBtns(); };
-$("pdfClear").onclick = () => { R.clearUnderlay(); pdfByLevel.delete(level); refreshPdfPanel(); };
+$("pdfClear").onclick = () => { if (!selDoc) return; const i = uDocs.indexOf(selDoc); if (i >= 0) uDocs.splice(i, 1); selDoc = null; applyLevelUnderlay(); };
 R.onUnderlay = (msg) => { status(msg); $("pdfHint").textContent = msg; syncPdfModeBtns(); };
+
+// copy the selected drawing to other levels (same alignment)
+$("pdfCopy").onclick = () => {
+  if (!selDoc || !meta) return;
+  const host = $("copyOpts"); host.innerHTML = "";
+  for (const st of [...meta.stories].sort((a, b) => b.elev - a.elev)) {
+    const row = document.createElement("label"); row.className = "row";
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.className = "copychk"; cb.value = st.name;
+    cb.checked = selDoc.levels.has(st.name); cb.disabled = st.name === level;
+    const s = document.createElement("span"); s.textContent = `${st.name}  (${st.elev.toFixed(1)}')`;
+    row.appendChild(cb); row.appendChild(s); host.appendChild(row);
+  }
+  $("copyModal").classList.remove("hide");
+};
+$("copyCancel").onclick = () => $("copyModal").classList.add("hide");
+$("copyGo").onclick = () => {
+  if (selDoc) {
+    const chosen = ([...document.querySelectorAll(".copychk")] as HTMLInputElement[]).filter(c => c.checked).map(c => c.value);
+    selDoc.levels = new Set([level, ...chosen]);
+  }
+  $("copyModal").classList.add("hide"); applyLevelUnderlay();
+};
+
+// grid-system toggles (only shown when a model has more than one grid system)
+function buildGridSystems() {
+  const host = $("gridSys"); host.innerHTML = ""; R.hiddenGridSystems.clear();
+  const sys = [...new Set((geom?.grid_lines ?? []).map(g => g.sys).filter((x): x is string => !!x))];
+  if (sys.length < 2) return;
+  for (const s of sys) {
+    const row = document.createElement("label"); row.className = "gsys";
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = true;
+    cb.onchange = () => { cb.checked ? R.hiddenGridSystems.delete(s) : R.hiddenGridSystems.add(s); R.draw(); };
+    const t = document.createElement("span"); t.textContent = "grid: " + s;
+    row.appendChild(cb); row.appendChild(t); host.appendChild(row);
+  }
+}
+
 function u8ToB64(u8: Uint8Array): string {
   let s = ""; const chunk = 0x8000;
   for (let i = 0; i < u8.length; i += chunk) s += String.fromCharCode(...u8.subarray(i, i + chunk));
   return btoa(s);
 }
-function gatherUnderlays(): Record<string, unknown> | undefined {
-  const out: Record<string, unknown> = {};
-  for (const [lvl, e] of pdfByLevel)
-    out[lvl] = { pdf: u8ToB64(e.st.data), page: e.st.page, tx: e.u.tx, ty: e.u.ty, s: e.u.s, rot: e.u.rot, opacity: e.u.opacity };
-  return Object.keys(out).length ? out : undefined;
+function gatherUnderlays(): unknown[] | undefined {
+  const out = uDocs.map(d => ({
+    name: d.name, pdf: u8ToB64(d.st.data), page: d.st.page,
+    tx: d.u.tx, ty: d.u.ty, s: d.u.s, rot: d.u.rot, opacity: d.u.opacity, levels: [...d.levels],
+  }));
+  return out.length ? out : undefined;
 }
 
 // ---------- controls ----------

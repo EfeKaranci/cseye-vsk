@@ -12,7 +12,7 @@ export interface Hit { kind: "column" | "support"; data: PlanColumn | Support; }
 /** A PDF/image underlay placed in world space (px→world: uniform scale s, rotation rot,
  *  translation of the image's bottom-left corner to (tx,ty)). */
 export interface Underlay {
-  img: CanvasImageSource; w: number; h: number;
+  name: string; img: CanvasImageSource; w: number; h: number;
   tx: number; ty: number; s: number; rot: number; opacity: number; visible: boolean;
 }
 
@@ -26,6 +26,7 @@ export class PlanRenderer {
   columns: PlanColumn[] = []; supports: Support[] = [];
   layer: Layer = "geom"; vmode: ValMode = "gov";
   showLabels = true; showBeams = true; showGrids = true;
+  hiddenGridSystems = new Set<string>();
   hover: Hit["data"] | null = null; pick: Hit["data"] | null = null;
   measureMode: MeasureMode = null;
   private mPts: P[] = [];
@@ -35,9 +36,11 @@ export class PlanRenderer {
   onCursor?: (x: number, y: number) => void;
   onNotify?: (m: string) => void;
   onMeasure?: (text: string | null) => void;
-  underlay: Underlay | null = null;
+  underlays: Underlay[] = [];
+  active: Underlay | null = null;
   underlayMode: "off" | "move" | "align" = "off";
   private uDrag: { x: number; y: number; tx: number; ty: number } | null = null;
+  private cDrag: { opp: P; oppLocal: P; dloc: P } | null = null;
   private alignStage = 0; private alignPdf: P[] = []; private alignWorld: P[] = [];
   onUnderlay?: (msg: string) => void;
   title = "";
@@ -99,7 +102,7 @@ export class PlanRenderer {
     const { ctx } = this; if (!ctx) return;
     this.computeScales();
     ctx.clearRect(0, 0, this.W(), this.H());
-    if (this.underlay) this.drawUnderlay();
+    if (this.underlays.length) this.drawUnderlays();
     if (this.showGrids) this.drawGrids();
     if (this.showBeams) this.drawBeams();
     if (this.layer === "react") this.drawReactions();
@@ -191,6 +194,7 @@ export class PlanRenderer {
     ctx.save(); ctx.lineWidth = 1; ctx.font = "600 11px " + css("--font-mono");
     for (const g of this.grids) {
       if (!g.visible) continue;
+      if (g.sys && this.hiddenGridSystems.has(g.sys)) continue;
       let bx: number, by: number;
       ctx.setLineDash([7, 5]); ctx.strokeStyle = css("--grid"); ctx.globalAlpha = .8; ctx.beginPath();
       if (g.dir === "X") {                 // constant X → vertical line across the view
@@ -274,21 +278,32 @@ export class PlanRenderer {
   private bindEvents() {
     const cv = this.cv;
     cv.addEventListener("pointerdown", e => {
-      if (this.underlayMode === "move" && this.underlay) { this.uDrag = { x: e.offsetX, y: e.offsetY, tx: this.underlay.tx, ty: this.underlay.ty }; cv.setPointerCapture(e.pointerId); return; }
+      if (this.underlayMode === "move" && this.active && this.underlays.includes(this.active)) {
+        const u = this.active, i = this.hitCorner(e.offsetX, e.offsetY, u);
+        if (i >= 0) {
+          const px = [[0, 0], [u.w, 0], [u.w, u.h], [0, u.h]] as [number, number][];
+          const dP = px[i], oP = px[(i + 2) % 4], oLoc = { x: oP[0], y: u.h - oP[1] };
+          this.cDrag = { opp: this.worldOf(u, oP[0], oP[1]), oppLocal: oLoc, dloc: { x: dP[0] - oLoc.x, y: (u.h - dP[1]) - oLoc.y } };
+          cv.setPointerCapture(e.pointerId); return;
+        }
+        this.uDrag = { x: e.offsetX, y: e.offsetY, tx: u.tx, ty: u.ty }; cv.setPointerCapture(e.pointerId); return;
+      }
       this.drag = { x: e.offsetX, y: e.offsetY, ox: this.ox, oy: this.oy, moved: false }; cv.setPointerCapture(e.pointerId);
     });
     cv.addEventListener("pointermove", e => {
       const w = this.inv(e.offsetX, e.offsetY); this.onCursor?.(w.x, w.y);
-      if (this.uDrag && this.underlay) { const S = this.scale; this.underlay.tx = this.uDrag.tx + (e.offsetX - this.uDrag.x) / S; this.underlay.ty = this.uDrag.ty - (e.offsetY - this.uDrag.y) / S; this.draw(); return; }
+      if (this.cDrag && this.active) { this.cornerScale(e.offsetX, e.offsetY); return; }
+      if (this.uDrag && this.active) { const S = this.scale; this.active.tx = this.uDrag.tx + (e.offsetX - this.uDrag.x) / S; this.active.ty = this.uDrag.ty - (e.offsetY - this.uDrag.y) / S; this.draw(); return; }
       if (this.drag) { this.ox = this.drag.ox + (e.offsetX - this.drag.x); this.oy = this.drag.oy - (e.offsetY - this.drag.y); this.drag.moved = true; this.draw(); return; }
       if (this.measureMode) { if (!this.mDone) { this.mCursor = this.snapPoint(e.offsetX, e.offsetY); this.onMeasure?.(this.measureReadout()); this.draw(); } return; }
       const h = this.nearest(e.offsetX, e.offsetY);
       if (h !== this.hover) { this.hover = h; cv.style.cursor = h ? "pointer" : "default"; if (!this.pick) this.emit(h); this.draw(); }
     });
     cv.addEventListener("pointerup", e => {
+      if (this.cDrag) { this.cDrag = null; return; }
       if (this.uDrag) { this.uDrag = null; return; }
       if (this.drag && !this.drag.moved) {
-        if (this.underlayMode === "align" && this.underlay) this.alignClick(e.offsetX, e.offsetY);
+        if (this.underlayMode === "align" && this.active) this.alignClick(e.offsetX, e.offsetY);
         else if (this.measureMode) this.placePoint(e.offsetX, e.offsetY);
         else { const h = this.nearest(e.offsetX, e.offsetY); this.pick = h; this.emit(h); this.draw(); }
       }
@@ -303,54 +318,83 @@ export class PlanRenderer {
     this.onPick?.({ kind: this.layer === "react" ? "support" : "column", data: d });
   }
 
-  // ---- PDF / image underlay ----
-  setUnderlay(img: CanvasImageSource, w: number, h: number) {
+  // ---- PDF / image underlays (named, multiple, per-level; app manages the list) ----
+  makeUnderlay(name: string, img: CanvasImageSource, w: number, h: number): Underlay {
     const e = this.extents, s = ((e.xmax - e.xmin) / w) || 1;   // default: fit width to model extents
-    this.underlay = { img, w, h, tx: e.xmin, ty: e.ymin, s, rot: 0, opacity: 0.55, visible: true };
-    this.draw();
+    return { name, img, w, h, tx: e.xmin, ty: e.ymin, s, rot: 0, opacity: 0.55, visible: true };
   }
-  clearUnderlay() { this.underlay = null; this.underlayMode = "off"; this.draw(); }
-  setUnderlayOpacity(o: number) { if (this.underlay) { this.underlay.opacity = o; this.draw(); } }
-  setUnderlayVisible(v: boolean) { if (this.underlay) { this.underlay.visible = v; this.draw(); } }
-  rotateUnderlay(deg: number) { if (this.underlay) { this.underlay.rot = deg * Math.PI / 180; this.draw(); } }
-  scaleUnderlayBy(f: number) { if (this.underlay) { this.underlay.s *= f; this.draw(); } }
+  setUnderlayOpacity(o: number) { if (this.active) { this.active.opacity = o; this.draw(); } }
+  rotateUnderlay(deg: number) { if (this.active) { this.active.rot = deg * Math.PI / 180; this.draw(); } }
+  scaleUnderlayBy(f: number) { if (this.active) { this.active.s *= f; this.draw(); } }
   setUnderlayMode(mode: "off" | "move" | "align") {
     this.underlayMode = mode; this.alignStage = 0; this.alignPdf = []; this.alignWorld = [];
     this.cv.style.cursor = mode === "align" ? "crosshair" : mode === "move" ? "move" : "default";
-    if (mode === "align") this.onUnderlay?.("Align: click the FIRST reference point on the PDF.");
+    if (mode === "align" && this.active) this.onUnderlay?.("Align: click the FIRST reference point on the PDF.");
     this.draw();
   }
-  private uMatrix() {
-    const u = this.underlay!, S = this.scale, H = this.H(), c = Math.cos(u.rot), sn = Math.sin(u.rot);
+  private uMatrix(u: Underlay) {
+    const S = this.scale, H = this.H(), c = Math.cos(u.rot), sn = Math.sin(u.rot);
     const ex = u.tx - u.s * sn * u.h, ey = u.ty + u.s * c * u.h;
     return { A: S * u.s * c, C: S * u.s * sn, E: this.ox + S * ex, B: -S * u.s * sn, D: S * u.s * c, F: H - this.oy - S * ey };
   }
-  private drawUnderlay() {
-    const u = this.underlay!; if (!u.visible) return;
-    const m = this.uMatrix(), d = this.dpr, ctx = this.ctx;
-    ctx.save(); ctx.globalAlpha = u.opacity;
-    ctx.setTransform(d * m.A, d * m.B, d * m.C, d * m.D, d * m.E, d * m.F);
-    ctx.drawImage(u.img, 0, 0);
-    ctx.restore();
+  private worldOf(u: Underlay, px: number, py: number): P {
+    const c = Math.cos(u.rot), sn = Math.sin(u.rot), ly = u.h - py;
+    return { x: u.tx + u.s * (c * px - sn * ly), y: u.ty + u.s * (sn * px + c * ly) };
   }
-  private screenToPdf(sx: number, sy: number): P {
-    const m = this.uMatrix(), det = m.A * m.D - m.C * m.B, X = sx - m.E, Y = sy - m.F;
+  private cornersScreen(u: Underlay) {
+    return ([[0, 0], [u.w, 0], [u.w, u.h], [0, u.h]] as [number, number][]).map(([px, py]) => {
+      const w = this.worldOf(u, px, py); return { x: this.wx(w.x), y: this.wy(w.y) };
+    });
+  }
+  private drawUnderlays() {
+    const d = this.dpr, ctx = this.ctx;
+    for (const u of this.underlays) {
+      if (!u.visible) continue;
+      const m = this.uMatrix(u);
+      ctx.save(); ctx.globalAlpha = u.opacity;
+      ctx.setTransform(d * m.A, d * m.B, d * m.C, d * m.D, d * m.E, d * m.F);
+      ctx.drawImage(u.img, 0, 0); ctx.restore();
+    }
+    if (this.active && this.underlayMode !== "off" && this.underlays.includes(this.active)) {
+      const cs = this.cornersScreen(this.active);
+      ctx.save(); ctx.strokeStyle = css("--accent"); ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+      ctx.beginPath(); cs.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
+      for (const p of cs) { ctx.beginPath(); ctx.fillStyle = css("--panel"); ctx.strokeStyle = css("--accent"); ctx.lineWidth = 1.5; ctx.rect(p.x - 5, p.y - 5, 10, 10); ctx.fill(); ctx.stroke(); }
+      ctx.restore();
+    }
+  }
+  private hitCorner(sx: number, sy: number, u: Underlay): number {
+    const cs = this.cornersScreen(u);
+    for (let i = 0; i < 4; i++) if (Math.abs(cs[i].x - sx) < 9 && Math.abs(cs[i].y - sy) < 9) return i;
+    return -1;
+  }
+  private screenToPdf(u: Underlay, sx: number, sy: number): P {
+    const m = this.uMatrix(u), det = m.A * m.D - m.C * m.B, X = sx - m.E, Y = sy - m.F;
     return { x: (m.D * X - m.C * Y) / det, y: (-m.B * X + m.A * Y) / det };
   }
+  private cornerScale(sx: number, sy: number) {
+    const u = this.active!, cd = this.cDrag!, C = this.inv(sx, sy), c = Math.cos(u.rot), sn = Math.sin(u.rot);
+    const Rdl = { x: c * cd.dloc.x - sn * cd.dloc.y, y: sn * cd.dloc.x + c * cd.dloc.y };
+    const denom = Rdl.x * Rdl.x + Rdl.y * Rdl.y || 1;
+    u.s = Math.max(1e-6, ((C.x - cd.opp.x) * Rdl.x + (C.y - cd.opp.y) * Rdl.y) / denom);
+    const Ro = { x: c * cd.oppLocal.x - sn * cd.oppLocal.y, y: sn * cd.oppLocal.x + c * cd.oppLocal.y };
+    u.tx = cd.opp.x - u.s * Ro.x; u.ty = cd.opp.y - u.s * Ro.y;
+    this.draw();
+  }
   private alignClick(sx: number, sy: number) {
-    const u = this.underlay!;
-    if (this.alignStage % 2 === 0) { this.alignPdf.push(this.screenToPdf(sx, sy)); this.onUnderlay?.(`Align: click the MODEL location for reference point ${this.alignPdf.length} (snaps to columns/grids).`); }
+    const u = this.active; if (!u) return;
+    if (this.alignStage % 2 === 0) { this.alignPdf.push(this.screenToPdf(u, sx, sy)); this.onUnderlay?.(`Align: click the MODEL location for reference point ${this.alignPdf.length} (snaps to columns/grids).`); }
     else { this.alignWorld.push(this.snapPoint(sx, sy)); this.onUnderlay?.(this.alignWorld.length < 2 ? "Align: click the SECOND reference point on the PDF." : ""); }
     this.alignStage++;
     if (this.alignWorld.length === 2) {
       const l = (p: P): P => ({ x: p.x, y: u.h - p.y });
       const l1 = l(this.alignPdf[0]), l2 = l(this.alignPdf[1]);
-      const d = { x: l2.x - l1.x, y: l2.y - l1.y }, D = { x: this.alignWorld[1].x - this.alignWorld[0].x, y: this.alignWorld[1].y - this.alignWorld[0].y };
-      const s = Math.hypot(D.x, D.y) / (Math.hypot(d.x, d.y) || 1), rot = Math.atan2(D.y, D.x) - Math.atan2(d.y, d.x);
+      const dd = { x: l2.x - l1.x, y: l2.y - l1.y }, D = { x: this.alignWorld[1].x - this.alignWorld[0].x, y: this.alignWorld[1].y - this.alignWorld[0].y };
+      const s = Math.hypot(D.x, D.y) / (Math.hypot(dd.x, dd.y) || 1), rot = Math.atan2(D.y, D.x) - Math.atan2(dd.y, dd.x);
       const c = Math.cos(rot), sn = Math.sin(rot);
       u.s = s; u.rot = rot; u.tx = this.alignWorld[0].x - s * (c * l1.x - sn * l1.y); u.ty = this.alignWorld[0].y - s * (sn * l1.x + c * l1.y);
       this.alignStage = 0; this.alignPdf = []; this.alignWorld = []; this.underlayMode = "move"; this.cv.style.cursor = "move";
-      this.onUnderlay?.("Aligned to 2 points — fine-tune with drag / sliders.");
+      this.onUnderlay?.("Aligned to 2 points — fine-tune with drag / corner handles.");
     }
     this.draw();
   }

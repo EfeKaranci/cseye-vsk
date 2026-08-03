@@ -63,15 +63,16 @@ def _grid_lines(rows, e):
         except Exception: return None
     for g in rows:
         lt = g.get("LineType", ""); vis = g.get("Visible") == "Yes"; gid = str(g.get("ID", "")).strip()
+        sysn = str(g.get("Name", "")).strip()
         if lt.startswith("X"):
             o = num(g.get("Ordinate"))
-            if o is not None: out.append({"id": gid, "dir": "X", "x1": o, "y1": e["ymin"], "x2": o, "y2": e["ymax"], "visible": vis})
+            if o is not None: out.append({"id": gid, "dir": "X", "x1": o, "y1": e["ymin"], "x2": o, "y2": e["ymax"], "visible": vis, "sys": sysn})
         elif lt.startswith("Y"):
             o = num(g.get("Ordinate"))
-            if o is not None: out.append({"id": gid, "dir": "Y", "x1": e["xmin"], "y1": o, "x2": e["xmax"], "y2": o, "visible": vis})
+            if o is not None: out.append({"id": gid, "dir": "Y", "x1": e["xmin"], "y1": o, "x2": e["xmax"], "y2": o, "visible": vis, "sys": sysn})
         else:
             x1, y1, x2, y2 = num(g.get("X1")), num(g.get("Y1")), num(g.get("X2")), num(g.get("Y2"))
-            if None not in (x1, y1, x2, y2): out.append({"id": gid, "dir": "G", "x1": x1, "y1": y1, "x2": x2, "y2": y2, "visible": vis})
+            if None not in (x1, y1, x2, y2): out.append({"id": gid, "dir": "G", "x1": x1, "y1": y1, "x2": x2, "y2": y2, "visible": vis, "sys": sysn})
     return out
 
 

@@ -38,8 +38,8 @@ def save_geometry(geom: dict) -> str:
         )
         c.executemany("INSERT INTO story VALUES(?,?,?)",
                       [(sid, s["name"], s["elev"]) for s in geom["stories"]])
-        c.executemany("INSERT INTO grid_line VALUES(?,?,?,?,?,?,?,?)",
-                      [(sid, g["id"], g["dir"], g["x1"], g["y1"], g["x2"], g["y2"], int(g["visible"]))
+        c.executemany("INSERT INTO grid_line VALUES(?,?,?,?,?,?,?,?,?)",
+                      [(sid, g["id"], g["dir"], g["x1"], g["y1"], g["x2"], g["y2"], int(g["visible"]), g.get("sys", ""))
                        for g in geom["grid_lines"]])
         c.executemany(
             "INSERT INTO frame VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -109,7 +109,7 @@ def meta(sid: str) -> dict | None:
 def geometry(sid: str) -> dict:
     c = con()
     frames = [dict(r) for r in c.execute("SELECT name,label,story,type,ix,iy,iz,jx,jy,jz,section FROM frame WHERE sid=?", (sid,))]
-    grids = [dict(r) for r in c.execute("SELECT gid as id,dir,x1,y1,x2,y2,visible FROM grid_line WHERE sid=?", (sid,))]
+    grids = [dict(r) for r in c.execute("SELECT gid as id,dir,x1,y1,x2,y2,visible,sys FROM grid_line WHERE sid=?", (sid,))]
     return {"frames": frames, "grid_lines": grids}
 
 

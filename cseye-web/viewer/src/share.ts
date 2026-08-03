@@ -17,8 +17,8 @@ let geom!: GeomBundle;
 let forces!: Bundle;
 let colsByStory = new Map<string, Frame[]>();
 let level = "", layer: Layer = "geom", result = "", curStep: string | null = null, stepList: string[] = [];
-let underlaysMeta: Record<string, any> = {};
-const underlayCache = new Map<string, Underlay>();
+let underlaysList: any[] = [];
+const imgCache = new Map<string, HTMLCanvasElement>();
 let shareBase = "";
 let pdfjs: any = null;
 async function ensurePdfjs() {
@@ -26,19 +26,39 @@ async function ensurePdfjs() {
   return pdfjs;
 }
 async function applyUnderlay() {
-  const m = underlaysMeta[level];
-  if (!m) { if (R.underlay) { R.underlay = null; R.draw(); } return; }
-  if (underlayCache.has(level)) { R.underlay = underlayCache.get(level)!; R.draw(); return; }
-  try {
-    const lib = await ensurePdfjs();
-    const doc = await lib.getDocument({ url: `${shareBase}/${m.pdf}` }).promise;
-    const page = await doc.getPage(m.page || 1);
-    const vp = page.getViewport({ scale: 2 });
-    const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
-    await page.render({ canvasContext: c.getContext("2d")!, viewport: vp }).promise;
-    const u: Underlay = { img: c, w: c.width, h: c.height, tx: m.tx, ty: m.ty, s: m.s, rot: m.rot, opacity: m.opacity ?? 0.55, visible: ($("lyPdf") as HTMLInputElement)?.checked ?? true };
-    underlayCache.set(level, u); R.underlay = u; R.draw();
-  } catch { /* underlay optional */ }
+  const docs = underlaysList.filter(d => Array.isArray(d.levels) && d.levels.includes(level));
+  if (!docs.length) { if (R.underlays.length) { R.underlays = []; R.draw(); } return; }
+  const vis = ($("lyPdf") as HTMLInputElement)?.checked ?? true;
+  const out: Underlay[] = [];
+  for (const m of docs) {
+    const key = `${m.pdf}|${m.page || 1}`;
+    let img = imgCache.get(key);
+    if (!img) {
+      try {
+        const lib = await ensurePdfjs();
+        const doc = await lib.getDocument({ url: `${shareBase}/${m.pdf}` }).promise;
+        const page = await doc.getPage(m.page || 1);
+        const vp = page.getViewport({ scale: 2 });
+        const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+        await page.render({ canvasContext: c.getContext("2d")!, viewport: vp }).promise;
+        img = c; imgCache.set(key, c);
+      } catch { continue; }
+    }
+    out.push({ name: m.name || "PDF", img, w: img.width, h: img.height, tx: m.tx, ty: m.ty, s: m.s, rot: m.rot, opacity: m.opacity ?? 0.55, visible: vis });
+  }
+  R.underlays = out; R.draw();
+}
+function buildGridSystems() {
+  const host = $("gridSys"); if (!host) return; host.innerHTML = ""; R.hiddenGridSystems.clear();
+  const sys = [...new Set((geom?.grid_lines ?? []).map((g: any) => g.sys).filter(Boolean))] as string[];
+  if (sys.length < 2) return;
+  for (const s of sys) {
+    const row = document.createElement("label"); row.className = "gsys";
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = true;
+    cb.onchange = () => { cb.checked ? R.hiddenGridSystems.delete(s) : R.hiddenGridSystems.add(s); R.draw(); };
+    const t = document.createElement("span"); t.textContent = "grid: " + s;
+    row.appendChild(cb); row.appendChild(t); host.appendChild(row);
+  }
 }
 
 async function loadPicker(token: string | null) {
@@ -77,7 +97,7 @@ async function boot() {
     ]);
   } catch (e: any) { $("status").textContent = "Could not load shared model: " + e.message; toast("Load failed"); busy(false); return; }
 
-  R.extents = geom.extents; R.grids = geom.grid_lines;
+  R.extents = geom.extents; R.grids = geom.grid_lines; buildGridSystems();
   colsByStory = new Map();
   for (const f of geom.frames) if (f.type === "column") (colsByStory.get(f.story) ?? colsByStory.set(f.story, []).get(f.story)!).push(f);
   $("fileName").textContent = geom.model.split(/[\\/]/).pop() ?? geom.model;
@@ -87,7 +107,7 @@ async function boot() {
   let best = geom.stories[0]?.name ?? "", bn = -1;
   for (const st of geom.stories) { const n = colsByStory.get(st.name)?.length ?? 0; if (n > bn) { bn = n; best = st.name; } }
   level = best;
-  try { const ur = await fetch(`${base}/underlays.json`); if (ur.ok) underlaysMeta = await ur.json(); } catch { /* optional */ }
+  try { const ur = await fetch(`${base}/underlays.json`); if (ur.ok) underlaysList = await ur.json(); } catch { /* optional */ }
   R.resize(); refresh(); R.fit(); applyUnderlay();
   $("status").textContent = `Shared read-only view · ${forces.result_sets.length} result sets`;
   busy(false);
@@ -209,7 +229,7 @@ $("stepPrev").onclick = () => cycleStep(-1); $("stepNext").onclick = () => cycle
 $("lyBeams").addEventListener("change", e => { R.showBeams = (e.target as HTMLInputElement).checked; R.draw(); });
 $("lyGrids").addEventListener("change", e => { R.showGrids = (e.target as HTMLInputElement).checked; R.draw(); });
 $("lyLabels").addEventListener("change", e => { R.showLabels = (e.target as HTMLInputElement).checked; R.draw(); });
-$("lyPdf").addEventListener("change", e => R.setUnderlayVisible((e.target as HTMLInputElement).checked));
+$("lyPdf").addEventListener("change", e => { const v = (e.target as HTMLInputElement).checked; R.underlays.forEach(u => u.visible = v); R.draw(); });
 $("pdfBtn").onclick = () => R.exportPDF(`CSEYE_${layer}_${level.replace(/\s+/g, "")}.pdf`);
 $("themeBtn").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark"); R.draw(); updateLegend(); };
 

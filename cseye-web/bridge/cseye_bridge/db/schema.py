@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS story(
   sid TEXT, name TEXT, elev REAL
 );
 CREATE TABLE IF NOT EXISTS grid_line(
-  sid TEXT, gid TEXT, dir TEXT, x1 REAL, y1 REAL, x2 REAL, y2 REAL, visible INTEGER
+  sid TEXT, gid TEXT, dir TEXT, x1 REAL, y1 REAL, x2 REAL, y2 REAL, visible INTEGER, sys TEXT
 );
 CREATE TABLE IF NOT EXISTS frame(
   sid TEXT, name TEXT, label TEXT, story TEXT, type TEXT,

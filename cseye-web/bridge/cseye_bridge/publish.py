@@ -56,7 +56,7 @@ def ensure_bucket() -> None:
 
 
 def publish(sid: str, label: str | None = None, expires_days: int | None = None,
-            results: list[str] | None = None, underlays: dict | None = None) -> dict:
+            results: list[str] | None = None, underlays: list | None = None) -> dict:
     url, key, bucket = config.SUPABASE_URL, config.SUPABASE_SERVICE_KEY, config.SUPABASE_BUCKET
     if not url or not key:
         raise RuntimeError("Supabase not configured. Set SUPABASE_URL and SUPABASE_SERVICE_KEY.")
@@ -72,11 +72,11 @@ def publish(sid: str, label: str | None = None, expires_days: int | None = None,
     for name, obj in (("geometry.json", geom), ("forces.json", forces)):
         _req("POST", f"{base}/{name}", json.dumps(obj, separators=(",", ":")).encode(), up_hdr)
 
-    # per-level background-PDF underlays (upload each unique PDF + a metadata map)
+    # named background-PDF underlays (list of docs, each on one or more levels)
     if underlays:
-        umeta: dict = {}
+        umeta: list = []
         uploaded: dict = {}
-        for lvl, u in underlays.items():
+        for u in underlays:
             b64 = u.get("pdf")
             if not b64:
                 continue
@@ -87,8 +87,9 @@ def publish(sid: str, label: str | None = None, expires_days: int | None = None,
                 _req("POST", f"{base}/{name}", raw,
                      {**_svc_headers(), "Content-Type": "application/pdf", "x-upsert": "true"})
                 uploaded[h] = name
-            umeta[lvl] = {"pdf": name, "page": u.get("page", 1), "tx": u["tx"], "ty": u["ty"],
-                          "s": u["s"], "rot": u["rot"], "opacity": u.get("opacity", 0.55)}
+            umeta.append({"name": u.get("name", ""), "pdf": name, "page": u.get("page", 1),
+                          "tx": u["tx"], "ty": u["ty"], "s": u["s"], "rot": u["rot"],
+                          "opacity": u.get("opacity", 0.55), "levels": u.get("levels", [])})
         if umeta:
             _req("POST", f"{base}/underlays.json", json.dumps(umeta).encode(), up_hdr)
 
