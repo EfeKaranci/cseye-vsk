@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CSEYE — ETABS Model Viewer</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand"><span class="mark">CS<b>EYE</b></span><span class="sub">STRUCTURAL VIEWER</span></div>
+      <div class="file"><span class="name" id="fileName">not connected</span><span class="meta mono" id="fileMeta">—</span></div>
+      <div class="spring"></div>
+      <div class="ctl">
+        <button class="btn" id="connectBtn">Connect bridge</button>
+        <button class="btn" id="attachBtn" disabled>Attach open model</button>
+        <button class="btn iconbtn" id="themeBtn" title="Light/dark">◑</button>
+        <button class="btn primary" id="pdfBtn" disabled>Export PDF</button>
+      </div>
+    </header>
+
+    <div class="subbar">
+      <div class="grp"><span class="lbl">Layer</span>
+        <select class="sel" id="layerSel">
+          <option value="geom">Geometry</option>
+          <option value="axial">Column axial (base)</option>
+          <option value="react">Base reactions</option>
+        </select>
+      </div>
+      <div class="grp hide" id="caseGrp"><span class="lbl">Result</span><select class="sel" id="caseSel"></select></div>
+      <div class="grp hide" id="valGrp"><span class="lbl">Value</span>
+        <select class="sel" id="valSel"><option value="gov">Governing |P|</option><option value="comp">Compression</option><option value="tens">Tension</option></select>
+      </div>
+      <div class="sep"></div>
+      <span class="note" id="status">Start the bridge (python run.py), then Connect.</span>
+    </div>
+
+    <div class="work">
+      <aside class="left">
+        <div class="rail-h"><span class="lbl">Models</span><span class="lbl mono" id="modelCount"></span></div>
+        <div class="models" id="models"></div>
+        <div class="rail-h"><span class="lbl">Level</span><span class="lbl mono" id="lvCount"></span></div>
+        <div class="levels" id="levels"></div>
+      </aside>
+
+      <div class="stage" id="stage">
+        <canvas id="cv"></canvas>
+        <div class="overlay hud">
+          <div class="pill"><span class="lbl" id="hudTag">Plan @</span> <span class="big mono" id="hudLevel">—</span></div>
+          <div class="pill mono" id="hudElev">el. —</div>
+        </div>
+        <div class="zoom">
+          <button class="btn iconbtn" id="zin">＋</button><button class="btn iconbtn" id="zout">－</button><button class="btn iconbtn" id="zfit">⤢</button>
+        </div>
+        <div class="cursor mono" id="cursor">x —, y —</div>
+        <div class="scalebar"><span class="mono" id="sbTxt">—</span><span class="bar" id="sbBar"></span></div>
+      </div>
+
+      <aside class="right">
+        <div class="sect"><h3>Selection</h3><div id="selBody"><p class="empty">Connect, then pick an element.</p></div></div>
+        <div class="sect"><h3 id="sumTitle">Summary</h3><dl class="kv" id="summary"></dl></div>
+        <div class="sect"><h3>Layers</h3>
+          <div class="lyr"><label><input type="checkbox" id="lyBeams" checked><span class="switch"></span>Beams (context)</label></div>
+          <div class="lyr"><label><input type="checkbox" id="lyGrids" checked><span class="switch"></span>Column grid</label></div>
+          <div class="lyr"><label><input type="checkbox" id="lyLabels" checked><span class="switch"></span>Value / labels</label></div>
+        </div>
+        <div class="sect"><h3>Legend</h3><div class="note" id="legend"></div></div>
+      </aside>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
