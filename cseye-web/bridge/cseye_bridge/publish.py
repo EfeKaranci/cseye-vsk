@@ -63,7 +63,7 @@ def publish(sid: str, label: str | None = None, expires_days: int | None = None)
     except RuntimeError:
         pass  # `share` table not created — fine, sharing still works by token
 
-    share_url = (config.SHARE_VIEWER_URL.rstrip("/") + f"/?s={token}") if config.SHARE_VIEWER_URL else None
+    share_url = (config.SHARE_VIEWER_URL.rstrip("/") + f"?s={token}") if config.SHARE_VIEWER_URL else None
     return {"token": token, "share_url": share_url, "results": forces["result_sets"],
             "share_recorded": share_recorded,
             "public_base": f"{url}/storage/v1/object/public/{bucket}/snapshots/{token}"}
