@@ -20,6 +20,7 @@ export class PlanRenderer {
   hover: Hit["data"] | null = null; pick: Hit["data"] | null = null;
   onPick?: (h: Hit | null) => void;
   onCursor?: (x: number, y: number) => void;
+  onNotify?: (m: string) => void;
   title = "";
 
   constructor(cv: HTMLCanvasElement) {
@@ -202,8 +203,16 @@ export class PlanRenderer {
     const jpg = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) jpg[i] = bin.charCodeAt(i);
     const pdf = buildPDF(jpg, oc.width, oc.height);
     const url = URL.createObjectURL(new Blob([pdf.buffer as ArrayBuffer], { type: "application/pdf" }));
-    const a = document.createElement("a"); a.href = url; a.download = fname; a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 6000);
+    // Primary: real download (works on a normal top-level page).
+    try { const a = document.createElement("a"); a.href = url; a.download = fname; a.rel = "noopener"; document.body.appendChild(a); a.click(); a.remove(); } catch { /* ignore */ }
+    // Embedded (sandboxed iframe): downloads are blocked — open the PDF in a new tab so it's reachable.
+    const embedded = window.self !== window.top;
+    let opened = false;
+    if (embedded) { try { opened = !!window.open(url, "_blank"); } catch { /* popup blocked */ } }
+    setTimeout(() => URL.revokeObjectURL(url), 20000);
+    this.onNotify?.(embedded
+      ? (opened ? "PDF opened in a new tab — press Ctrl+S to save it." : "Pop-up blocked — allow pop-ups to get the PDF, or open the app in its own tab.")
+      : `Saved “${fname}” — check your Downloads folder.`);
   }
 }
 

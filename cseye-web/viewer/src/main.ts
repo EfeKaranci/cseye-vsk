@@ -1,6 +1,6 @@
 import { api } from "./api";
 import { PlanRenderer, type Layer, type ValMode, type Hit } from "./render";
-import type { Meta, Geometry, PlanColumn, Frame } from "./types";
+import type { Meta, Geometry, PlanColumn, Frame, ModelInfo } from "./types";
 
 const $ = (id: string) => document.getElementById(id)!;
 const toast = (m: string) => { const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout((t as any)._t); (t as any)._t = setTimeout(() => t.classList.remove("show"), 2400); };
@@ -14,24 +14,39 @@ let colsByStory = new Map<string, Frame[]>();
 let level = "";
 let layer: Layer = "geom";
 let result = "";
+let allModels: ModelInfo[] = [];
 
 // ---------- connect / models ----------
+function setConn(ok: boolean) {
+  const c = $("conn"); c.classList.toggle("ok", ok); c.classList.toggle("bad", !ok);
+  $("connTxt").textContent = ok ? "Bridge: connected" : "Bridge: offline";
+}
+function renderModels(q = "") {
+  const term = q.trim().toLowerCase();
+  const list = term ? allModels.filter(m => m.name.toLowerCase().includes(term) || m.dir.toLowerCase().includes(term)) : allModels;
+  $("modelCount").textContent = term ? `${list.length}/${allModels.length}` : `${allModels.length}`;
+  const host = $("models"); host.innerHTML = "";
+  for (const m of list.slice(0, 500)) {
+    const el = document.createElement("div"); el.className = "model";
+    el.title = m.path;
+    el.innerHTML = `<div class="nm">${m.name}</div><div class="dir">${m.dir}</div>`;
+    el.onclick = () => openModel(m.path, el);
+    host.appendChild(el);
+  }
+}
 async function connect() {
   try {
     await api.health();
-    status("Bridge connected. Attach the open ETABS model, or pick a model to open.");
+    setConn(true);
+    ($("connectBtn") as HTMLButtonElement).textContent = "Reconnect";
     ($("attachBtn") as HTMLButtonElement).disabled = false;
-    const { count, models } = await api.models();
-    $("modelCount").textContent = `${count}`;
-    const host = $("models"); host.innerHTML = "";
-    for (const m of models.slice(0, 400)) {
-      const el = document.createElement("div"); el.className = "model";
-      el.innerHTML = `<div class="nm">${m.name}</div><div class="dir">${m.dir}</div>`;
-      el.onclick = () => openModel(m.path, el);
-      host.appendChild(el);
-    }
-  } catch (e) {
-    status("Cannot reach bridge at /api. Start it: cd bridge && python run.py");
+    status("Bridge connected. Attach the open ETABS model, or pick one to open.");
+    const { models } = await api.models();
+    allModels = models;
+    renderModels(($("modelSearch") as HTMLInputElement).value);
+  } catch {
+    setConn(false);
+    status("Cannot reach bridge at /api. Start the bridge (python run.py) and Reconnect.");
     toast("Bridge not reachable");
   }
 }
@@ -184,10 +199,12 @@ R.onPick = (h: Hit | null) => {
   }
 };
 R.onCursor = (x, y) => { $("cursor").textContent = `x ${x.toFixed(1)}, y ${y.toFixed(1)}`; };
+R.onNotify = (m) => toast(m);
 
 // ---------- controls ----------
 $("connectBtn").onclick = connect;
 $("attachBtn").onclick = attach;
+($("modelSearch") as HTMLInputElement).addEventListener("input", e => renderModels((e.target as HTMLInputElement).value));
 $("zin").onclick = () => R.zoomAt(R.W() / 2, R.H() / 2, 1.2);
 $("zout").onclick = () => R.zoomAt(R.W() / 2, R.H() / 2, 1 / 1.2);
 $("zfit").onclick = () => R.fit();
