@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.cseye/
+*.db
+node_modules/
+dist/
+*.egg-info/
+.venv/
+# large local data dumps produced by dev tools
+tools/*.json

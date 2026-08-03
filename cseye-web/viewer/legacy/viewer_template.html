@@ -1,0 +1,485 @@
+<title>CSEYE — ETABS Model Viewer</title>
+<style>
+  :root{
+    --bg:#e9edf2; --panel:#ffffff; --panel-2:#f4f7fa; --ink:#0f151c; --ink-soft:#5a6675;
+    --ink-faint:#8a97a6; --line:#d4dbe4; --line-soft:#e3e8ee; --grid:#aab6c4; --grid-strong:#7d8b9b;
+    --accent:#0e7c86; --accent-ink:#ffffff; --accent-weak:#d3ebed; --amber:#b9761a;
+    --comp:#1f5fb0; --tens:#c9403f; --up:#0e7c86; --canvas:#fbfcfe; --shadow:rgba(20,30,45,.10);
+    --font-ui:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:ui-monospace,"Cascadia Code","Consolas","SF Mono",monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0b0e13; --panel:#12171e; --panel-2:#171d25; --ink:#e7ecf3; --ink-soft:#8d9bab;
+      --ink-faint:#5f6c7b; --line:#232b35; --line-soft:#1b222b; --grid:#333f4c; --grid-strong:#556474;
+      --accent:#2bb6c4; --accent-ink:#04222a; --accent-weak:#123037; --amber:#e0a33e;
+      --comp:#57a0ff; --tens:#ff6a67; --up:#2bb6c4; --canvas:#090c11; --shadow:rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#e9edf2; --panel:#ffffff; --panel-2:#f4f7fa; --ink:#0f151c; --ink-soft:#5a6675;
+    --ink-faint:#8a97a6; --line:#d4dbe4; --line-soft:#e3e8ee; --grid:#aab6c4; --grid-strong:#7d8b9b;
+    --accent:#0e7c86; --accent-ink:#ffffff; --accent-weak:#d3ebed; --amber:#b9761a;
+    --comp:#1f5fb0; --tens:#c9403f; --up:#0e7c86; --canvas:#fbfcfe; --shadow:rgba(20,30,45,.10);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0b0e13; --panel:#12171e; --panel-2:#171d25; --ink:#e7ecf3; --ink-soft:#8d9bab;
+    --ink-faint:#5f6c7b; --line:#232b35; --line-soft:#1b222b; --grid:#333f4c; --grid-strong:#556474;
+    --accent:#2bb6c4; --accent-ink:#04222a; --accent-weak:#123037; --amber:#e0a33e;
+    --comp:#57a0ff; --tens:#ff6a67; --up:#2bb6c4; --canvas:#090c11; --shadow:rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);
+    font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased;overflow:hidden}
+  .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+  .lbl{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
+  button{font-family:inherit;color:inherit;cursor:pointer}
+  ::selection{background:var(--accent-weak)}
+  .app{display:grid;grid-template-rows:auto auto 1fr;height:100vh}
+  header{display:flex;align-items:center;gap:16px;padding:0 16px;height:52px;
+    background:var(--panel);border-bottom:1px solid var(--line);z-index:5}
+  .brand{display:flex;align-items:baseline;gap:9px}
+  .brand .mark{font-weight:800;letter-spacing:.14em;font-size:15px}
+  .brand .mark b{color:var(--accent)}
+  .brand .sub{font-size:11px;color:var(--ink-faint)}
+  .file{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+  .file .name{font-weight:600;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:30ch}
+  .file .meta{font-size:10.5px;color:var(--ink-faint)}
+  .tabs{display:flex;gap:2px;margin-left:4px}
+  .tab{background:none;border:0;padding:7px 11px;border-radius:7px;color:var(--ink-soft);font-weight:600;font-size:12.5px;display:flex;align-items:center;gap:6px}
+  .tab:hover:not(:disabled){background:var(--panel-2);color:var(--ink)}
+  .tab[aria-selected="true"]{background:var(--accent-weak);color:var(--accent)}
+  .tab:disabled{opacity:.5;cursor:not-allowed}
+  .tab .soon{font-size:8.5px;letter-spacing:.06em;padding:1px 5px;border-radius:20px;background:var(--line);color:var(--ink-faint);text-transform:uppercase;font-weight:700}
+  .spring{flex:1}
+  .ctl{display:flex;align-items:center;gap:8px}
+  .btn{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-weight:600;font-size:12.5px;display:flex;align-items:center;gap:7px;color:var(--ink)}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .btn.primary:hover{filter:brightness(1.06);color:var(--accent-ink)}
+  .iconbtn{width:32px;height:32px;padding:0;justify-content:center;border-radius:8px}
+  .sel{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:6px 9px;font-size:12.5px;font-weight:600;font-family:inherit}
+  .sel:disabled{opacity:.5}
+  .subbar{display:flex;align-items:center;gap:14px;padding:0 16px;height:40px;background:var(--panel-2);border-bottom:1px solid var(--line);font-size:12px}
+  .subbar .grp{display:flex;align-items:center;gap:8px}
+  .subbar .sep{width:1px;height:20px;background:var(--line)}
+  .hide{display:none!important}
+  .work{display:grid;grid-template-columns:210px 1fr 278px;min-height:0}
+  aside{background:var(--panel);overflow:hidden;display:flex;flex-direction:column;min-height:0}
+  aside.left{border-right:1px solid var(--line)}
+  aside.right{border-left:1px solid var(--line)}
+  .rail-h{padding:11px 14px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line-soft)}
+  .levels{overflow-y:auto;padding:8px;display:flex;flex-direction:column-reverse;gap:0}
+  .lv{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px;padding:0 9px;border-left:2px solid transparent;border-radius:6px;cursor:pointer;min-height:var(--h);color:var(--ink-soft)}
+  .lv:hover{background:var(--panel-2);color:var(--ink)}
+  .lv[aria-current="true"]{background:var(--accent-weak);border-left-color:var(--accent);color:var(--accent)}
+  .lv .nm{font-weight:650;font-size:12px}
+  .lv .el{font-size:10.5px;color:var(--ink-faint)}
+  .lv[aria-current="true"] .el{color:var(--accent)}
+  .lv .cnt{font-size:10px;color:var(--ink-faint);grid-column:1;justify-self:start;margin-top:-2px}
+  .stage{position:relative;background:var(--canvas);min-width:0;overflow:hidden}
+  canvas{display:block;width:100%;height:100%;touch-action:none}
+  .overlay{position:absolute;pointer-events:none;font-size:11px}
+  .hud{left:14px;top:12px;display:flex;flex-direction:column;gap:3px}
+  .hud .pill{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 9px;box-shadow:0 2px 8px var(--shadow);pointer-events:auto}
+  .hud .big{font-size:14px;font-weight:700}
+  .zoom{position:absolute;right:14px;top:12px;display:flex;flex-direction:column;gap:6px;pointer-events:auto}
+  .cursor{position:absolute;left:14px;bottom:12px;background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 9px;box-shadow:0 2px 8px var(--shadow);color:var(--ink-soft)}
+  .scalebar{position:absolute;right:14px;bottom:12px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink-soft)}
+  .scalebar .bar{height:6px;border:1px solid var(--grid-strong);border-top:0;width:var(--sbw,80px)}
+  .rp{overflow-y:auto;padding:0 0 20px}
+  .sect{padding:13px 15px;border-bottom:1px solid var(--line-soft)}
+  .sect h3{margin:0 0 10px;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:12px}
+  .kv dt{color:var(--ink-soft)}
+  .kv dd{margin:0;text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:600}
+  .empty{color:var(--ink-faint);font-size:12px;font-style:italic}
+  .swatch{width:11px;height:11px;border-radius:3px;display:inline-block;vertical-align:-1px;margin-right:6px}
+  .lyr{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:12.5px}
+  .lyr label{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+  .switch{position:relative;width:34px;height:19px;background:var(--line);border-radius:20px;transition:background .15s;flex:none}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;background:#fff;border-radius:50%;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+  input[type=checkbox]{display:none}
+  input[type=checkbox]:checked + .switch{background:var(--accent)}
+  input[type=checkbox]:checked + .switch::after{transform:translateX(15px)}
+  .note{font-size:11.5px;color:var(--ink-soft);line-height:1.5}
+  .note b{color:var(--ink)}
+  .banner{margin:0;padding:8px 16px;background:var(--panel-2);border-bottom:1px solid var(--line-soft);font-size:11.5px;color:var(--ink-soft);display:flex;gap:8px;align-items:center}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--amber);flex:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--amber) 22%,transparent)}
+  .grad{height:12px;border-radius:3px;margin:4px 0 3px;background:linear-gradient(90deg,var(--comp),color-mix(in srgb,var(--comp) 30%,var(--panel)),color-mix(in srgb,var(--tens) 30%,var(--panel)),var(--tens))}
+  .gradrow{display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink-soft)}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);
+    padding:9px 16px;border-radius:9px;font-size:12.5px;font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:20;box-shadow:0 8px 24px var(--shadow)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+
+<div class="app">
+  <header>
+    <div class="brand"><span class="mark">CS<b>EYE</b></span><span class="sub">STRUCTURAL VIEWER</span></div>
+    <div class="file"><span class="name" id="fileName">model</span><span class="meta mono" id="fileMeta">—</span></div>
+    <nav class="tabs" role="tablist" aria-label="View type">
+      <button class="tab" role="tab" aria-selected="true">Plan</button>
+      <button class="tab" role="tab" aria-selected="false" disabled>Elevation <span class="soon">soon</span></button>
+      <button class="tab" role="tab" aria-selected="false" disabled>Diaphragm <span class="soon">soon</span></button>
+    </nav>
+    <div class="spring"></div>
+    <div class="ctl">
+      <button class="btn iconbtn theme" id="themeBtn" title="Toggle light/dark">◑</button>
+      <button class="btn primary" id="pdfBtn" title="Download the current view as a PDF">Export PDF</button>
+    </div>
+  </header>
+
+  <div class="subbar">
+    <div class="grp"><span class="lbl">Layer</span>
+      <select class="sel" id="layerSel">
+        <option value="geom">Geometry</option>
+        <option value="axial">Column axial (base)</option>
+        <option value="react">Base reactions</option>
+      </select>
+    </div>
+    <div class="grp" id="caseGrp"><span class="lbl">Result</span>
+      <select class="sel" id="caseSel"></select>
+    </div>
+    <div class="grp" id="valGrp"><span class="lbl">Value</span>
+      <select class="sel" id="valSel">
+        <option value="gov">Governing |P|</option>
+        <option value="comp">Compression (min)</option>
+        <option value="tens">Tension (max)</option>
+      </select>
+    </div>
+    <div class="sep"></div>
+    <span class="note" id="subInfo"></span>
+  </div>
+
+  <div class="banner"><span class="dot"></span><span id="bannerTxt"></span></div>
+
+  <div class="work">
+    <aside class="left">
+      <div class="rail-h"><span class="lbl">Level</span><span class="lbl mono" id="lvCount"></span></div>
+      <div class="levels" id="levels"></div>
+    </aside>
+
+    <div class="stage" id="stage">
+      <canvas id="cv"></canvas>
+      <div class="overlay hud">
+        <div class="pill"><span class="lbl" id="hudTag">Plan @</span> <span class="big mono" id="hudLevel">—</span></div>
+        <div class="pill mono" id="hudElev">el. —</div>
+      </div>
+      <div class="zoom">
+        <button class="btn iconbtn" id="zin" title="Zoom in">＋</button>
+        <button class="btn iconbtn" id="zout" title="Zoom out">－</button>
+        <button class="btn iconbtn" id="zfit" title="Fit to view">⤢</button>
+      </div>
+      <div class="cursor mono" id="cursor">x —, y —</div>
+      <div class="scalebar"><span class="mono" id="sbTxt">—</span><span class="bar" id="sbBar"></span></div>
+    </div>
+
+    <aside class="right">
+      <div class="rp">
+        <div class="sect">
+          <h3>Selection</h3>
+          <div id="selBody"><p class="empty">Hover or click an element to inspect it.</p></div>
+        </div>
+        <div class="sect">
+          <h3 id="sumTitle">Level summary</h3>
+          <dl class="kv" id="lvSummary"></dl>
+        </div>
+        <div class="sect">
+          <h3>Layers</h3>
+          <div class="lyr"><label><input type="checkbox" id="lyColumns" checked><span class="switch"></span>Columns</label></div>
+          <div class="lyr"><label><input type="checkbox" id="lyBeams" checked><span class="switch"></span>Beams (context)</label></div>
+          <div class="lyr"><label><input type="checkbox" id="lyBraces"><span class="switch"></span>Braces</label></div>
+          <div class="lyr"><label><input type="checkbox" id="lyGrids" checked><span class="switch"></span>Column grid</label></div>
+          <div class="lyr"><label><input type="checkbox" id="lyLabels" checked><span class="switch"></span>Value / labels</label></div>
+        </div>
+        <div class="sect" id="legendSect">
+          <h3>Legend</h3>
+          <div class="note" id="legend"></div>
+        </div>
+        <div class="sect">
+          <h3>Roadmap</h3>
+          <p class="note">Same data backbone feeds the next views: <b>bracing-elevation member forces</b> and <b>diaphragm forces</b>. Full design envelopes (<span class="mono">LRFD_Env…</span>) appear here once all cases are run.</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = /*__DATA__*/ null;
+const FORCES = /*__FORCES__*/ null;
+
+const S={level:null,scale:1,ox:0,oy:0,hover:null,pick:null,
+  layer:'geom',rcase:null,vmode:'gov',
+  layers:{columns:true,beams:true,braces:false,grids:true,labels:true},
+  dpr:Math.max(1,Math.min(2,window.devicePixelRatio||1))};
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d'),stage=document.getElementById('stage');
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const hasForces=FORCES&&FORCES.result_sets&&FORCES.result_sets.length;
+
+const byStory={};DATA.stories.forEach(s=>byStory[s.name]={cols:[],beams:[],braces:[]});
+DATA.frames.forEach(f=>{const b=byStory[f.story];if(!b)return;
+  if(f.type==='column')b.cols.push(f);else if(f.type==='beam')b.beams.push(f);else if(f.type==='brace')b.braces.push(f);});
+const storyByName={};DATA.stories.forEach(s=>storyByName[s.name]=s);
+const reactList=hasForces?Object.entries(FORCES.reactions).map(([j,r])=>({joint:j,...r})):[];
+
+const caseMaxP={};
+if(hasForces){for(const cse of FORCES.result_sets){let m=0;
+  for(const k in FORCES.col_forces){const d=FORCES.col_forces[k][cse];if(!d)continue;
+    m=Math.max(m,Math.abs(d.Pmin),Math.abs(d.Pmax));}caseMaxP[cse]=m||1;}}
+const caseMaxFz={};
+if(hasForces){for(const cse of FORCES.result_sets){let m=0;
+  for(const r of reactList){const c=r.cases[cse];if(c)m=Math.max(m,Math.abs(c.Fz));}caseMaxFz[cse]=m||1;}}
+
+function W(){return cv.width/S.dpr}function H(){return cv.height/S.dpr}
+function wx(x){return S.ox+x*S.scale}function wy(y){return H()-(S.oy+y*S.scale)}
+function inv(px,py){return{x:(px-S.ox)/S.scale,y:(H()-py-S.oy)/S.scale}}
+function fit(){const e=DATA.extents,pad=44,bw=(e.xmax-e.xmin)||1,bh=(e.ymax-e.ymin)||1;
+  const s=Math.min((W()-2*pad)/bw,(H()-2*pad)/bh);S.scale=s;
+  S.ox=pad-e.xmin*s+(W()-2*pad-bw*s)/2;S.oy=pad-e.ymin*s+(H()-2*pad-bh*s)/2;draw();}
+function zoomAt(px,py,f){const w=inv(px,py);S.scale*=f;S.ox=px-w.x*S.scale;S.oy=(H()-py)-w.y*S.scale;draw();}
+function resize(){const r=stage.getBoundingClientRect();cv.width=Math.round(r.width*S.dpr);cv.height=Math.round(r.height*S.dpr);ctx.setTransform(S.dpr,0,0,S.dpr,0,0);draw();}
+
+function colP(f){const cf=hasForces&&FORCES.col_forces[f.name];const d=cf&&cf[S.rcase];if(!d)return null;
+  if(S.vmode==='comp')return d.Pmin;if(S.vmode==='tens')return d.Pmax;
+  return Math.abs(d.Pmin)>=Math.abs(d.Pmax)?d.Pmin:d.Pmax;}
+function rampColor(v,max){const t=Math.min(1,Math.abs(v)/max);
+  if(v<0)return `hsl(214,80%,${72-40*t}%)`;return `hsl(4,74%,${70-34*t}%)`;}
+function rad(v,max,lo,hi){return lo+(hi-lo)*Math.min(1,Math.abs(v)/max);}
+
+function draw(){
+  if(!S.level)return;const b=byStory[S.level]||{cols:[],beams:[],braces:[]};
+  ctx.clearRect(0,0,W(),H());drawGridBg();
+  if(S.layers.grids)drawGrids();
+  if(S.layers.beams)drawFrames(b.beams,css('--grid'),1);
+  if(S.layers.braces)drawFrames(b.braces,css('--amber'),1.4);
+  if(S.layer==='react')drawReactions();
+  else if(S.layers.columns)drawColumns(b.cols);
+  drawScaleBar();
+}
+function drawGridBg(){const step=10*S.scale;if(step<14)return;
+  ctx.save();ctx.strokeStyle=css('--line-soft');ctx.globalAlpha=.6;ctx.lineWidth=1;ctx.beginPath();
+  for(let x=S.ox%step;x<W();x+=step){ctx.moveTo(x,0);ctx.lineTo(x,H());}
+  for(let y=(H()-S.oy)%step;y<H();y+=step){ctx.moveTo(0,y);ctx.lineTo(W(),y);}
+  ctx.stroke();ctx.restore();}
+function drawFrames(arr,color,w){ctx.save();ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineCap='round';ctx.globalAlpha=.85;ctx.beginPath();
+  for(const f of arr){const i=DATA.points[f.i],j=DATA.points[f.j];if(!i||!j)continue;ctx.moveTo(wx(i[0]),wy(i[1]));ctx.lineTo(wx(j[0]),wy(j[1]));}
+  ctx.stroke();ctx.restore();}
+function drawGrids(){const e=DATA.extents;ctx.save();ctx.lineWidth=1;ctx.setLineDash([7,5]);ctx.strokeStyle=css('--grid');ctx.globalAlpha=.85;ctx.font='600 11px '+css('--font-mono');
+  for(const g of DATA.grid_lines){if(g.visible===false)continue;ctx.beginPath();ctx.moveTo(wx(g.x1),wy(g.y1));ctx.lineTo(wx(g.x2),wy(g.y2));ctx.stroke();}
+  ctx.setLineDash([]);
+  for(const g of DATA.grid_lines){if(g.visible===false)continue;
+    const px=wx(g.dir==='X'?g.x1:e.xmax),py=wy(g.dir==='X'?e.ymax:g.y1);
+    const cx=g.dir==='X'?px:px+13,cy=g.dir==='X'?py-13:py;
+    ctx.beginPath();ctx.fillStyle=css('--canvas');ctx.strokeStyle=css('--grid-strong');ctx.arc(cx,cy,10,0,7);ctx.fill();ctx.stroke();
+    ctx.fillStyle=css('--ink-soft');ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(g.id.length>4?g.id.slice(0,4):g.id,cx,cy);}
+  ctx.restore();}
+function drawColumns(cols){
+  const axial=S.layer==='axial'&&hasForces&&S.rcase;const max=axial?caseMaxP[S.rcase]:1;
+  const drawn=[];
+  for(const f of cols){const i=DATA.points[f.i];if(!i)continue;const x=wx(i[0]),y=wy(i[1]);
+    const on=f===S.pick||f===S.hover;let color,r,val=null;
+    if(axial){val=colP(f);
+      if(val===null){color=css('--ink-faint');r=on?5:3;}
+      else{color=rampColor(val,max);r=rad(val,max,3.2,9.5);}}
+    else{color=css('--accent');r=on?6.5:4.6;}
+    ctx.beginPath();ctx.fillStyle=color;ctx.globalAlpha=on?1:.92;ctx.arc(x,y,on?r+1.5:r,0,7);ctx.fill();
+    if(on){ctx.globalAlpha=1;ctx.lineWidth=2;ctx.strokeStyle=css('--ink');ctx.stroke();}
+    ctx.globalAlpha=1;drawn.push({f,x,y,r,val,on});}
+  // labels: spacing-based declutter so dense levels (e.g. L01, 161 cols) still show values when zoomed;
+  // prioritize larger |value|; hovered/selected always labelled.
+  if(S.layers.labels){ctx.font='600 10px '+css('--font-mono');ctx.textAlign='center';ctx.textBaseline='bottom';
+    const order=drawn.slice().sort((a,b)=>(b.on-a.on)||(Math.abs(b.val||0)-Math.abs(a.val||0)));
+    const placed=[];const GX=30,GY=13;
+    for(const d of order){if(d.x<-30||d.x>W()+30||d.y<-20||d.y>H()+20)continue;
+      let ok=d.on;if(!ok){ok=true;for(const p of placed){if(Math.abs(p[0]-d.x)<GX&&Math.abs(p[1]-d.y)<GY){ok=false;break;}}}
+      if(!ok)continue;placed.push([d.x,d.y]);
+      const txt=axial?(d.val===null?'–':Math.round(Math.abs(d.val))+''):d.f.label;
+      ctx.fillStyle=d.on?css('--ink'):css('--ink-soft');ctx.fillText(txt,d.x,d.y-d.r-2);}}
+}
+function drawReactions(){
+  const max=caseMaxFz[S.rcase]||1;const drawn=[];
+  for(const rr of reactList){const c=rr.cases[S.rcase];if(!c)continue;const x=wx(rr.x),y=wy(rr.y);
+    const on=rr===S.pick||rr===S.hover;const up=c.Fz>=0;const r=rad(c.Fz,max,3.5,11);
+    ctx.beginPath();ctx.fillStyle=up?css('--up'):css('--tens');ctx.globalAlpha=on?1:.9;ctx.arc(x,y,on?r+1.5:r,0,7);ctx.fill();
+    if(on){ctx.lineWidth=2;ctx.strokeStyle=css('--ink');ctx.stroke();}ctx.globalAlpha=1;drawn.push({rr,x,y,r,v:c.Fz,on});}
+  if(S.layers.labels){ctx.font='600 10px '+css('--font-mono');ctx.textAlign='center';ctx.textBaseline='bottom';
+    const order=drawn.slice().sort((a,b)=>(b.on-a.on)||(Math.abs(b.v)-Math.abs(a.v)));const placed=[];const GX=32,GY=13;
+    for(const d of order){if(d.x<-30||d.x>W()+30||d.y<-20||d.y>H()+20)continue;
+      let ok=d.on;if(!ok){ok=true;for(const p of placed){if(Math.abs(p[0]-d.x)<GX&&Math.abs(p[1]-d.y)<GY){ok=false;break;}}}
+      if(!ok)continue;placed.push([d.x,d.y]);
+      ctx.fillStyle=d.on?css('--ink'):css('--ink-soft');ctx.fillText(Math.round(Math.abs(d.v))+'',d.x,d.y-d.r-2);}}
+}
+function drawScaleBar(){const target=90/S.scale,pow=Math.pow(10,Math.floor(Math.log10(target)));
+  const cand=[1,2,5,10].map(m=>m*pow);let L=cand[0];for(const c of cand)if(c<=target)L=c;
+  document.getElementById('sbBar').style.setProperty('--sbw',(L*S.scale)+'px');document.getElementById('sbTxt').textContent=L+" ft";}
+
+function nearest(px,py){
+  if(S.layer==='react'){let best=null,bd=16*16;for(const rr of reactList){if(!rr.cases[S.rcase])continue;
+    const dx=wx(rr.x)-px,dy=wy(rr.y)-py,d=dx*dx+dy*dy;if(d<bd){bd=d;best=rr;}}return best;}
+  const b=byStory[S.level];if(!b)return null;let best=null,bd=14*14;
+  for(const f of b.cols){const i=DATA.points[f.i];if(!i)continue;const dx=wx(i[0])-px,dy=wy(i[1])-py,d=dx*dx+dy*dy;if(d<bd){bd=d;best=f;}}return best;}
+function fmtSel(o){const el=document.getElementById('selBody');
+  if(!o){el.innerHTML='<p class="empty">Hover or click an element to inspect it.</p>';return;}
+  if(o.joint!==undefined){const c=o.cases[S.rcase]||{};
+    const combo=(FORCES.result_kinds&&FORCES.result_kinds[S.rcase]==='combo');
+    const env=('Fzmax' in c)&&(Math.abs((c.Fzmax||0)-(c.Fzmin||0))>0.05);
+    el.innerHTML=`<dl class="kv"><dt>Support joint</dt><dd>${o.joint}</dd>
+      <dt>Plan X,Y</dt><dd>${o.x.toFixed(1)}, ${o.y.toFixed(1)}</dd><dt>Elev</dt><dd>${o.z.toFixed(2)}</dd>
+      <dt>Result</dt><dd style="font-size:11px">${S.rcase}${combo?' · combo':''}</dd>
+      <dt>Fz gov</dt><dd>${(c.Fz||0).toFixed(1)} k</dd>
+      ${env?`<dt>Fz max</dt><dd style="color:var(--up)">${c.Fzmax.toFixed(1)} k</dd><dt>Fz min</dt><dd style="color:var(--tens)">${c.Fzmin.toFixed(1)} k</dd>`:''}
+      <dt>Fx</dt><dd>${(c.Fx||0).toFixed(1)} k</dd><dt>Fy</dt><dd>${(c.Fy||0).toFixed(1)} k</dd>
+      <dt>Mx</dt><dd>${(c.Mx||0).toFixed(1)}</dd><dt>My</dt><dd>${(c.My||0).toFixed(1)}</dd></dl>`;return;}
+  const i=DATA.points[o.i],j=DATA.points[o.j],base=Math.min(i[2],j[2]),top=Math.max(i[2],j[2]);
+  const cf=hasForces&&FORCES.col_forces[o.name]&&FORCES.col_forces[o.name][S.rcase];
+  let fr='';if(cf){const P=Math.abs(cf.Pmin)>=Math.abs(cf.Pmax)?cf.Pmin:cf.Pmax;
+    fr=`<dt>Axial P</dt><dd>${P.toFixed(1)} k ${P<0?'C':'T'}</dd>
+        <dt>P range</dt><dd>${cf.Pmin.toFixed(0)} / ${cf.Pmax.toFixed(0)}</dd>
+        <dt>V2, V3</dt><dd>${cf.V2.toFixed(1)}, ${cf.V3.toFixed(1)}</dd>
+        <dt>M2, M3</dt><dd>${cf.M2.toFixed(0)}, ${cf.M3.toFixed(0)}</dd>`;}
+  else if(S.layer!=='geom')fr=`<dt>Axial</dt><dd style="color:var(--ink-faint)">no result</dd>`;
+  el.innerHTML=`<dl class="kv"><dt>Label</dt><dd>${o.label}</dd><dt>Story</dt><dd>${o.story}</dd>
+    <dt>Section</dt><dd style="font-size:11px">${o.sec||'—'}</dd>
+    <dt>Plan X,Y</dt><dd>${i[0].toFixed(1)}, ${i[1].toFixed(1)}</dd>
+    <dt>Base / Top</dt><dd>${base.toFixed(1)} / ${top.toFixed(1)}</dd>${fr}</dl>`;}
+
+function buildLevels(){const host=document.getElementById('levels');
+  const S2=DATA.stories.slice().sort((a,b)=>a.elev-b.elev);const elevs=S2.map(s=>s.elev);
+  let minH=Infinity;for(let k=1;k<elevs.length;k++)minH=Math.min(minH,Math.abs(elevs[k]-elevs[k-1])||99);
+  host.innerHTML='';for(const s of S2){const idx=S2.indexOf(s);
+    const h=idx<S2.length-1?Math.abs(S2[idx+1].elev-s.elev):minH;const px=Math.max(26,Math.min(62,20+h*0.9));
+    const n=(byStory[s.name]||{cols:[]}).cols.length;const el=document.createElement('div');
+    el.className='lv';el.style.setProperty('--h',px+'px');el.setAttribute('role','button');el.tabIndex=0;
+    el.setAttribute('aria-current',s.name===S.level);
+    el.innerHTML=`<span class="nm">${s.name}</span><span class="el mono">${s.elev.toFixed(1)}'</span>`+(n?`<span class="cnt mono">${n} col</span>`:'');
+    el.onclick=()=>setLevel(s.name);el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setLevel(s.name);}};host.appendChild(el);}}
+function setLevel(name){S.level=name;S.pick=null;S.hover=null;fmtSel(null);
+  document.querySelectorAll('.lv').forEach(el=>el.setAttribute('aria-current',el.querySelector('.nm').textContent===name));
+  const st=storyByName[name];document.getElementById('hudLevel').textContent=name;
+  document.getElementById('hudElev').textContent='el. '+st.elev.toFixed(2)+" ft";
+  updateSummary();draw();}
+function updateSummary(){const b=byStory[S.level],st=storyByName[S.level],sum=document.getElementById('lvSummary');
+  if(S.layer==='react'){document.getElementById('sumTitle').textContent='Reactions summary';
+    let tot=0,n=0,mn=1e30,mx=-1e30;for(const rr of reactList){const c=rr.cases[S.rcase];if(!c)continue;tot+=c.Fz;n++;mn=Math.min(mn,c.Fz);mx=Math.max(mx,c.Fz);}
+    sum.innerHTML=`<dt>Result</dt><dd style="font-size:11px">${S.rcase}</dd><dt>Supports</dt><dd>${n}</dd>
+      <dt>Σ Fz</dt><dd>${tot.toFixed(0)} k</dd><dt>Max Fz</dt><dd>${mx.toFixed(0)} k</dd><dt>Min Fz</dt><dd>${mn.toFixed(0)} k</dd>`;return;}
+  document.getElementById('sumTitle').textContent='Level summary';
+  let extra='';
+  if(S.layer==='axial'&&hasForces){let mn=1e30,mx=-1e30,cnt=0;for(const f of b.cols){const P=colP(f);if(P==null)continue;mn=Math.min(mn,P);mx=Math.max(mx,P);cnt++;}
+    if(cnt)extra=`<dt>Axial min</dt><dd>${mn.toFixed(0)} k</dd><dt>Axial max</dt><dd>${mx.toFixed(0)} k</dd><dt>With result</dt><dd>${cnt}/${b.cols.length}</dd>`;}
+  sum.innerHTML=`<dt>Elevation</dt><dd>${st.elev.toFixed(2)} ft</dd><dt>Columns</dt><dd>${b.cols.length}</dd>
+    <dt>Beams</dt><dd>${b.beams.length}</dd><dt>Braces</dt><dd>${b.braces.length}</dd>${extra}`;}
+
+function legend(){const el=document.getElementById('legend');
+  if(S.layer==='axial'&&hasForces){const m=caseMaxP[S.rcase];
+    el.innerHTML=`<div class="note">Base axial force, <b>${S.rcase}</b> (kip). Circle size ∝ |P|.</div>
+      <div class="grad"></div><div class="gradrow"><span>−${m.toFixed(0)} comp</span><span>0</span><span>+${m.toFixed(0)} tens</span></div>`;return;}
+  if(S.layer==='react'&&hasForces){const m=caseMaxFz[S.rcase];
+    el.innerHTML=`<div><span class="swatch" style="background:var(--up)"></span>Downward reaction (Fz+)</div>
+      <div style="margin-top:5px"><span class="swatch" style="background:var(--tens)"></span>Uplift (Fz−)</div>
+      <div class="note" style="margin-top:6px">Circle size ∝ |Fz|, max ${m.toFixed(0)} k.</div>`;return;}
+  el.innerHTML=`<div><span class="swatch" style="background:var(--accent)"></span>Column (this level)</div>
+    <div style="margin-top:5px"><span class="swatch" style="background:var(--grid)"></span>Beam / grid line</div>
+    <div style="margin-top:5px"><span class="swatch" style="background:var(--amber)"></span>Brace</div>`;}
+
+function applyLayer(){
+  const isReact=S.layer==='react',isAxial=S.layer==='axial';
+  document.getElementById('caseGrp').classList.toggle('hide',!(isReact||isAxial));
+  document.getElementById('valGrp').classList.toggle('hide',!isAxial);
+  document.getElementById('hudTag').textContent=isReact?'Reactions':'Plan @';
+  document.querySelectorAll('.lv').forEach(el=>el.style.opacity=isReact?0.5:1);
+  legend();updateSummary();draw();}
+
+/* PDF export — self-contained (no window.print; works in a sandboxed iframe) */
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);}
+function exportPDF(){
+  const root=document.documentElement,prev=root.getAttribute('data-theme');
+  root.setAttribute('data-theme','light');draw();
+  const dpr=S.dpr,headH=72,Wc=cv.width/dpr,Hc=cv.height/dpr;
+  const oc=document.createElement('canvas');oc.width=cv.width;oc.height=cv.height+Math.round(headH*dpr);
+  const o=oc.getContext('2d');o.setTransform(dpr,0,0,dpr,0,0);
+  o.fillStyle='#ffffff';o.fillRect(0,0,Wc,Hc+headH);
+  o.fillStyle='#0e7c86';o.fillRect(0,0,Wc,3);
+  const st=storyByName[S.level]||{elev:0};
+  const title=S.layer==='react'?`Base Reactions — ${S.rcase}`:S.layer==='axial'?`Column Axial (base) — ${S.level} — ${S.rcase}`:`Column Plan — ${S.level}`;
+  o.fillStyle='#111827';o.font='700 22px system-ui,"Segoe UI",sans-serif';o.textBaseline='alphabetic';o.fillText(title,18,36);
+  o.fillStyle='#4b5563';o.font='12px ui-monospace,Consolas,monospace';
+  o.fillText(`${DATA.model.split(/[\\/]/).pop()}     el. ${st.elev.toFixed(2)} ft     ETABS ${DATA.etabs_version} · ${DATA.units}     ${new Date().toISOString().slice(0,10)}     CSEYE`,18,58);
+  o.drawImage(cv,0,headH,Wc,Hc);
+  if(prev)root.setAttribute('data-theme',prev);else root.removeAttribute('data-theme');draw();
+  try{
+    const b64=oc.toDataURL('image/jpeg',0.92).split(',')[1],bin=atob(b64);
+    const jpg=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)jpg[i]=bin.charCodeAt(i);
+    const pdf=buildPDF(jpg,oc.width,oc.height);
+    const url=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));
+    const fn=`CSEYE_${S.layer==='geom'?'plan':S.layer}_${(S.level||'').replace(/\s+/g,'')}${S.rcase&&S.layer!=='geom'?'_'+S.rcase.replace(/[^\w]+/g,''):''}.pdf`;
+    const a=document.createElement('a');a.href=url;a.download=fn;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),6000);
+    toast('PDF downloaded: '+fn);
+  }catch(err){toast('Export failed: '+err.message);}
+}
+function buildPDF(jpg,iw,ih){
+  const PW=792,PH=Math.round(PW*ih/iw);
+  const enc=s=>{const a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i)&255;return a;};
+  const parts=[];let off=0;const xr=[];const put=u=>{parts.push(u);off+=u.length;};const puts=s=>put(enc(s));
+  puts("%PDF-1.3\n");
+  const obj=(n,b)=>{xr[n]=off;puts(`${n} 0 obj\n`+b+"\nendobj\n");};
+  obj(1,"<</Type/Catalog/Pages 2 0 R>>");
+  obj(2,"<</Type/Pages/Kids[3 0 R]/Count 1>>");
+  obj(3,`<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${PW} ${PH}]/Resources<</XObject<</Im0 4 0 R>>>>/Contents 5 0 R>>`);
+  xr[4]=off;puts(`4 0 obj\n<</Type/XObject/Subtype/Image/Width ${iw}/Height ${ih}/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length ${jpg.length}>>\nstream\n`);
+  put(jpg);puts("\nendstream\nendobj\n");
+  const content=`q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;
+  xr[5]=off;puts(`5 0 obj\n<</Length ${content.length}>>\nstream\n`+content+"\nendstream\nendobj\n");
+  const xs=off;let x="xref\n0 6\n0000000000 65535 f \n";
+  for(let i=1;i<=5;i++)x+=String(xr[i]).padStart(10,'0')+" 00000 n \n";
+  puts(x);puts(`trailer\n<</Size 6/Root 1 0 R>>\nstartxref\n${xs}\n%%EOF`);
+  const tot=parts.reduce((n,p)=>n+p.length,0),out=new Uint8Array(tot);let p=0;for(const u of parts){out.set(u,p);p+=u.length;}
+  return out;
+}
+
+let drag=null;
+cv.addEventListener('pointerdown',e=>{drag={x:e.offsetX,y:e.offsetY,ox:S.ox,oy:S.oy,moved:false};cv.setPointerCapture(e.pointerId);});
+cv.addEventListener('pointermove',e=>{const w=inv(e.offsetX,e.offsetY);
+  document.getElementById('cursor').textContent=`x ${w.x.toFixed(1)}, y ${w.y.toFixed(1)}`;
+  if(drag){S.ox=drag.ox+(e.offsetX-drag.x);S.oy=drag.oy-(e.offsetY-drag.y);drag.moved=true;draw();return;}
+  const f=nearest(e.offsetX,e.offsetY);if(f!==S.hover){S.hover=f;cv.style.cursor=f?'pointer':'default';if(!S.pick)fmtSel(f);draw();}});
+cv.addEventListener('pointerup',e=>{if(drag&&!drag.moved){const f=nearest(e.offsetX,e.offsetY);S.pick=f;fmtSel(f);draw();}drag=null;});
+cv.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.offsetX,e.offsetY,e.deltaY<0?1.12:1/1.12);},{passive:false});
+document.getElementById('zin').onclick=()=>zoomAt(W()/2,H()/2,1.2);
+document.getElementById('zout').onclick=()=>zoomAt(W()/2,H()/2,1/1.2);
+document.getElementById('zfit').onclick=fit;
+for(const[k,id]of[['columns','lyColumns'],['beams','lyBeams'],['braces','lyBraces'],['grids','lyGrids'],['labels','lyLabels']])
+  document.getElementById(id).addEventListener('change',e=>{S.layers[k]=e.target.checked;draw();});
+document.getElementById('layerSel').addEventListener('change',e=>{S.layer=e.target.value;S.pick=null;S.hover=null;fmtSel(null);applyLayer();});
+document.getElementById('caseSel').addEventListener('change',e=>{S.rcase=e.target.value;S.pick=null;fmtSel(null);legend();updateSummary();draw();});
+document.getElementById('valSel').addEventListener('change',e=>{S.vmode=e.target.value;draw();updateSummary();});
+document.getElementById('pdfBtn').onclick=exportPDF;
+document.getElementById('themeBtn').onclick=()=>{const cur=document.documentElement.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  document.documentElement.setAttribute('data-theme',cur==='dark'?'light':'dark');draw();legend();};
+window.addEventListener('resize',resize);
+
+document.getElementById('fileName').textContent=DATA.model.split(/[\\/]/).pop();
+document.getElementById('fileMeta').textContent=`ETABS ${DATA.etabs_version} · ${DATA.units} · ${DATA.frames.length} frames · ${DATA.stories.length} stories`;
+document.getElementById('lvCount').textContent=DATA.stories.length+' lv';
+const KINDS=(hasForces&&FORCES.result_kinds)||{};
+const isCombo=n=>KINDS[n]==='combo';
+if(hasForces){const cs=document.getElementById('caseSel');
+  const mk=(label,names)=>{if(!names.length)return;const g=document.createElement('optgroup');g.label=label;
+    names.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;g.appendChild(o);});cs.appendChild(g);};
+  mk('Load cases',FORCES.result_sets.filter(n=>!isCombo(n)));
+  mk('Load combinations',FORCES.result_sets.filter(isCombo));
+  S.rcase=FORCES.result_sets[0];}
+else{const s=document.getElementById('layerSel');[...s.options].forEach(o=>{if(o.value!=='geom')o.disabled=true;});}
+if(hasForces){const nc=FORCES.result_sets.filter(n=>!isCombo(n)).length,nk=FORCES.result_sets.filter(isCombo).length;
+  document.getElementById('bannerTxt').innerHTML=`Live results attached: <b>${nc} load cases</b> + <b>${nk} load combinations</b> across ${reactList.length} support joints. Choose a result set to color columns by base axial or plot reactions.`;}
+else document.getElementById('bannerTxt').innerHTML=`Geometry only — analysis results not embedded in this model.`;
+document.getElementById('subInfo').textContent=hasForces?`${Object.keys(FORCES.col_forces).length} columns · ${FORCES.result_sets.length} result sets`:'';
+buildLevels();legend();
+let best=DATA.stories[0].name,bn=-1;for(const s of DATA.stories){const n=(byStory[s.name]||{cols:[]}).cols.length;if(n>bn){bn=n;best=s.name;}}
+requestAnimationFrame(()=>{resize();setLevel(best);applyLayer();fit();});
+</script>
