@@ -13,7 +13,7 @@ app.add_middleware(
     allow_origins=config.CORS_ORIGINS,
     allow_methods=["*"], allow_headers=["*"],
 )
-app.include_router(router)
+app.include_router(router, prefix="/api")
 
 # Serve the built viewer if present (viewer/dist), else the legacy single-file viewer.
 _here = Path(__file__).resolve().parent.parent.parent

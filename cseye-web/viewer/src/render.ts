@@ -201,7 +201,7 @@ export class PlanRenderer {
     const b64 = oc.toDataURL("image/jpeg", 0.92).split(",")[1], bin = atob(b64);
     const jpg = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) jpg[i] = bin.charCodeAt(i);
     const pdf = buildPDF(jpg, oc.width, oc.height);
-    const url = URL.createObjectURL(new Blob([pdf], { type: "application/pdf" }));
+    const url = URL.createObjectURL(new Blob([pdf.buffer as ArrayBuffer], { type: "application/pdf" }));
     const a = document.createElement("a"); a.href = url; a.download = fname; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 6000);
   }
