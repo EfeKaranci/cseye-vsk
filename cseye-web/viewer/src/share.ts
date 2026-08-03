@@ -18,8 +18,24 @@ let forces!: Bundle;
 let colsByStory = new Map<string, Frame[]>();
 let level = "", layer: Layer = "geom", result = "", curStep: string | null = null, stepList: string[] = [];
 
+async function loadPicker(token: string | null) {
+  try {
+    const r = await fetch(`${SUPA}/storage/v1/object/public/${BUCKET}/index.json`);
+    if (!r.ok) return;
+    const idx = await r.json();
+    if (!Array.isArray(idx) || !idx.length) return;
+    const pick = $("modelPick") as HTMLSelectElement;
+    pick.innerHTML = `<option value="">Open a published model…</option>` +
+      idx.map((e: any) => `<option value="${e.token}">${e.label || e.model || e.token}</option>`).join("");
+    pick.value = token ?? "";
+    pick.classList.remove("hide");
+    pick.onchange = () => { if (pick.value) location.search = "?s=" + encodeURIComponent(pick.value); };
+  } catch { /* no index yet */ }
+}
+
 async function boot() {
   const token = new URLSearchParams(location.search).get("s");
+  if (SUPA) await loadPicker(token);
   if (!token) {
     $("fileName").textContent = "CSEYE — Shared Viewer";
     $("fileMeta").textContent = "read-only";

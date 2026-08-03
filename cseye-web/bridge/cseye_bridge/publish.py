@@ -4,7 +4,7 @@ bundles to a public Storage bucket under a random token, and record a `share`
 row. The service_role key stays here — it never reaches the browser.
 """
 from __future__ import annotations
-import json, uuid, datetime, urllib.request, urllib.error
+import os, json, uuid, datetime, urllib.request, urllib.error
 from . import config
 from .db import store
 
@@ -21,6 +21,27 @@ def _req(method: str, url: str, body: bytes | None, headers: dict) -> tuple[int,
 def _svc_headers() -> dict:
     key = config.SUPABASE_SERVICE_KEY
     return {"Authorization": f"Bearer {key}", "apikey": key, "Content-Type": "application/json"}
+
+
+def _read_index() -> list:
+    """Read the public model index (list of published snapshots)."""
+    url, bucket = config.SUPABASE_URL, config.SUPABASE_BUCKET
+    try:
+        with urllib.request.urlopen(f"{url}/storage/v1/object/public/{bucket}/index.json", timeout=30) as r:
+            data = json.loads(r.read())
+            return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
+def _update_index(entry: dict) -> None:
+    """Prepend an entry to the public index.json (dedup by token). Powers the
+    share-site model dropdown without exposing any key to the browser."""
+    url, bucket = config.SUPABASE_URL, config.SUPABASE_BUCKET
+    items = [e for e in _read_index() if e.get("token") != entry["token"]]
+    items.insert(0, entry)
+    _req("POST", f"{url}/storage/v1/object/{bucket}/index.json",
+         json.dumps(items).encode(), {**_svc_headers(), "x-upsert": "true"})
 
 
 def ensure_bucket() -> None:
@@ -64,7 +85,17 @@ def publish(sid: str, label: str | None = None, expires_days: int | None = None,
     except RuntimeError:
         pass  # `share` table not created — fine, sharing still works by token
 
+    listed = False
+    try:
+        _update_index({"token": token, "model": os.path.basename(geom["model"]),
+                       "label": label or os.path.basename(geom["model"]),
+                       "sets": len(forces["result_sets"]),
+                       "created_at": datetime.datetime.utcnow().isoformat() + "Z"})
+        listed = True
+    except RuntimeError:
+        pass
+
     share_url = (config.SHARE_VIEWER_URL.rstrip("/") + f"?s={token}") if config.SHARE_VIEWER_URL else None
     return {"token": token, "share_url": share_url, "results": forces["result_sets"],
-            "share_recorded": share_recorded,
+            "share_recorded": share_recorded, "listed": listed,
             "public_base": f"{url}/storage/v1/object/public/{bucket}/snapshots/{token}"}
