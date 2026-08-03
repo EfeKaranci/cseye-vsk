@@ -113,6 +113,35 @@ def geometry(sid: str) -> dict:
     return {"frames": frames, "grid_lines": grids}
 
 
+def export_geometry(sid: str) -> dict:
+    """Full geometry bundle for publishing (self-contained)."""
+    m = meta(sid); g = geometry(sid)
+    return {"model": m["model"], "etabs_version": m["etabs_version"], "units": m["units"],
+            "extents": m["extents"], "stories": m["stories"],
+            "frames": g["frames"], "grid_lines": g["grid_lines"], "result_sets": m["result_sets"]}
+
+
+def export_forces(sid: str) -> dict:
+    """Full per-step forces + reactions bundle (client aggregates level slices)."""
+    c = con()
+    steps_map: dict = {}
+    for r in c.execute("SELECT result_set,label FROM step WHERE sid=? ORDER BY idx", (sid,)):
+        steps_map.setdefault(r["result_set"], []).append(r["label"])
+    cf: dict = {}
+    for r in c.execute("SELECT result_set,frame,step,p,v2,v3,m2,m3 FROM column_force WHERE sid=?", (sid,)):
+        cf.setdefault(r["frame"], {}).setdefault(r["result_set"], {})[r["step"]] = {
+            "P": r["p"], "V2": r["v2"], "V3": r["v3"], "M2": r["m2"], "M3": r["m3"]}
+    rx: dict = {}
+    for r in c.execute("SELECT result_set,joint,step,x,y,z,fx,fy,fz,mx,my,mz FROM reaction WHERE sid=?", (sid,)):
+        d = rx.setdefault(r["joint"], {"x": r["x"], "y": r["y"], "z": r["z"], "results": {}})
+        d["results"].setdefault(r["result_set"], {})[r["step"]] = {
+            "Fx": r["fx"], "Fy": r["fy"], "Fz": r["fz"], "Mx": r["mx"], "My": r["my"], "Mz": r["mz"]}
+    kinds = {r["name"]: r["kind"] for r in c.execute("SELECT name,kind FROM result_set WHERE sid=?", (sid,))}
+    results = sorted({rs for f in cf.values() for rs in f})
+    return {"result_sets": results, "result_kinds": {k: kinds.get(k, "case") for k in results},
+            "steps": steps_map, "col_forces": cf, "reactions": rx}
+
+
 def steps(sid: str, result: str) -> list[str]:
     c = con()
     return [r["label"] for r in c.execute(

@@ -23,6 +23,12 @@ CORS_ORIGINS = os.environ.get(
 
 UNITS_KIP_FT = 4  # ETABS eUnits: kip, ft, F
 
+# --- Supabase publish (Phase 3). Set these in the environment to enable /publish. ---
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")            # https://<ref>.supabase.co
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")  # service_role key (bridge only, never the browser)
+SUPABASE_BUCKET = os.environ.get("SUPABASE_BUCKET", "cseye") # public Storage bucket
+SHARE_VIEWER_URL = os.environ.get("CSEYE_SHARE_URL", "")     # Cloudflare Pages URL of the share viewer
+
 # Default "curated governing" set hints (used when a model has these; else all finished).
 CURATED_COMBO_HINTS = [
     "ENVELOPE", "ENV", "ULS-2", "1.4D", "1.2D", "ASD", "SEISM", "WIND", "W_USER",

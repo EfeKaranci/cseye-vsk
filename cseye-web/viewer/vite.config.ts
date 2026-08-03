@@ -4,6 +4,11 @@ import { defineConfig } from "vite";
 // same-origin "/api/*" paths (no CORS in dev). In prod the viewer is served
 // by the bridge itself (see bridge/main.py static mount) or the hosted site.
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      input: { main: "index.html", share: "share.html" },
+    },
+  },
   server: {
     port: 5173,
     proxy: {

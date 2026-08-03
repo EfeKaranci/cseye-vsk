@@ -17,6 +17,7 @@ let level = "";
 let layer: Layer = "geom";
 let result = "";
 let allModels: ModelInfo[] = [];
+let publishEnabled = false;
 let stepList: string[] = [];
 let curStep: string | null = null;   // null = envelope (aggregate across steps)
 const stepsCache = new Map<string, string[]>();
@@ -44,6 +45,7 @@ async function connect() {
   try {
     await api.health();
     setConn(true);
+    try { publishEnabled = (await api.config()).publish_enabled; } catch { publishEnabled = false; }
     ($("connectBtn") as HTMLButtonElement).textContent = "Reconnect";
     ($("attachBtn") as HTMLButtonElement).disabled = false;
     status("Bridge connected. Attach the open ETABS model, or pick one to open.");
@@ -85,6 +87,7 @@ async function loadSnapshot(s: string) {
   $("fileName").textContent = meta.model;
   $("fileMeta").textContent = `ETABS ${meta.etabs_version} · ${meta.units} · ${geom.frames.length} frames · ${meta.stories.length} stories`;
   ($("pdfBtn") as HTMLButtonElement).disabled = false;
+  ($("publishBtn") as HTMLButtonElement).disabled = !publishEnabled;
   buildLevels(); buildResults();
   // default: most-framed level
   let best = meta.stories[0]?.name ?? "", bn = -1;
@@ -273,6 +276,18 @@ $("lyBeams").addEventListener("change", e => { R.showBeams = (e.target as HTMLIn
 $("lyGrids").addEventListener("change", e => { R.showGrids = (e.target as HTMLInputElement).checked; R.draw(); });
 $("lyLabels").addEventListener("change", e => { R.showLabels = (e.target as HTMLInputElement).checked; R.draw(); });
 $("pdfBtn").onclick = () => R.exportPDF(`CSEYE_${layer}_${level.replace(/\s+/g, "")}.pdf`);
+$("publishBtn").onclick = async () => {
+  if (!sid) return;
+  busy(true); status("Publishing to Supabase…");
+  try {
+    const r = await api.publish(sid);
+    const url = r.share_url ?? r.public_base;
+    try { await navigator.clipboard.writeText(url); } catch { /* clipboard may be blocked */ }
+    status("Published → " + url);
+    toast(r.share_url ? "Share link copied to clipboard" : "Published (set CSEYE_SHARE_URL for a viewer link)");
+  } catch (e: any) { toast("Publish failed: " + e.message); status(String(e.message)); }
+  finally { busy(false); }
+};
 $("themeBtn").onclick = () => {
   const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light");
   document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark"); R.draw(); updateLegend();

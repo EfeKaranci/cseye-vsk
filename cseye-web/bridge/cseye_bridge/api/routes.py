@@ -8,6 +8,7 @@ from .. import config
 from ..etabs.session import get_session
 from ..etabs import extract
 from ..db import store
+from .. import publish as publisher
 
 router = APIRouter()
 
@@ -115,3 +116,20 @@ def plan(sid: str, story: str, result: str, step: str | None = None):
 @router.get("/m/{sid}/reactions")
 def reactions(sid: str, result: str, step: str | None = None):
     return {"result": result, "step": step, "supports": store.reactions(sid, result, step)}
+
+
+@router.get("/config")
+def bridge_config():
+    """Whether cloud publishing is configured (so the UI can show/hide Publish)."""
+    return {"publish_enabled": bool(config.SUPABASE_URL and config.SUPABASE_SERVICE_KEY),
+            "share_viewer": config.SHARE_VIEWER_URL or None}
+
+
+@router.post("/m/{sid}/publish")
+def do_publish(sid: str, payload: dict = Body(default={})):
+    if not store.meta(sid):
+        raise HTTPException(404, "unknown snapshot")
+    try:
+        return publisher.publish(sid, label=payload.get("label"), expires_days=payload.get("expires_days"))
+    except RuntimeError as e:
+        raise HTTPException(400, str(e))

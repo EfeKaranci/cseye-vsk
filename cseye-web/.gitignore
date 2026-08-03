@@ -11,3 +11,7 @@ tools/*.json
 
 # stray tsc output
 viewer/src/*.js
+
+# secrets
+bridge/.env
+.env
