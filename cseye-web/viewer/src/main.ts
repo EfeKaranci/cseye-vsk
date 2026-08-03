@@ -1,6 +1,9 @@
 import { api } from "./api";
-import { PlanRenderer, type Layer, type ValMode, type Hit, type MeasureMode } from "./render";
+import { PlanRenderer, type Layer, type ValMode, type Hit, type MeasureMode, type Underlay } from "./render";
 import type { Meta, Geometry, PlanColumn, Frame, ModelInfo, Support } from "./types";
+import * as pdfjsLib from "pdfjs-dist";
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 const $ = (id: string) => document.getElementById(id)!;
 const toast = (m: string) => { const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout((t as any)._t); (t as any)._t = setTimeout(() => t.classList.remove("show"), 2400); };
@@ -18,6 +21,8 @@ let layer: Layer = "geom";
 let result = "";
 let allModels: ModelInfo[] = [];
 let publishEnabled = false;
+interface PdfState { pdf: any; page: number; pages: number; }
+const pdfByLevel = new Map<string, { u: Underlay; st: PdfState }>();
 let stepList: string[] = [];
 let curStep: string | null = null;   // null = envelope (aggregate across steps)
 const stepsCache = new Map<string, string[]>();
@@ -76,6 +81,7 @@ async function attach() {
 // ---------- load a snapshot ----------
 async function loadSnapshot(s: string) {
   sid = s;
+  pdfByLevel.clear(); R.underlay = null;   // new model → drop any underlays
   meta = await api.meta(s);
   geom = await api.geometry(s);
   R.extents = meta.extents; R.grids = geom.grid_lines;
@@ -105,7 +111,7 @@ function buildLevels() {
     const n = colsByStory.get(st.name)?.length ?? 0;
     const el = document.createElement("div"); el.className = "lv";
     el.innerHTML = `<span class="nm">${st.name}</span><span class="lvr"><span class="el mono">${st.elev.toFixed(1)}'</span>${n ? `<span class="cnt mono">${n} col</span>` : ""}</span>`;
-    el.onclick = () => { level = st.name; markLevel(); refresh(); };
+    el.onclick = () => { level = st.name; markLevel(); applyLevelUnderlay(); refresh(); };
     host.appendChild(el);
   }
   markLevel();
@@ -250,6 +256,65 @@ const mBtns: [string, MeasureMode][] = [["mDist", "dist"], ["mPerim", "perim"], 
 const syncMeasureBtns = () => { for (const [id, mode] of mBtns) $(id).classList.toggle("active", R.measureMode === mode); };
 for (const [id, mode] of mBtns) $(id).onclick = () => { R.setMeasure(mode); syncMeasureBtns(); };
 R.onMeasure = (text) => status(text ?? "");
+
+// ---------- background PDF underlay (per level) ----------
+async function loadPdf(file: File) {
+  busy(true); status("Rendering PDF…");
+  try {
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+    await renderPdfPage({ pdf, page: 1, pages: pdf.numPages }, false);
+    R.setUnderlayMode("move"); syncPdfModeBtns();
+    status("PDF placed — drag to position (Move/scale) or use 2-point align.");
+  } catch (e: any) { toast("PDF load failed: " + e.message); }
+  finally { busy(false); }
+}
+async function renderPdfPage(st: PdfState, keep: boolean) {
+  const page = await st.pdf.getPage(st.page);
+  const vp = page.getViewport({ scale: 2 });
+  const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+  await page.render({ canvasContext: c.getContext("2d")!, viewport: vp }).promise;
+  const entry = pdfByLevel.get(level);
+  if (keep && entry) { entry.u.img = c; entry.u.w = c.width; entry.u.h = c.height; entry.st = st; R.underlay = entry.u; R.draw(); }
+  else { R.setUnderlay(c, c.width, c.height); pdfByLevel.set(level, { u: R.underlay!, st }); }
+  refreshPdfPanel();
+}
+function refreshPdfPanel() {
+  const entry = pdfByLevel.get(level);
+  $("pdfNone").classList.toggle("hide", !!entry);
+  $("pdfCtl").classList.toggle("hide", !entry);
+  if (!entry) return;
+  $("pdfPage").textContent = `${entry.st.page}/${entry.st.pages}`;
+  ($("pdfOpacity") as HTMLInputElement).value = String(Math.round(entry.u.opacity * 100));
+  const deg = Math.round(entry.u.rot * 180 / Math.PI);
+  ($("pdfRotate") as HTMLInputElement).value = String(deg); $("pdfRotVal").textContent = deg + "°";
+  ($("pdfVis") as HTMLInputElement).checked = entry.u.visible;
+}
+function applyLevelUnderlay() {
+  const entry = pdfByLevel.get(level);
+  R.underlay = entry?.u ?? null;
+  if (R.underlayMode !== "off") { R.setUnderlayMode("off"); }
+  syncPdfModeBtns(); refreshPdfPanel();
+}
+function syncPdfModeBtns() {
+  $("pdfMove").classList.toggle("active", R.underlayMode === "move");
+  $("pdfAlign").classList.toggle("active", R.underlayMode === "align");
+}
+$("pdfLoad").onclick = () => ($("pdfFile") as HTMLInputElement).click();
+($("pdfFile") as HTMLInputElement).addEventListener("change", e => {
+  const f = (e.target as HTMLInputElement).files?.[0]; if (f) loadPdf(f); (e.target as HTMLInputElement).value = "";
+});
+$("pdfPrev").onclick = () => { const e = pdfByLevel.get(level); if (e && e.st.page > 1) { e.st.page--; renderPdfPage(e.st, true); } };
+$("pdfNext").onclick = () => { const e = pdfByLevel.get(level); if (e && e.st.page < e.st.pages) { e.st.page++; renderPdfPage(e.st, true); } };
+($("pdfOpacity") as HTMLInputElement).addEventListener("input", e => R.setUnderlayOpacity(+(e.target as HTMLInputElement).value / 100));
+($("pdfRotate") as HTMLInputElement).addEventListener("input", e => { const d = +(e.target as HTMLInputElement).value; R.rotateUnderlay(d); $("pdfRotVal").textContent = d + "°"; });
+($("pdfVis") as HTMLInputElement).addEventListener("change", e => R.setUnderlayVisible((e.target as HTMLInputElement).checked));
+$("pdfPlus").onclick = () => R.scaleUnderlayBy(1.05);
+$("pdfMinus").onclick = () => R.scaleUnderlayBy(1 / 1.05);
+$("pdfMove").onclick = () => { R.setUnderlayMode(R.underlayMode === "move" ? "off" : "move"); syncPdfModeBtns(); };
+$("pdfAlign").onclick = () => { R.setUnderlayMode(R.underlayMode === "align" ? "off" : "align"); syncPdfModeBtns(); };
+$("pdfClear").onclick = () => { R.clearUnderlay(); pdfByLevel.delete(level); refreshPdfPanel(); };
+R.onUnderlay = (msg) => { status(msg); $("pdfHint").textContent = msg; syncPdfModeBtns(); };
 
 // ---------- controls ----------
 $("connectBtn").onclick = connect;

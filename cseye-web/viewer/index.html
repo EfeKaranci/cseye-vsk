@@ -84,6 +84,22 @@
           <div class="lyr"><label><input type="checkbox" id="lyGrids" checked><span class="switch"></span>Column grid</label></div>
           <div class="lyr"><label><input type="checkbox" id="lyLabels" checked><span class="switch"></span>Value / labels</label></div>
         </div>
+        <div class="sect">
+          <h3>Background PDF <span class="lbl" style="float:right;text-transform:none">this level</span></h3>
+          <input type="file" id="pdfFile" accept="application/pdf" class="hide" />
+          <div id="pdfNone">
+            <button class="btn" id="pdfLoad">Load PDF…</button>
+            <p class="note" style="margin-top:6px">Overlay a drawing behind the plan for the current level, then align it with move/scale or 2 grid points.</p>
+          </div>
+          <div id="pdfCtl" class="hide">
+            <div class="pdfrow"><button class="btn iconbtn" id="pdfPrev">◀</button><span class="mono" id="pdfPage">1/1</span><button class="btn iconbtn" id="pdfNext">▶</button><span class="spring"></span><label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="pdfVis" checked>show</label></div>
+            <div class="pdfrow"><span class="lbl" style="width:52px">Opacity</span><input type="range" id="pdfOpacity" min="5" max="100" value="55" /></div>
+            <div class="pdfrow"><span class="lbl" style="width:52px">Rotate</span><input type="range" id="pdfRotate" min="-180" max="180" value="0" /><span class="mono" id="pdfRotVal" style="width:34px;text-align:right">0°</span></div>
+            <div class="pdfrow"><span class="lbl" style="width:52px">Align</span><button class="btn" id="pdfMove">Move/scale</button><button class="btn" id="pdfAlign">2-point</button></div>
+            <div class="pdfrow"><button class="btn iconbtn" id="pdfMinus">－</button><span class="lbl">scale</span><button class="btn iconbtn" id="pdfPlus">＋</button><span class="spring"></span><button class="btn" id="pdfClear">Remove</button></div>
+            <p class="note" id="pdfHint"></p>
+          </div>
+        </div>
         <div class="sect"><h3>Legend</h3><div class="note" id="legend"></div></div>
       </aside>
     </div>
