@@ -83,7 +83,14 @@ class EtabsSession:
     def status(self) -> Optional[dict]:
         if self._sm is None:
             return None
-        return self._ex.submit(self._status).result()
+        try:
+            return self._ex.submit(self._status).result()
+        except Exception:
+            # ETABS was closed / the COM object went stale → drop it so /health
+            # stays healthy ("connected, no model") and the user can re-attach.
+            self._sm = None
+            self._path = None
+            return None
 
 
 # Process-wide singleton (one ETABS connection per bridge).
