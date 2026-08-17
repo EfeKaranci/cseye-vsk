@@ -110,16 +110,18 @@ def _select(sm, names):
 
 
 def step_label(st, sn) -> str:
-    """Human label for a result step: '' (single), 'Max'/'Min' (envelope), 'Mode 3', 'Step 2'."""
+    """Human label for a result step: '' (single value), 'Max'/'Min' (envelope),
+    'Mode 3', 'Step 2' (multi-step / nonlinear staged construction stages)."""
     st = (str(st) or "").strip()
-    if not st:
-        return ""
+    try:
+        n = float(sn)
+    except Exception:
+        n = 0.0
     if st in ("Max", "Min"):
         return st
-    try:
-        return f"{st} {float(sn):g}"
-    except Exception:
-        return f"{st} {sn}"
+    if not st:                                   # empty type → distinguish by step number
+        return "" if n == 0 else f"Step {n:g}"
+    return f"{st} {n:g}" if n else st
 
 
 def _columns(sm) -> list[str]:
