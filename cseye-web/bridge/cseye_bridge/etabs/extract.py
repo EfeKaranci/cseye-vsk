@@ -151,14 +151,20 @@ def column_forces(sm, names) -> tuple[dict, dict]:
         ff = sm.Results.FrameForce(nm, 0); n = ff[0]
         if not n: continue
         sta = ff[2]; base = min(sta) if zi <= zj else max(sta)
-        d: dict = {}
+        base_by_rs: dict = {}                       # result set -> [row idx] at base station, in order
         for r in range(n):
             if abs(sta[r] - base) > 1e-4: continue
-            rs = ff[5][r]; lab = step_label(ff[6][r], ff[7][r])
-            d.setdefault(rs, {})[lab] = {"P": R3(ff[8][r]), "V2": R3(ff[9][r]), "V3": R3(ff[10][r]),
-                                         "M2": R3(ff[12][r]), "M3": R3(ff[13][r])}
-            s = steps.setdefault(rs, [])
-            if lab not in s: s.append(lab)
+            base_by_rs.setdefault(ff[5][r], []).append(r)
+        d: dict = {}
+        for rs, rows in base_by_rs.items():
+            labs = [step_label(ff[6][r], ff[7][r]) for r in rows]
+            if len(rows) > 1 and len(set(labs)) < len(rows):   # staged construction: blank labels → sequential
+                labs = [f"Step {i + 1}" for i in range(len(rows))]
+            rd = d.setdefault(rs, {}); slist = steps.setdefault(rs, [])
+            for r, lab in zip(rows, labs):
+                rd[lab] = {"P": R3(ff[8][r]), "V2": R3(ff[9][r]), "V3": R3(ff[10][r]),
+                           "M2": R3(ff[12][r]), "M3": R3(ff[13][r])}
+                if lab not in slist: slist.append(lab)
         forces[nm] = d
     return forces, steps
 
@@ -168,12 +174,19 @@ def reactions(sm, names) -> dict:
     Returns { joint: {x,y,z, results:{ result:{ step:{Fx..Mz} } } } } (supports only)."""
     _select(sm, names)
     jr = sm.Results.JointReact("All", 2); n = jr[0]
-    acc: dict = {}
+    order: dict = {}                                 # joint -> result set -> [row idx] in order
     for i in range(n):
-        j = jr[1][i]; rs = jr[3][i]; lab = step_label(jr[4][i], jr[5][i])
-        acc.setdefault(j, {}).setdefault(rs, {})[lab] = {
-            "Fx": R3(jr[6][i]), "Fy": R3(jr[7][i]), "Fz": R3(jr[8][i]),
-            "Mx": R3(jr[9][i]), "My": R3(jr[10][i]), "Mz": R3(jr[11][i])}
+        order.setdefault(jr[1][i], {}).setdefault(jr[3][i], []).append(i)
+    acc: dict = {}
+    for j, per_rs in order.items():
+        for rs, rows in per_rs.items():
+            labs = [step_label(jr[4][i], jr[5][i]) for i in rows]
+            if len(rows) > 1 and len(set(labs)) < len(rows):   # staged construction: sequential steps
+                labs = [f"Step {k + 1}" for k in range(len(rows))]
+            for i, lab in zip(rows, labs):
+                acc.setdefault(j, {}).setdefault(rs, {})[lab] = {
+                    "Fx": R3(jr[6][i]), "Fy": R3(jr[7][i]), "Fz": R3(jr[8][i]),
+                    "Mx": R3(jr[9][i]), "My": R3(jr[10][i]), "Mz": R3(jr[11][i])}
     out: dict = {}
     for j, per in acc.items():
         mx = 0.0
