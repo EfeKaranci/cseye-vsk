@@ -18,6 +18,7 @@ export interface GeomBundle {
   stories: { name: string; elev: number }[];
   frames: Frame[]; grid_lines: any[];
   result_sets: { name: string; kind: string; finished: number | null; extracted?: boolean }[];
+  combos?: Record<string, { type: string | null; items: { case: string; sf: number | null }[] }>;
 }
 
 export const stepsFor = (b: Bundle, result: string): string[] => (b.steps[result] ?? []).filter(s => s !== "");

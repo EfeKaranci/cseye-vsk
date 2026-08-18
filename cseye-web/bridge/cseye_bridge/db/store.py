@@ -46,8 +46,24 @@ def save_geometry(geom: dict) -> str:
             [(sid, f["name"], f["label"], f["story"], f["type"],
               f["ix"], f["iy"], f["iz"], f["jx"], f["jy"], f["jz"], f["section"]) for f in geom["frames"]],
         )
+        c.execute("DELETE FROM combo_def WHERE sid=?", (sid,))
+        crows = [(sid, name, i, it["case"], it["sf"] if isinstance(it["sf"], (int, float)) else None, d.get("type"))
+                 for name, d in (geom.get("combos") or {}).items() for i, it in enumerate(d.get("items", []))]
+        c.executemany("INSERT INTO combo_def VALUES(?,?,?,?,?,?)", crows)
         c.commit()
     return sid
+
+
+def combos(sid: str) -> dict:
+    """{comboName: {type, items:[{case, sf}]}} for the snapshot."""
+    c = con()
+    out: dict = {}
+    for r in c.execute("SELECT name,seq,casen,sf,ctype FROM combo_def WHERE sid=? ORDER BY name,seq", (sid,)):
+        d = out.setdefault(r["name"], {"type": r["ctype"], "items": []})
+        if r["ctype"]:
+            d["type"] = r["ctype"]
+        d["items"].append({"case": r["casen"], "sf": r["sf"]})
+    return out
 
 
 def save_result_sets(sid: str, sets: list[dict]):
@@ -103,7 +119,7 @@ def meta(sid: str) -> dict | None:
         r["extracted"] = r["name"] in have
     return {"id": sid, "model": s["model"], "path": s["path"], "etabs_version": s["etabs_ver"],
             "units": s["units"], "locked": bool(s["locked"]), "extents": json.loads(s["extents"]),
-            "stories": stories, "result_sets": rs}
+            "stories": stories, "result_sets": rs, "combos": combos(sid)}
 
 
 def geometry(sid: str) -> dict:
@@ -118,7 +134,8 @@ def export_geometry(sid: str) -> dict:
     m = meta(sid); g = geometry(sid)
     return {"model": m["model"], "etabs_version": m["etabs_version"], "units": m["units"],
             "extents": m["extents"], "stories": m["stories"],
-            "frames": g["frames"], "grid_lines": g["grid_lines"], "result_sets": m["result_sets"]}
+            "frames": g["frames"], "grid_lines": g["grid_lines"], "result_sets": m["result_sets"],
+            "combos": m.get("combos", {})}
 
 
 def export_forces(sid: str, results: list[str] | None = None) -> dict:

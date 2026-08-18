@@ -52,7 +52,7 @@ def geometry(sm) -> dict:
     return {
         "model": sm.GetModelFilename(), "etabs_version": sm.GetVersion()[0], "units": "kip, ft",
         "locked": bool(sm.GetModelIsLocked()), "extents": extents,
-        "stories": stories, "frames": frames, "grid_lines": grids,
+        "stories": stories, "frames": frames, "grid_lines": grids, "combos": combos(sm),
     }
 
 
@@ -74,6 +74,50 @@ def _grid_lines(rows, e):
             x1, y1, x2, y2 = num(g.get("X1")), num(g.get("Y1")), num(g.get("X2")), num(g.get("Y2"))
             if None not in (x1, y1, x2, y2): out.append({"id": gid, "dir": "G", "x1": x1, "y1": y1, "x2": x2, "y2": y2, "visible": vis, "sys": sysn})
     return out
+
+
+def combos(sm) -> dict:
+    """Composition of each load combination: {name: {type, items:[{case, sf}]}}."""
+    out: dict = {}
+    for r in _table(sm, "Load Combination Definitions"):
+        name = r.get("Name"); ln = r.get("LoadName")
+        if not name:
+            continue
+        c = out.setdefault(name, {"type": None, "items": []})
+        typ = r.get("Type")
+        if typ and str(typ) != "None":
+            c["type"] = typ
+        if ln:
+            try:
+                sf = round(float(r.get("SF")), 4)
+            except Exception:
+                sf = r.get("SF")
+            c["items"].append({"case": ln, "sf": sf})
+    return out
+
+
+def staged_labels(sm) -> dict:
+    """Ordered output-stage labels per nonlinear staged-construction case:
+    {case: ['1YR','2YR',...]} (comment, else stage name)."""
+    by_case: dict = {}
+    for r in _table(sm, "Load Case Definitions - Nonlinear Staged Construction"):
+        name = r.get("Name"); stg = r.get("Stage")
+        if not name or stg in (None, "None", ""):
+            continue
+        d = by_case.setdefault(name, {})
+        e = d.setdefault(stg, {"stage": stg, "name": None, "comment": None, "output": None})
+        for k, col in (("name", "StageName"), ("comment", "Comments"), ("output", "Output")):
+            if not e[k] and r.get(col) not in (None, "None"):
+                e[k] = r.get(col)
+    labels: dict = {}
+    for name, stages in by_case.items():
+        try:
+            ordered = sorted(stages.values(), key=lambda s: float(s["stage"]))
+        except Exception:
+            ordered = list(stages.values())
+        outs = [s for s in ordered if str(s.get("output")).lower() == "yes"]
+        labels[name] = [(s.get("comment") or s.get("name") or f"Stage {s['stage']}") for s in outs]
+    return labels
 
 
 def result_sets(sm) -> list[dict]:
@@ -142,6 +186,7 @@ def column_forces(sm, names) -> tuple[dict, dict]:
       steps  = { result: [ordered step labels] }.
     """
     _select(sm, names)
+    staged = staged_labels(sm)
     forces: dict = {}
     steps: dict = {}
     for nm in _columns(sm):
@@ -158,8 +203,9 @@ def column_forces(sm, names) -> tuple[dict, dict]:
         d: dict = {}
         for rs, rows in base_by_rs.items():
             labs = [step_label(ff[6][r], ff[7][r]) for r in rows]
-            if len(rows) > 1 and len(set(labs)) < len(rows):   # staged construction: blank labels → sequential
-                labs = [f"Step {i + 1}" for i in range(len(rows))]
+            if len(rows) > 1 and len(set(labs)) < len(rows):   # staged construction: blank labels
+                sl = staged.get(rs)
+                labs = sl if (sl and len(sl) == len(rows)) else [f"Step {i + 1}" for i in range(len(rows))]
             rd = d.setdefault(rs, {}); slist = steps.setdefault(rs, [])
             for r, lab in zip(rows, labs):
                 rd[lab] = {"P": R3(ff[8][r]), "V2": R3(ff[9][r]), "V3": R3(ff[10][r]),
@@ -173,6 +219,7 @@ def reactions(sm, names) -> dict:
     """Support reactions per result set, PER STEP.
     Returns { joint: {x,y,z, results:{ result:{ step:{Fx..Mz} } } } } (supports only)."""
     _select(sm, names)
+    staged = staged_labels(sm)
     jr = sm.Results.JointReact("All", 2); n = jr[0]
     order: dict = {}                                 # joint -> result set -> [row idx] in order
     for i in range(n):
@@ -181,8 +228,9 @@ def reactions(sm, names) -> dict:
     for j, per_rs in order.items():
         for rs, rows in per_rs.items():
             labs = [step_label(jr[4][i], jr[5][i]) for i in rows]
-            if len(rows) > 1 and len(set(labs)) < len(rows):   # staged construction: sequential steps
-                labs = [f"Step {k + 1}" for k in range(len(rows))]
+            if len(rows) > 1 and len(set(labs)) < len(rows):   # staged construction
+                sl = staged.get(rs)
+                labs = sl if (sl and len(sl) == len(rows)) else [f"Step {k + 1}" for k in range(len(rows))]
             for i, lab in zip(rows, labs):
                 acc.setdefault(j, {}).setdefault(rs, {})[lab] = {
                     "Fx": R3(jr[6][i]), "Fy": R3(jr[7][i]), "Fz": R3(jr[8][i]),

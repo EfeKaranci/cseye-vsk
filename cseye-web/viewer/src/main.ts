@@ -97,7 +97,7 @@ async function loadSnapshot(s: string) {
   $("fileMeta").textContent = `ETABS ${meta.etabs_version} · ${meta.units} · ${geom.frames.length} frames · ${meta.stories.length} stories`;
   ($("pdfBtn") as HTMLButtonElement).disabled = false;
   ($("publishBtn") as HTMLButtonElement).disabled = !publishEnabled;
-  buildLevels(); buildResults();
+  buildLevels(); buildResults("", true);
   // default: most-framed level
   let best = meta.stories[0]?.name ?? "", bn = -1;
   for (const st of meta.stories) { const n = colsByStory.get(st.name)?.length ?? 0; if (n > bn) { bn = n; best = st.name; } }
@@ -125,18 +125,30 @@ function markLevel() {
   $("hudLevel").textContent = level; $("hudElev").textContent = "el. " + (st?.elev.toFixed(2) ?? "—") + " ft";
 }
 
-function buildResults() {
+function buildResults(filter = "", setDefault = false) {
   const cs = $("caseSel") as HTMLSelectElement; cs.innerHTML = "";
+  const term = filter.trim().toLowerCase();
   const mk = (label: string, kind: string) => {
-    const names = meta!.result_sets.filter(r => r.kind === kind);
+    const names = meta!.result_sets.filter(r => r.kind === kind && (!term || r.name.toLowerCase().includes(term)));
     if (!names.length) return;
     const g = document.createElement("optgroup"); g.label = label;
     for (const r of names) { const o = document.createElement("option"); o.value = r.name; o.textContent = r.name + (r.finished ? "" : r.kind === "case" ? " ·not run" : ""); g.appendChild(o); }
     cs.appendChild(g);
   };
   mk("Load cases", "case"); mk("Load combinations", "combo");
-  result = meta!.result_sets.find(r => r.kind === "case" && r.finished)?.name ?? meta!.result_sets[0]?.name ?? "";
+  if (setDefault) result = meta!.result_sets.find(r => r.kind === "case" && r.finished)?.name ?? meta!.result_sets[0]?.name ?? "";
   cs.value = result;
+  updateComboBox();
+}
+function updateComboBox() {
+  const box = $("comboBox"), sect = $("comboSect");
+  const def = meta?.combos?.[result];
+  const isCombo = meta?.result_sets.find(r => r.name === result)?.kind === "combo";
+  if (!isCombo || !def || !def.items.length) { sect.classList.add("hide"); return; }
+  sect.classList.remove("hide");
+  const fmt = (sf: number | null) => sf == null ? "" : `× ${sf}`;
+  box.innerHTML = (def.type ? `<div class="combo-type">${def.type}</div>` : "") +
+    def.items.map(it => `<div class="combo-row"><span class="cn">${it.case}</span><span class="cf">${fmt(it.sf)}</span></div>`).join("");
 }
 
 // ---------- steps (multi-step cases / envelope combos) ----------
@@ -410,7 +422,8 @@ $("zfit").onclick = () => R.fit();
   $("hudTag").textContent = layer === "react" ? "Reactions" : "Plan @";
   refresh();
 };
-($("caseSel") as HTMLSelectElement).onchange = e => { result = (e.target as HTMLSelectElement).value; curStep = null; refresh(); };
+($("caseSel") as HTMLSelectElement).onchange = e => { result = (e.target as HTMLSelectElement).value; curStep = null; updateComboBox(); refresh(); };
+($("caseSearch") as HTMLInputElement).addEventListener("input", e => buildResults((e.target as HTMLInputElement).value));
 $("stepPrev").onclick = () => cycleStep(-1);
 $("stepNext").onclick = () => cycleStep(1);
 ($("stepSel") as HTMLSelectElement).onchange = e => { curStep = (e.target as HTMLSelectElement).value || null; refresh(); };

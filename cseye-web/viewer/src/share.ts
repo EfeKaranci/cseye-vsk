@@ -103,7 +103,7 @@ async function boot() {
   $("fileName").textContent = geom.model.split(/[\\/]/).pop() ?? geom.model;
   $("fileMeta").textContent = `ETABS ${geom.etabs_version} · ${geom.units} · ${geom.frames.length} frames · ${geom.stories.length} stories`;
   (($("pdfBtn")) as HTMLButtonElement).disabled = false;
-  buildLevels(); buildResults();
+  buildLevels(); buildResults("", true);
   let best = geom.stories[0]?.name ?? "", bn = -1;
   for (const st of geom.stories) { const n = colsByStory.get(st.name)?.length ?? 0; if (n > bn) { bn = n; best = st.name; } }
   level = best;
@@ -134,17 +134,30 @@ function markLevel() {
   const st = geom.stories.find(s => s.name === level);
   $("hudLevel").textContent = level; $("hudElev").textContent = "el. " + (st?.elev.toFixed(2) ?? "—") + " ft";
 }
-function buildResults() {
+function buildResults(filter = "", setDefault = false) {
   const cs = $("caseSel") as HTMLSelectElement; cs.innerHTML = "";
+  const term = filter.trim().toLowerCase();
   const mk = (label: string, kind: string) => {
-    const names = forces.result_sets.filter(n => (forces.result_kinds[n] ?? "case") === kind);
+    const names = forces.result_sets.filter(n => (forces.result_kinds[n] ?? "case") === kind && (!term || n.toLowerCase().includes(term)));
     if (!names.length) return;
     const g = document.createElement("optgroup"); g.label = label;
     for (const n of names) { const o = document.createElement("option"); o.value = n; o.textContent = n; g.appendChild(o); }
     cs.appendChild(g);
   };
   mk("Load cases", "case"); mk("Load combinations", "combo");
-  result = forces.result_sets[0] ?? ""; cs.value = result;
+  if (setDefault) result = forces.result_sets[0] ?? "";
+  cs.value = result;
+  updateComboBox();
+}
+function updateComboBox() {
+  const box = $("comboBox"), sect = $("comboSect");
+  const def = geom.combos?.[result];
+  const isCombo = (forces.result_kinds[result] ?? "case") === "combo";
+  if (!isCombo || !def || !def.items.length) { sect.classList.add("hide"); return; }
+  sect.classList.remove("hide");
+  const fmt = (sf: number | null) => sf == null ? "" : `× ${sf}`;
+  box.innerHTML = (def.type ? `<div class="combo-type">${def.type}</div>` : "") +
+    def.items.map(it => `<div class="combo-row"><span class="cn">${it.case}</span><span class="cf">${fmt(it.sf)}</span></div>`).join("");
 }
 function buildStepSel() {
   const sel = $("stepSel") as HTMLSelectElement; sel.innerHTML = "";
@@ -222,7 +235,8 @@ $("zin").onclick = () => R.zoomAt(R.W() / 2, R.H() / 2, 1.2);
 $("zout").onclick = () => R.zoomAt(R.W() / 2, R.H() / 2, 1 / 1.2);
 $("zfit").onclick = () => R.fit();
 ($("layerSel") as HTMLSelectElement).onchange = e => { layer = (e.target as HTMLSelectElement).value as Layer; $("caseGrp").classList.toggle("hide", layer === "geom"); $("valGrp").classList.toggle("hide", layer !== "axial"); if (layer === "geom") $("stepGrp").classList.add("hide"); $("hudTag").textContent = layer === "react" ? "Reactions" : "Plan @"; refresh(); };
-($("caseSel") as HTMLSelectElement).onchange = e => { result = (e.target as HTMLSelectElement).value; curStep = null; refresh(); };
+($("caseSel") as HTMLSelectElement).onchange = e => { result = (e.target as HTMLSelectElement).value; curStep = null; updateComboBox(); refresh(); };
+($("caseSearch") as HTMLInputElement).addEventListener("input", e => buildResults((e.target as HTMLInputElement).value));
 ($("valSel") as HTMLSelectElement).onchange = e => { R.vmode = (e.target as HTMLSelectElement).value as ValMode; R.draw(); updateSummary(); };
 $("stepPrev").onclick = () => cycleStep(-1); $("stepNext").onclick = () => cycleStep(1);
 ($("stepSel") as HTMLSelectElement).onchange = e => { curStep = (e.target as HTMLSelectElement).value || null; refresh(); };

@@ -2,9 +2,13 @@ export interface Extents { xmin: number; xmax: number; ymin: number; ymax: numbe
 export interface Story { name: string; elev: number; }
 export interface ResultSet { name: string; kind: "case" | "combo"; finished: number | null; extracted: boolean; }
 
+export interface ComboItem { case: string; sf: number | null; }
+export interface ComboDef { type: string | null; items: ComboItem[]; }
+export type ComboMap = Record<string, ComboDef>;
+
 export interface Meta {
   id: string; model: string; path: string; etabs_version: string; units: string;
-  locked: boolean; extents: Extents; stories: Story[]; result_sets: ResultSet[];
+  locked: boolean; extents: Extents; stories: Story[]; result_sets: ResultSet[]; combos?: ComboMap;
 }
 
 export interface Frame {

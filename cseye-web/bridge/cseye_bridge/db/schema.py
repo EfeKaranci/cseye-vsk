@@ -35,6 +35,9 @@ CREATE TABLE IF NOT EXISTS step(
   sid TEXT, result_set TEXT, label TEXT, idx INTEGER,
   PRIMARY KEY (sid, result_set, label)
 );
+CREATE TABLE IF NOT EXISTS combo_def(
+  sid TEXT, name TEXT, seq INTEGER, casen TEXT, sf REAL, ctype TEXT
+);
 CREATE INDEX IF NOT EXISTS ix_frame_slice ON frame(sid, story, type);
 CREATE INDEX IF NOT EXISTS ix_cf_slice ON column_force(sid, result_set);
 CREATE INDEX IF NOT EXISTS ix_rx_slice ON reaction(sid, result_set);

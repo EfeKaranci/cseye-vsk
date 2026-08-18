@@ -28,7 +28,7 @@
           <option value="react">Base reactions</option>
         </select>
       </div>
-      <div class="grp hide" id="caseGrp"><span class="lbl">Result</span><select class="sel" id="caseSel"></select></div>
+      <div class="grp hide" id="caseGrp"><span class="lbl">Result</span><input class="sel csfilter" id="caseSearch" type="search" placeholder="filter…" autocomplete="off" /><select class="sel" id="caseSel"></select></div>
       <div class="grp hide" id="valGrp"><span class="lbl">Value</span>
         <select class="sel" id="valSel"><option value="gov">Governing |P|</option><option value="comp">Compression</option><option value="tens">Tension</option></select>
       </div>
@@ -65,6 +65,7 @@
       <aside class="right">
         <div class="sect"><h3>Selection</h3><div id="selBody"><p class="empty">Pick an element.</p></div></div>
         <div class="sect"><h3 id="sumTitle">Summary</h3><dl class="kv" id="summary"></dl></div>
+        <div class="sect hide" id="comboSect"><h3>Combination makeup</h3><div id="comboBox" class="note"></div></div>
         <div class="sect"><h3>Layers</h3>
           <div class="lyr"><label><input type="checkbox" id="lyBeams" checked><span class="switch"></span>Beams (context)</label></div>
           <div class="lyr"><label><input type="checkbox" id="lyGrids" checked><span class="switch"></span>Column grid</label></div>
