@@ -52,8 +52,12 @@ header{display:flex;align-items:center;gap:16px;padding:0 16px;height:52px;backg
 .pdfrow input[type=range]{flex:1;accent-color:var(--accent);min-width:0}
 .pdfrow .spring{flex:1}
 .work{display:grid;grid-template-columns:236px 1fr 280px;min-height:0}
+.work.left-collapsed{grid-template-columns:0 1fr 280px}
+.work.left-collapsed .left{border-right:0}
 aside{background:var(--panel);overflow:hidden;display:flex;flex-direction:column;min-height:0}
 aside.left{border-right:1px solid var(--line)}aside.right{border-left:1px solid var(--line);overflow-y:auto}
+#leftToggle.active{background:var(--accent-weak);border-color:var(--accent);color:var(--accent)}
+.urow.locked .unm::after{content:" 🔒";font-size:10px}
 .rail-h{padding:10px 14px 7px;display:flex;justify-content:space-between;border-bottom:1px solid var(--line-soft)}
 .rail-toggle{align-items:center;gap:8px;width:100%;background:none;color:inherit;text-align:left;font:inherit}
 .rail-toggle:hover{background:var(--panel-2)}.rail-toggle .spring{flex:1}

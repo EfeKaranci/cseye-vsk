@@ -19,11 +19,13 @@
         <button class="btn" id="attachBtn" disabled>Attach open model</button>
         <button class="btn iconbtn" id="themeBtn" title="Light/dark">◑</button>
         <button class="btn" id="publishBtn" disabled title="Publish a shareable read-only link">Publish…</button>
+        <button class="btn" id="batchBtn" disabled title="Batch-export selected combinations to a multi-page PDF">Batch PDF…</button>
         <button class="btn primary" id="pdfBtn" disabled>Export PDF</button>
       </div>
     </header>
 
     <div class="subbar">
+      <button class="btn iconbtn" id="leftToggle" title="Collapse / expand left panel">⯇</button>
       <div class="grp"><span class="lbl">Layer</span>
         <select class="sel" id="layerSel">
           <option value="geom">Geometry</option>
@@ -91,7 +93,8 @@
           <div class="pdfrow"><span class="lbl" style="width:56px">Marker</span><input type="range" id="dMarker" min="40" max="260" value="100" /></div>
           <div class="pdfrow"><span class="lbl" style="width:56px">Label</span><input type="range" id="dLabel" min="60" max="220" value="100" /></div>
           <div class="pdfrow"><span class="lbl" style="width:56px">Fill</span><input type="range" id="dFill" min="15" max="100" value="90" /></div>
-          <div class="pdfrow"><span class="lbl" style="width:56px">Colors</span><select class="sel" id="dScheme"><option value="sign">Comp / Tension</option><option value="mag">Magnitude</option><option value="magv">Magnitude · viridis</option></select></div>
+          <div class="pdfrow"><span class="lbl" style="width:56px">Colors</span><select class="sel" id="dScheme"><option value="sign">Comp / Tension</option><option value="mag">Magnitude</option><option value="magv" selected>Magnitude · viridis</option></select></div>
+          <div class="pdfrow"><span class="lbl" style="width:56px">PDF res</span><select class="sel" id="pdfRes"><option value="1">Standard (1×)</option><option value="2" selected>High (2×)</option><option value="3">Very high (3×)</option><option value="4">Max (4×)</option></select></div>
         </div>
         <div class="sect">
           <h3>Background PDF <span class="lbl" style="float:right;text-transform:none">this level</span></h3>
@@ -104,7 +107,8 @@
             <div class="pdfrow"><span class="lbl" style="width:52px">Opacity</span><input type="range" id="pdfOpacity" min="5" max="100" value="55" /></div>
             <div class="pdfrow"><span class="lbl" style="width:52px">Rotate</span><input type="range" id="pdfRotate" min="-180" max="180" value="0" /><span class="mono" id="pdfRotVal" style="width:34px;text-align:right">0°</span></div>
             <div class="pdfrow"><span class="lbl" style="width:52px">Align</span><button class="btn" id="pdfMove">Move/scale</button><button class="btn" id="pdfAlign">2-point</button></div>
-            <div class="pdfrow"><button class="btn" id="pdfCopy">Copy to levels…</button><span class="spring"></span><button class="btn" id="pdfClear">Remove</button></div>
+            <div class="pdfrow"><button class="btn" id="pdfLock" title="Freeze this layer's position so it can't be moved">🔒 Lock position</button><span class="spring"></span><button class="btn" id="pdfCopy">Copy to levels…</button></div>
+            <div class="pdfrow"><span class="spring"></span><button class="btn" id="pdfClear">Remove</button></div>
             <p class="note" id="pdfHint">Drag to move · corner handles to scale.</p>
           </div>
         </div>
@@ -137,6 +141,24 @@
       <p class="note">The selected drawing will also show (same alignment) on the checked levels.</p>
       <div class="pubgrid" id="copyOpts"></div>
       <div class="modbtns"><span class="spring"></span><button class="btn" id="copyCancel">Cancel</button><button class="btn primary" id="copyGo">Apply</button></div>
+    </div>
+  </div>
+
+  <div class="modal hide" id="batchModal">
+    <div class="sheet">
+      <h3>Batch export to PDF</h3>
+      <p class="note" id="batchScope">Pick load combinations — one page per combination in a single PDF.</p>
+      <div class="pdfrow"><span class="lbl" style="width:64px">Value</span><select class="sel" id="batchVal"></select>
+        <span class="lbl" style="width:40px;margin-left:8px">Step</span><select class="sel" id="batchStep"></select>
+        <span class="lbl" style="width:56px;margin-left:8px">PDF res</span><select class="sel" id="batchRes"><option value="1">1×</option><option value="2" selected>2×</option><option value="3">3×</option><option value="4">4×</option></select></div>
+      <div class="pubgrid" id="batchOpts"></div>
+      <div class="modbtns">
+        <button class="btn" id="batchAll">Select all</button>
+        <button class="btn" id="batchNone">Clear</button>
+        <span class="spring"></span>
+        <button class="btn" id="batchCancel">Cancel</button>
+        <button class="btn primary" id="batchGo">Export PDF</button>
+      </div>
     </div>
   </div>
 

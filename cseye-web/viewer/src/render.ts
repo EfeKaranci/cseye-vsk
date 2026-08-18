@@ -22,6 +22,7 @@ export interface Hit { kind: "column" | "support"; data: PlanColumn | Support; }
 export interface Underlay {
   name: string; img: CanvasImageSource; w: number; h: number;
   tx: number; ty: number; s: number; rot: number; opacity: number; visible: boolean;
+  locked?: boolean;   // when true, position/scale is frozen (no drag / corner / align)
 }
 
 /** Canvas plan renderer. World=model coords (ft), Y up. Feeds off bridge slices. */
@@ -36,7 +37,7 @@ export class PlanRenderer {
   showLabels = true; showBeams = true; showGrids = true;
   hiddenGridSystems = new Set<string>();
   markerScale = 1; labelScale = 1; fillAlpha = 0.9;
-  colorScheme: "sign" | "mag" | "magv" = "sign";
+  colorScheme: "sign" | "mag" | "magv" = "magv";
   zoomWindowMode = false;
   private zw: { x0: number; y0: number; x1: number; y1: number } | null = null;
   onZoomWindow?: (on: boolean) => void;
@@ -326,7 +327,7 @@ export class PlanRenderer {
     const cv = this.cv;
     cv.addEventListener("pointerdown", e => {
       if (this.zoomWindowMode) { this.zw = { x0: e.offsetX, y0: e.offsetY, x1: e.offsetX, y1: e.offsetY }; cv.setPointerCapture(e.pointerId); return; }
-      if (this.underlayMode === "move" && this.active && this.underlays.includes(this.active)) {
+      if (this.underlayMode === "move" && this.active && !this.active.locked && this.underlays.includes(this.active)) {
         const u = this.active, i = this.hitCorner(e.offsetX, e.offsetY, u);
         if (i >= 0) {
           const px = [[0, 0], [u.w, 0], [u.w, u.h], [0, u.h]] as [number, number][];
@@ -383,6 +384,7 @@ export class PlanRenderer {
   rotateUnderlay(deg: number) { if (this.active) { this.active.rot = deg * Math.PI / 180; this.draw(); } }
   scaleUnderlayBy(f: number) { if (this.active) { this.active.s *= f; this.draw(); } }
   setUnderlayMode(mode: "off" | "move" | "align") {
+    if (mode !== "off" && this.active?.locked) { this.onUnderlay?.("Layer is locked — unlock it to move or align."); mode = "off"; }
     this.underlayMode = mode; this.alignStage = 0; this.alignPdf = []; this.alignWorld = [];
     this.cv.style.cursor = mode === "align" ? "crosshair" : mode === "move" ? "move" : "default";
     if (mode === "align" && this.active) this.onUnderlay?.("Align: click the FIRST reference point on the PDF.");
@@ -456,50 +458,78 @@ export class PlanRenderer {
   }
 
   // ---- PDF export (self-contained; sandbox-safe) ----
-  exportPDF(fname: string) {
-    const root = document.documentElement, prev = root.getAttribute("data-theme");
-    root.setAttribute("data-theme", "light"); this.draw();
+  /** Capture the current view (title header + plan) as a JPEG at `scale`× the
+   *  screen pixel density. Caller sets the theme/state; higher scale = higher DPI. */
+  snapshotJPEG(scale = 1): PdfPage {
+    const prevDpr = this.dpr;
+    if (scale > 1) { this.dpr = Math.min(prevDpr * scale, 8); this.resize(); } else this.draw();
     const headH = 72, Wc = this.W(), Hc = this.H();
     const oc = document.createElement("canvas"); oc.width = this.cv.width; oc.height = this.cv.height + Math.round(headH * this.dpr);
     const o = oc.getContext("2d")!; o.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     o.fillStyle = "#fff"; o.fillRect(0, 0, Wc, Hc + headH); o.fillStyle = "#0e7c86"; o.fillRect(0, 0, Wc, 3);
     o.fillStyle = "#111827"; o.font = '700 22px system-ui,sans-serif'; o.fillText(this.title, 18, 36);
     o.drawImage(this.cv, 0, headH, Wc, Hc);
-    if (prev) root.setAttribute("data-theme", prev); else root.removeAttribute("data-theme"); this.draw();
-    const b64 = oc.toDataURL("image/jpeg", 0.92).split(",")[1], bin = atob(b64);
+    if (scale > 1) { this.dpr = prevDpr; this.resize(); }
+    const b64 = oc.toDataURL("image/jpeg", 0.95).split(",")[1], bin = atob(b64);
     const jpg = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) jpg[i] = bin.charCodeAt(i);
-    const pdf = buildPDF(jpg, oc.width, oc.height);
-    const url = URL.createObjectURL(new Blob([pdf.buffer as ArrayBuffer], { type: "application/pdf" }));
-    // Primary: real download (works on a normal top-level page).
-    try { const a = document.createElement("a"); a.href = url; a.download = fname; a.rel = "noopener"; document.body.appendChild(a); a.click(); a.remove(); } catch { /* ignore */ }
-    // Embedded (sandboxed iframe): downloads are blocked — open the PDF in a new tab so it's reachable.
-    const embedded = window.self !== window.top;
-    let opened = false;
-    if (embedded) { try { opened = !!window.open(url, "_blank"); } catch { /* popup blocked */ } }
-    setTimeout(() => URL.revokeObjectURL(url), 20000);
-    this.onNotify?.(embedded
-      ? (opened ? "PDF opened in a new tab — press Ctrl+S to save it." : "Pop-up blocked — allow pop-ups to get the PDF, or open the app in its own tab.")
-      : `Saved “${fname}” — check your Downloads folder.`);
+    return { jpg, w: oc.width, h: oc.height };
+  }
+  /** Force the light theme for export; returns the previous value to restore with restoreTheme(). */
+  setLightForExport(): string | null {
+    const prev = document.documentElement.getAttribute("data-theme");
+    document.documentElement.setAttribute("data-theme", "light"); this.draw();
+    return prev;
+  }
+  restoreTheme(prev: string | null) {
+    if (prev) document.documentElement.setAttribute("data-theme", prev); else document.documentElement.removeAttribute("data-theme");
+    this.draw();
+  }
+  exportPDF(fname: string, scale = 2) {
+    const prev = this.setLightForExport();
+    const page = this.snapshotJPEG(scale);
+    this.restoreTheme(prev);
+    this.onNotify?.(deliverPDF(buildImagePDF([page]), fname));
   }
 }
 
-function buildPDF(jpg: Uint8Array, iw: number, ih: number): Uint8Array {
-  const PW = 792, PH = Math.round(PW * ih / iw);
+export interface PdfPage { jpg: Uint8Array; w: number; h: number; }
+
+/** Build a (possibly multi-page) PDF, one JPEG image per page. */
+export function buildImagePDF(pages: PdfPage[]): Uint8Array {
   const enc = (s: string) => { const a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i) & 255; return a; };
   const parts: Uint8Array[] = []; let off = 0; const xr: number[] = [];
   const put = (u: Uint8Array) => { parts.push(u); off += u.length; }; const puts = (s: string) => put(enc(s));
-  puts("%PDF-1.3\n");
   const obj = (n: number, b: string) => { xr[n] = off; puts(`${n} 0 obj\n` + b + "\nendobj\n"); };
+  puts("%PDF-1.3\n");
+  const nObj = 2 + pages.length * 3;
   obj(1, "<</Type/Catalog/Pages 2 0 R>>");
-  obj(2, "<</Type/Pages/Kids[3 0 R]/Count 1>>");
-  obj(3, `<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${PW} ${PH}]/Resources<</XObject<</Im0 4 0 R>>>>/Contents 5 0 R>>`);
-  xr[4] = off; puts(`4 0 obj\n<</Type/XObject/Subtype/Image/Width ${iw}/Height ${ih}/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length ${jpg.length}>>\nstream\n`);
-  put(jpg); puts("\nendstream\nendobj\n");
-  const content = `q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;
-  xr[5] = off; puts(`5 0 obj\n<</Length ${content.length}>>\nstream\n` + content + "\nendstream\nendobj\n");
-  const xs = off; let x = "xref\n0 6\n0000000000 65535 f \n";
-  for (let i = 1; i <= 5; i++) x += String(xr[i]).padStart(10, "0") + " 00000 n \n";
-  puts(x); puts(`trailer\n<</Size 6/Root 1 0 R>>\nstartxref\n${xs}\n%%EOF`);
+  const kids = pages.map((_, i) => `${3 + i * 3} 0 R`).join(" ");
+  obj(2, `<</Type/Pages/Kids[${kids}]/Count ${pages.length}>>`);
+  pages.forEach((pg, i) => {
+    const pageN = 3 + i * 3, imgN = 4 + i * 3, contN = 5 + i * 3;
+    const PW = 792, PH = Math.round(PW * pg.h / pg.w);
+    obj(pageN, `<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${PW} ${PH}]/Resources<</XObject<</Im0 ${imgN} 0 R>>>>/Contents ${contN} 0 R>>`);
+    xr[imgN] = off; puts(`${imgN} 0 obj\n<</Type/XObject/Subtype/Image/Width ${pg.w}/Height ${pg.h}/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length ${pg.jpg.length}>>\nstream\n`);
+    put(pg.jpg); puts("\nendstream\nendobj\n");
+    const content = `q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;
+    xr[contN] = off; puts(`${contN} 0 obj\n<</Length ${content.length}>>\nstream\n` + content + "\nendstream\nendobj\n");
+  });
+  const xs = off; let x = `xref\n0 ${nObj + 1}\n0000000000 65535 f \n`;
+  for (let i = 1; i <= nObj; i++) x += String(xr[i]).padStart(10, "0") + " 00000 n \n";
+  puts(x); puts(`trailer\n<</Size ${nObj + 1}/Root 1 0 R>>\nstartxref\n${xs}\n%%EOF`);
   const tot = parts.reduce((n, p) => n + p.length, 0), out = new Uint8Array(tot); let p = 0;
   for (const u of parts) { out.set(u, p); p += u.length; } return out;
+}
+
+/** Trigger a download (or new-tab open when embedded). Returns a status message. */
+export function deliverPDF(pdf: Uint8Array, fname: string): string {
+  const url = URL.createObjectURL(new Blob([pdf.buffer as ArrayBuffer], { type: "application/pdf" }));
+  try { const a = document.createElement("a"); a.href = url; a.download = fname; a.rel = "noopener"; document.body.appendChild(a); a.click(); a.remove(); } catch { /* ignore */ }
+  const embedded = window.self !== window.top;
+  let opened = false;
+  if (embedded) { try { opened = !!window.open(url, "_blank"); } catch { /* popup blocked */ } }
+  setTimeout(() => URL.revokeObjectURL(url), 20000);
+  return embedded
+    ? (opened ? "PDF opened in a new tab — press Ctrl+S to save it." : "Pop-up blocked — allow pop-ups to get the PDF, or open the app in its own tab.")
+    : `Saved “${fname}” — check your Downloads folder.`;
 }

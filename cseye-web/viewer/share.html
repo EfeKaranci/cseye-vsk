@@ -21,6 +21,7 @@
     </header>
 
     <div class="subbar">
+      <button class="btn iconbtn" id="leftToggle" title="Collapse / expand left panel">⯇</button>
       <div class="grp"><span class="lbl">Layer</span>
         <select class="sel" id="layerSel">
           <option value="geom">Geometry</option>
@@ -78,7 +79,8 @@
           <div class="pdfrow"><span class="lbl" style="width:56px">Marker</span><input type="range" id="dMarker" min="40" max="260" value="100" /></div>
           <div class="pdfrow"><span class="lbl" style="width:56px">Label</span><input type="range" id="dLabel" min="60" max="220" value="100" /></div>
           <div class="pdfrow"><span class="lbl" style="width:56px">Fill</span><input type="range" id="dFill" min="15" max="100" value="90" /></div>
-          <div class="pdfrow"><span class="lbl" style="width:56px">Colors</span><select class="sel" id="dScheme"><option value="sign">Comp / Tension</option><option value="mag">Magnitude</option><option value="magv">Magnitude · viridis</option></select></div>
+          <div class="pdfrow"><span class="lbl" style="width:56px">Colors</span><select class="sel" id="dScheme"><option value="sign">Comp / Tension</option><option value="mag">Magnitude</option><option value="magv" selected>Magnitude · viridis</option></select></div>
+          <div class="pdfrow"><span class="lbl" style="width:56px">PDF res</span><select class="sel" id="pdfRes"><option value="1">Standard (1×)</option><option value="2" selected>High (2×)</option><option value="3">Very high (3×)</option><option value="4">Max (4×)</option></select></div>
         </div>
         <div class="sect"><h3>Legend</h3><div class="note" id="legend"></div></div>
       </aside>

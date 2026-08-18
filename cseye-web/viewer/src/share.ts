@@ -17,6 +17,7 @@ let geom!: GeomBundle;
 let forces!: Bundle;
 let colsByStory = new Map<string, Frame[]>();
 let level = "", layer: Layer = "geom", result = "", curStep: string | null = null, stepList: string[] = [];
+let pdfScale = 2;   // PDF export resolution multiplier (screen density ×)
 let underlaysList: any[] = [];
 const imgCache = new Map<string, HTMLCanvasElement>();
 let shareBase = "";
@@ -288,9 +289,16 @@ $("lyPdf").addEventListener("change", e => { const v = (e.target as HTMLInputEle
 ($("dLabel") as HTMLInputElement).addEventListener("input", e => { R.labelScale = +(e.target as HTMLInputElement).value / 100; R.draw(); });
 ($("dFill") as HTMLInputElement).addEventListener("input", e => { R.fillAlpha = +(e.target as HTMLInputElement).value / 100; R.draw(); });
 ($("dScheme") as HTMLSelectElement).addEventListener("change", e => { R.colorScheme = (e.target as HTMLSelectElement).value as any; R.draw(); updateLegend(); });
+($("pdfRes") as HTMLSelectElement).addEventListener("change", e => { pdfScale = +(e.target as HTMLSelectElement).value; });
+$("leftToggle").onclick = () => {
+  const collapsed = document.querySelector(".work")!.classList.toggle("left-collapsed");
+  $("leftToggle").classList.toggle("active", collapsed);
+  $("leftToggle").textContent = collapsed ? "⯈" : "⯇";
+  R.resize();
+};
 $("zwin").onclick = () => R.setZoomWindow(!R.zoomWindowMode);
 R.onZoomWindow = (on) => $("zwin").classList.toggle("active", on);
-$("pdfBtn").onclick = () => R.exportPDF(`CSEYE_${layer}_${level.replace(/\s+/g, "")}.pdf`);
+$("pdfBtn").onclick = () => R.exportPDF(`CSEYE_${layer}_${level.replace(/\s+/g, "")}.pdf`, pdfScale);
 $("themeBtn").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark"); R.draw(); updateLegend(); };
 
 R.resize();

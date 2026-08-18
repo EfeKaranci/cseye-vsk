@@ -1,5 +1,5 @@
 import { api } from "./api";
-import { PlanRenderer, type Layer, type ValMode, type Hit, type MeasureMode, type Underlay } from "./render";
+import { PlanRenderer, buildImagePDF, deliverPDF, type Layer, type ValMode, type Hit, type MeasureMode, type Underlay, type PdfPage } from "./render";
 import type { Meta, Geometry, PlanColumn, Frame, ModelInfo, Support } from "./types";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
@@ -28,6 +28,7 @@ let selDoc: UDoc | null = null;
 let stepList: string[] = [];
 let curStep: string | null = null;   // null = envelope (aggregate across steps)
 const stepsCache = new Map<string, string[]>();
+let pdfScale = 2;                     // PDF export resolution multiplier (screen density ×)
 
 // ---------- connect / models ----------
 function setConn(ok: boolean) {
@@ -96,6 +97,7 @@ async function loadSnapshot(s: string) {
   $("fileName").textContent = meta.model;
   $("fileMeta").textContent = `ETABS ${meta.etabs_version} · ${meta.units} · ${geom.frames.length} frames · ${meta.stories.length} stories`;
   ($("pdfBtn") as HTMLButtonElement).disabled = false;
+  ($("batchBtn") as HTMLButtonElement).disabled = false;
   ($("publishBtn") as HTMLButtonElement).disabled = !publishEnabled;
   buildLevels(); buildResults("", true);
   // default: most-framed level
@@ -163,12 +165,15 @@ function updateComboBox() {
 }
 
 // ---------- steps (multi-step cases / envelope combos) ----------
-async function loadSteps(res: string) {
+async function getSteps(res: string): Promise<string[]> {
   if (!stepsCache.has(res)) {
     try { const r = await api.steps(sid!, res); stepsCache.set(res, r.steps.filter(s => s !== "")); }
     catch { stepsCache.set(res, []); }
   }
-  stepList = stepsCache.get(res)!;
+  return stepsCache.get(res)!;
+}
+async function loadSteps(res: string) {
+  stepList = await getSteps(res);
   buildStepSel();
 }
 function buildStepSel() {
@@ -354,7 +359,7 @@ function refreshPdfPanel() {
   const docs = uDocs.filter(d => d.levels.has(level));
   const list = $("uList"); list.innerHTML = "";
   for (const d of docs) {
-    const row = document.createElement("div"); row.className = "urow" + (d === selDoc ? " sel" : "");
+    const row = document.createElement("div"); row.className = "urow" + (d === selDoc ? " sel" : "") + (d.u.locked ? " locked" : "");
     const eye = document.createElement("input"); eye.type = "checkbox"; eye.checked = d.u.visible;
     eye.onclick = ev => { ev.stopPropagation(); d.u.visible = eye.checked; R.draw(); };
     const nm = document.createElement("span"); nm.className = "unm"; nm.textContent = d.name;
@@ -371,6 +376,10 @@ function refreshPdfPanel() {
     ($("pdfOpacity") as HTMLInputElement).value = String(Math.round(selDoc.u.opacity * 100));
     const deg = Math.round(selDoc.u.rot * 180 / Math.PI);
     ($("pdfRotate") as HTMLInputElement).value = String(deg); $("pdfRotVal").textContent = deg + "°";
+    const locked = !!selDoc.u.locked;
+    const lb = $("pdfLock"); lb.textContent = locked ? "🔓 Unlock" : "🔒 Lock position"; lb.classList.toggle("active", locked);
+    for (const id of ["pdfMove", "pdfAlign", "pdfPlus", "pdfMinus", "pdfRotate"]) ($(id) as HTMLButtonElement).disabled = locked;
+    $("pdfHint").textContent = locked ? "Layer locked — position frozen. Unlock to move." : "Drag to move · corner handles to scale.";
   }
 }
 $("pdfLoad").onclick = () => ($("pdfFile") as HTMLInputElement).click();
@@ -384,6 +393,12 @@ $("pdfPlus").onclick = () => R.scaleUnderlayBy(1.05);
 $("pdfMinus").onclick = () => R.scaleUnderlayBy(1 / 1.05);
 $("pdfMove").onclick = () => { R.setUnderlayMode(R.underlayMode === "move" ? "off" : "move"); syncPdfModeBtns(); };
 $("pdfAlign").onclick = () => { R.setUnderlayMode(R.underlayMode === "align" ? "off" : "align"); syncPdfModeBtns(); };
+$("pdfLock").onclick = () => {
+  if (!selDoc) return;
+  selDoc.u.locked = !selDoc.u.locked;
+  if (selDoc.u.locked) R.setUnderlayMode("off");
+  syncPdfModeBtns(); refreshPdfPanel(); R.draw();
+};
 $("pdfClear").onclick = () => { if (!selDoc) return; const i = uDocs.indexOf(selDoc); if (i >= 0) uDocs.splice(i, 1); selDoc = null; applyLevelUnderlay(); };
 R.onUnderlay = (msg) => { status(msg); $("pdfHint").textContent = msg; syncPdfModeBtns(); };
 
@@ -474,9 +489,16 @@ $("lyLabels").addEventListener("change", e => { R.showLabels = (e.target as HTML
 ($("dLabel") as HTMLInputElement).addEventListener("input", e => { R.labelScale = +(e.target as HTMLInputElement).value / 100; R.draw(); });
 ($("dFill") as HTMLInputElement).addEventListener("input", e => { R.fillAlpha = +(e.target as HTMLInputElement).value / 100; R.draw(); });
 ($("dScheme") as HTMLSelectElement).addEventListener("change", e => { R.colorScheme = (e.target as HTMLSelectElement).value as any; R.draw(); updateLegend(); });
+($("pdfRes") as HTMLSelectElement).addEventListener("change", e => { pdfScale = +(e.target as HTMLSelectElement).value; });
+$("leftToggle").onclick = () => {
+  const collapsed = document.querySelector(".work")!.classList.toggle("left-collapsed");
+  $("leftToggle").classList.toggle("active", collapsed);
+  $("leftToggle").textContent = collapsed ? "⯈" : "⯇";
+  R.resize();
+};
 $("zwin").onclick = () => R.setZoomWindow(!R.zoomWindowMode);
 R.onZoomWindow = (on) => $("zwin").classList.toggle("active", on);
-$("pdfBtn").onclick = () => R.exportPDF(`CSEYE_${layer}_${level.replace(/\s+/g, "")}.pdf`);
+$("pdfBtn").onclick = () => R.exportPDF(`CSEYE_${layer}_${level.replace(/\s+/g, "")}.pdf`, pdfScale);
 function openPublish() {
   if (!sid || !meta) return;
   ($("pubLabel") as HTMLInputElement).value = meta.model;
@@ -521,6 +543,76 @@ $("pubGo").onclick = async () => {
   } catch (e: any) { toast("Publish failed: " + e.message); status(String(e.message)); }
   finally { busy(false); }
 };
+// ---------- batch export (one page per combination) ----------
+function openBatch() {
+  if (!sid || !meta) return;
+  const isData = layer !== "geom";
+  const vsel = $("batchVal") as HTMLSelectElement;
+  const vopts: [string, string][] = layer === "react"
+    ? [["gov", "Governing Fz"], ["range", "Δ max−min"]]
+    : [["gov", "Governing |P|"], ["comp", "Compression"], ["tens", "Tension"], ["range", "Δ max−min"]];
+  vsel.innerHTML = isData ? vopts.map(([v, t]) => `<option value="${v}">${t}</option>`).join("") : "";
+  $("batchScope").textContent = layer === "react"
+    ? "One page per combination — base reactions (whole model)."
+    : layer === "axial"
+      ? `One page per combination — column axial at level ${level}.`
+      : "Switch the Layer (top-left) to Column axial or Base reactions first.";
+  const host = $("batchOpts"); host.innerHTML = "";
+  for (const r of meta.result_sets.filter(r => r.kind === "combo")) {
+    const row = document.createElement("label"); row.className = "row";
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.className = "batchchk"; cb.value = r.name; cb.checked = r.name === result;
+    const nm = document.createElement("span"); nm.textContent = r.name;
+    row.appendChild(cb); row.appendChild(nm);
+    if (r.extracted) { const t = document.createElement("span"); t.className = "tag"; t.textContent = "extracted"; row.appendChild(t); }
+    host.appendChild(row);
+  }
+  const ssel = $("batchStep") as HTMLSelectElement;
+  const steps = new Set<string>();
+  for (const [res, sl] of stepsCache) if (meta.result_sets.find(r => r.name === res)?.kind === "combo") sl.forEach(s => steps.add(s));
+  ssel.innerHTML = `<option value="">Envelope (all)</option>` + [...steps].map(s => `<option value="${s}">${s}</option>`).join("");
+  $("batchModal").classList.remove("hide");
+}
+const batchChks = () => [...document.querySelectorAll(".batchchk")] as HTMLInputElement[];
+$("batchBtn").onclick = openBatch;
+$("batchAll").onclick = () => batchChks().forEach(c => c.checked = true);
+$("batchNone").onclick = () => batchChks().forEach(c => c.checked = false);
+$("batchCancel").onclick = () => $("batchModal").classList.add("hide");
+$("batchGo").onclick = async () => {
+  if (layer === "geom") { toast("Switch to Column axial or Base reactions first."); return; }
+  const names = batchChks().filter(c => c.checked).map(c => c.value);
+  if (!names.length) { toast("Select at least one combination."); return; }
+  const vmode = ($("batchVal") as HTMLSelectElement).value as ValMode;
+  const chosenStep = ($("batchStep") as HTMLSelectElement).value || null;
+  const scale = +($("batchRes") as HTMLSelectElement).value;
+  $("batchModal").classList.add("hide"); busy(true);
+  const saved = { vmode: R.vmode, cols: R.columns, sup: R.supports, title: R.title };
+  R.vmode = vmode;
+  const prevTheme = R.setLightForExport();
+  const pages: PdfPage[] = [];
+  try {
+    for (const nm of names) {
+      status(`Rendering ${nm}… (${pages.length + 1}/${names.length})`);
+      await ensureExtracted(nm);
+      const steps = await getSteps(nm);
+      const useStep = vmode === "range" ? undefined : (chosenStep && steps.includes(chosenStep) ? chosenStep : undefined);
+      if (layer === "axial") { const r = await api.plan(sid!, level, nm, useStep); R.columns = r.columns; R.supports = []; }
+      else { const r = await api.reactions(sid!, nm, useStep); R.supports = r.supports; R.columns = []; }
+      const sfx = vmode === "range" ? " · Δ(max−min)" : (useStep ? " · " + useStep : "");
+      R.title = (layer === "react" ? `Base Reactions — ${nm}` : `Column Axial (base) — ${level} — ${nm}`) + sfx;
+      pages.push(R.snapshotJPEG(scale));
+    }
+    R.restoreTheme(prevTheme);
+    const fname = `CSEYE_batch_${layer}_${level.replace(/\s+/g, "")}_${pages.length}p.pdf`;
+    status(deliverPDF(buildImagePDF(pages), fname));
+    toast(`Exported ${pages.length}-page PDF.`);
+  } catch (e: any) {
+    R.restoreTheme(prevTheme); toast("Batch failed: " + e.message); status(String(e.message));
+  } finally {
+    R.vmode = saved.vmode; R.columns = saved.cols; R.supports = saved.sup; R.title = saved.title;
+    R.draw(); busy(false);
+  }
+};
+
 $("themeBtn").onclick = () => {
   const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light");
   document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark"); R.draw(); updateLegend();
