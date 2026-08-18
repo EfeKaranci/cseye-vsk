@@ -7,6 +7,14 @@ type P = { x: number; y: number };
 
 const css = (v: string) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
+const VIRIDIS: [number, number, number][] = [[68, 1, 84], [59, 82, 139], [33, 145, 140], [94, 201, 98], [253, 231, 37]];
+function viridis(t: number): string {
+  t = Math.max(0, Math.min(1, t));
+  const seg = t * (VIRIDIS.length - 1), i = Math.min(Math.floor(seg), VIRIDIS.length - 2), f = seg - i;
+  const a = VIRIDIS[i], b = VIRIDIS[i + 1];
+  return `rgb(${Math.round(a[0] + (b[0] - a[0]) * f)},${Math.round(a[1] + (b[1] - a[1]) * f)},${Math.round(a[2] + (b[2] - a[2]) * f)})`;
+}
+
 export interface Hit { kind: "column" | "support"; data: PlanColumn | Support; }
 
 /** A PDF/image underlay placed in world space (px→world: uniform scale s, rotation rot,
@@ -27,6 +35,11 @@ export class PlanRenderer {
   layer: Layer = "geom"; vmode: ValMode = "gov";
   showLabels = true; showBeams = true; showGrids = true;
   hiddenGridSystems = new Set<string>();
+  markerScale = 1; labelScale = 1; fillAlpha = 0.9;
+  colorScheme: "sign" | "mag" | "magv" = "sign";
+  zoomWindowMode = false;
+  private zw: { x0: number; y0: number; x1: number; y1: number } | null = null;
+  onZoomWindow?: (on: boolean) => void;
   hover: Hit["data"] | null = null; pick: Hit["data"] | null = null;
   measureMode: MeasureMode = null;
   private mPts: P[] = [];
@@ -73,6 +86,23 @@ export class PlanRenderer {
     this.oy = pad - e.ymin * s + (this.H() - 2 * pad - bh * s) / 2;
     this.draw();
   }
+  setZoomWindow(on: boolean) { this.zoomWindowMode = on; this.zw = null; this.cv.style.cursor = on ? "crosshair" : "default"; this.onZoomWindow?.(on); this.draw(); }
+  private zoomToScreenRect(x0: number, y0: number, x1: number, y1: number) {
+    const a = this.inv(x0, y0), b = this.inv(x1, y1);
+    const wx0 = Math.min(a.x, b.x), wx1 = Math.max(a.x, b.x), wy0 = Math.min(a.y, b.y), wy1 = Math.max(a.y, b.y);
+    const bw = (wx1 - wx0) || 1, bh = (wy1 - wy0) || 1, pad = 18;
+    const s = Math.min((this.W() - 2 * pad) / bw, (this.H() - 2 * pad) / bh);
+    this.scale = s;
+    this.ox = pad - wx0 * s + (this.W() - 2 * pad - bw * s) / 2;
+    this.oy = pad - wy0 * s + (this.H() - 2 * pad - bh * s) / 2;
+    this.draw();
+  }
+  private drawZoomRect() {
+    const z = this.zw!, ctx = this.ctx;
+    ctx.save(); ctx.fillStyle = css("--accent"); ctx.globalAlpha = 0.15; ctx.fillRect(z.x0, z.y0, z.x1 - z.x0, z.y1 - z.y0);
+    ctx.globalAlpha = 1; ctx.strokeStyle = css("--accent"); ctx.lineWidth = 1.5; ctx.setLineDash([5, 3]);
+    ctx.strokeRect(z.x0, z.y0, z.x1 - z.x0, z.y1 - z.y0); ctx.setLineDash([]); ctx.restore();
+  }
   zoomAt(px: number, py: number, f: number) {
     const w = this.inv(px, py); this.scale *= f;
     this.ox = px - w.x * this.scale; this.oy = (this.H() - py) - w.y * this.scale; this.draw();
@@ -91,11 +121,13 @@ export class PlanRenderer {
     if (this.vmode === "tens") return c.pmax;
     return Math.abs(c.pmin) >= Math.abs(c.pmax) ? c.pmin : c.pmax;
   }
-  private ramp(v: number, max: number) {
+  ramp(v: number, max: number) {
     const t = Math.min(1, Math.abs(v) / max);
-    return v < 0 ? `hsl(214,80%,${72 - 40 * t}%)` : `hsl(4,74%,${70 - 34 * t}%)`;
+    if (this.colorScheme === "sign") return v < 0 ? `hsl(214,80%,${72 - 40 * t}%)` : `hsl(4,74%,${70 - 34 * t}%)`;
+    if (this.colorScheme === "mag") return `hsl(${210 - 210 * t},74%,${62 - 16 * t}%)`;
+    return viridis(t);
   }
-  private rad(v: number, max: number, lo: number, hi: number) { return lo + (hi - lo) * Math.min(1, Math.abs(v) / max); }
+  private rad(v: number, max: number, lo: number, hi: number) { return (lo + (hi - lo) * Math.min(1, Math.abs(v) / max)) * this.markerScale; }
 
   // ---- draw ----
   draw() {
@@ -108,6 +140,7 @@ export class PlanRenderer {
     if (this.layer === "react") this.drawReactions();
     else this.drawColumns();
     if (this.measureMode) this.drawMeasure();
+    if (this.zw) this.drawZoomRect();
     this.drawScaleBar();
   }
 
@@ -219,9 +252,9 @@ export class PlanRenderer {
     for (const c of this.columns) {
       const x = this.wx(c.ix), y = this.wy(c.iy), on = c === this.pick || c === this.hover;
       let color: string, r: number, val: number | null = null;
-      if (axial) { val = this.colP(c); if (val == null) { color = css("--ink-faint"); r = on ? 5 : 3; } else { color = this.ramp(val, this.maxP); r = this.rad(val, this.maxP, 3.2, 9.5); } }
-      else { color = css("--accent"); r = on ? 6.5 : 4.6; }
-      ctx.beginPath(); ctx.fillStyle = color; ctx.globalAlpha = on ? 1 : .92; ctx.arc(x, y, on ? r + 1.5 : r, 0, 7); ctx.fill();
+      if (axial) { val = this.colP(c); if (val == null) { color = css("--ink-faint"); r = (on ? 5 : 3) * this.markerScale; } else { color = this.ramp(val, this.maxP); r = this.rad(val, this.maxP, 3.2, 9.5); } }
+      else { color = css("--accent"); r = (on ? 6.5 : 4.6) * this.markerScale; }
+      ctx.beginPath(); ctx.fillStyle = color; ctx.globalAlpha = on ? 1 : this.fillAlpha; ctx.arc(x, y, on ? r + 1.5 : r, 0, 7); ctx.fill();
       if (on) { ctx.globalAlpha = 1; ctx.lineWidth = 2; ctx.strokeStyle = css("--ink"); ctx.stroke(); }
       ctx.globalAlpha = 1;
       drawn.push({ x, y, r, val, on, label: axial ? (val == null ? "–" : String(Math.round(Math.abs(val)))) : c.label });
@@ -234,7 +267,7 @@ export class PlanRenderer {
     for (const s of this.supports) {
       const x = this.wx(s.x), y = this.wy(s.y), on = s === this.pick || s === this.hover;
       const r = this.rad(s.fz, this.maxFz, 3.5, 11);
-      ctx.beginPath(); ctx.fillStyle = s.fz >= 0 ? css("--up") : css("--tens"); ctx.globalAlpha = on ? 1 : .9;
+      ctx.beginPath(); ctx.fillStyle = s.fz >= 0 ? css("--up") : css("--tens"); ctx.globalAlpha = on ? 1 : this.fillAlpha;
       ctx.arc(x, y, on ? r + 1.5 : r, 0, 7); ctx.fill();
       if (on) { ctx.lineWidth = 2; ctx.strokeStyle = css("--ink"); ctx.stroke(); } ctx.globalAlpha = 1;
       drawn.push({ x, y, r, val: s.fz, on, label: String(Math.round(Math.abs(s.fz))) });
@@ -243,9 +276,9 @@ export class PlanRenderer {
   }
   private declutterLabels(items: { x: number; y: number; r: number; val: number | null; on: boolean; label: string }[]) {
     if (!this.showLabels) return;
-    const { ctx } = this; ctx.font = "600 10px " + css("--font-mono"); ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    const { ctx } = this; ctx.font = `600 ${(10 * this.labelScale).toFixed(1)}px ` + css("--font-mono"); ctx.textAlign = "center"; ctx.textBaseline = "bottom";
     const order = items.slice().sort((a, b) => (+b.on - +a.on) || (Math.abs(b.val ?? 0) - Math.abs(a.val ?? 0)));
-    const placed: [number, number][] = []; const GX = 30, GY = 13;
+    const placed: [number, number][] = []; const GX = 30 * this.labelScale, GY = 13 * this.labelScale;
     for (const d of order) {
       if (d.x < -30 || d.x > this.W() + 30 || d.y < -20 || d.y > this.H() + 20) continue;
       let ok = d.on;
@@ -278,6 +311,7 @@ export class PlanRenderer {
   private bindEvents() {
     const cv = this.cv;
     cv.addEventListener("pointerdown", e => {
+      if (this.zoomWindowMode) { this.zw = { x0: e.offsetX, y0: e.offsetY, x1: e.offsetX, y1: e.offsetY }; cv.setPointerCapture(e.pointerId); return; }
       if (this.underlayMode === "move" && this.active && this.underlays.includes(this.active)) {
         const u = this.active, i = this.hitCorner(e.offsetX, e.offsetY, u);
         if (i >= 0) {
@@ -292,6 +326,7 @@ export class PlanRenderer {
     });
     cv.addEventListener("pointermove", e => {
       const w = this.inv(e.offsetX, e.offsetY); this.onCursor?.(w.x, w.y);
+      if (this.zw) { this.zw.x1 = e.offsetX; this.zw.y1 = e.offsetY; this.draw(); return; }
       if (this.cDrag && this.active) { this.cornerScale(e.offsetX, e.offsetY); return; }
       if (this.uDrag && this.active) { const S = this.scale; this.active.tx = this.uDrag.tx + (e.offsetX - this.uDrag.x) / S; this.active.ty = this.uDrag.ty - (e.offsetY - this.uDrag.y) / S; this.draw(); return; }
       if (this.drag) { this.ox = this.drag.ox + (e.offsetX - this.drag.x); this.oy = this.drag.oy - (e.offsetY - this.drag.y); this.drag.moved = true; this.draw(); return; }
@@ -300,6 +335,7 @@ export class PlanRenderer {
       if (h !== this.hover) { this.hover = h; cv.style.cursor = h ? "pointer" : "default"; if (!this.pick) this.emit(h); this.draw(); }
     });
     cv.addEventListener("pointerup", e => {
+      if (this.zw) { const z = this.zw; this.zw = null; if (Math.abs(z.x1 - z.x0) > 6 && Math.abs(z.y1 - z.y0) > 6) this.zoomToScreenRect(z.x0, z.y0, z.x1, z.y1); this.setZoomWindow(false); return; }
       if (this.cDrag) { this.cDrag = null; return; }
       if (this.uDrag) { this.uDrag = null; return; }
       if (this.drag && !this.drag.moved) {
@@ -312,6 +348,12 @@ export class PlanRenderer {
     cv.addEventListener("dblclick", () => this.finishPoly());
     cv.addEventListener("wheel", e => { e.preventDefault(); this.zoomAt(e.offsetX, e.offsetY, e.deltaY < 0 ? 1.12 : 1 / 1.12); }, { passive: false });
     window.addEventListener("resize", () => this.resize());
+    window.addEventListener("keydown", e => {
+      const tag = (document.activeElement as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+      if (e.key === "z" || e.key === "Z") this.setZoomWindow(!this.zoomWindowMode);
+      else if (e.key === "Escape" && this.zoomWindowMode) this.setZoomWindow(false);
+    });
   }
   private emit(d: Hit["data"] | null) {
     if (!d) { this.onPick?.(null); return; }

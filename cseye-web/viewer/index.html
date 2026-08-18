@@ -70,7 +70,7 @@
           <div class="pill mono" id="hudElev">el. —</div>
         </div>
         <div class="zoom">
-          <button class="btn iconbtn" id="zin">＋</button><button class="btn iconbtn" id="zout">－</button><button class="btn iconbtn" id="zfit">⤢</button>
+          <button class="btn iconbtn" id="zin">＋</button><button class="btn iconbtn" id="zout">－</button><button class="btn iconbtn" id="zfit">⤢</button><button class="btn iconbtn" id="zwin" title="Zoom to window (Z)"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.2"/><path d="M10.3 10.3 14 14"/></svg></button>
         </div>
         <div class="cursor mono" id="cursor">x —, y —</div>
         <div class="scalebar"><span class="mono" id="sbTxt">—</span><span class="bar" id="sbBar"></span></div>
@@ -85,6 +85,13 @@
           <div class="lyr"><label><input type="checkbox" id="lyGrids" checked><span class="switch"></span>Column grid</label></div>
           <div id="gridSys"></div>
           <div class="lyr"><label><input type="checkbox" id="lyLabels" checked><span class="switch"></span>Value / labels</label></div>
+        </div>
+        <div class="sect">
+          <h3>Display</h3>
+          <div class="pdfrow"><span class="lbl" style="width:56px">Marker</span><input type="range" id="dMarker" min="40" max="260" value="100" /></div>
+          <div class="pdfrow"><span class="lbl" style="width:56px">Label</span><input type="range" id="dLabel" min="60" max="220" value="100" /></div>
+          <div class="pdfrow"><span class="lbl" style="width:56px">Fill</span><input type="range" id="dFill" min="15" max="100" value="90" /></div>
+          <div class="pdfrow"><span class="lbl" style="width:56px">Colors</span><select class="sel" id="dScheme"><option value="sign">Comp / Tension</option><option value="mag">Magnitude</option><option value="magv">Magnitude · viridis</option></select></div>
         </div>
         <div class="sect">
           <h3>Background PDF <span class="lbl" style="float:right;text-transform:none">this level</span></h3>

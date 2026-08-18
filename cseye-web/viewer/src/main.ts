@@ -237,7 +237,9 @@ function updateLegend() {
   const el = $("legend");
   if (layer === "axial") {
     const m = Math.max(1, ...R.columns.flatMap(c => [Math.abs(c.pmin ?? 0), Math.abs(c.pmax ?? 0)]));
-    el.innerHTML = `<div class="note">Base axial, <b>${result}</b> (kip). Size ∝ |P|.</div><div class="grad"></div><div class="gradrow"><span>−${m.toFixed(0)} comp</span><span>0</span><span>+${m.toFixed(0)} tens</span></div>`;
+    const stops: string[] = []; for (let i = 0; i <= 6; i++) { const t = i / 6; stops.push(R.ramp(R.colorScheme === "sign" ? t * 2 - 1 : t, 1)); }
+    const row = R.colorScheme === "sign" ? `<span>−${m.toFixed(0)} comp</span><span>0</span><span>+${m.toFixed(0)} tens</span>` : `<span>0</span><span>|P|</span><span>${m.toFixed(0)}</span>`;
+    el.innerHTML = `<div class="note">Base axial, <b>${result}</b> (kip). Size ∝ |P|.</div><div class="grad" style="background:linear-gradient(90deg,${stops.join(",")})"></div><div class="gradrow">${row}</div>`;
   } else if (layer === "react") {
     el.innerHTML = `<div><span class="swatch" style="background:var(--up)"></span>Downward (Fz+)</div><div style="margin-top:5px"><span class="swatch" style="background:var(--tens)"></span>Uplift (Fz−)</div>`;
   } else {
@@ -431,6 +433,12 @@ $("stepNext").onclick = () => cycleStep(1);
 $("lyBeams").addEventListener("change", e => { R.showBeams = (e.target as HTMLInputElement).checked; R.draw(); });
 $("lyGrids").addEventListener("change", e => { R.showGrids = (e.target as HTMLInputElement).checked; R.draw(); });
 $("lyLabels").addEventListener("change", e => { R.showLabels = (e.target as HTMLInputElement).checked; R.draw(); });
+($("dMarker") as HTMLInputElement).addEventListener("input", e => { R.markerScale = +(e.target as HTMLInputElement).value / 100; R.draw(); });
+($("dLabel") as HTMLInputElement).addEventListener("input", e => { R.labelScale = +(e.target as HTMLInputElement).value / 100; R.draw(); });
+($("dFill") as HTMLInputElement).addEventListener("input", e => { R.fillAlpha = +(e.target as HTMLInputElement).value / 100; R.draw(); });
+($("dScheme") as HTMLSelectElement).addEventListener("change", e => { R.colorScheme = (e.target as HTMLSelectElement).value as any; R.draw(); updateLegend(); });
+$("zwin").onclick = () => R.setZoomWindow(!R.zoomWindowMode);
+R.onZoomWindow = (on) => $("zwin").classList.toggle("active", on);
 $("pdfBtn").onclick = () => R.exportPDF(`CSEYE_${layer}_${level.replace(/\s+/g, "")}.pdf`);
 function openPublish() {
   if (!sid || !meta) return;
