@@ -1,7 +1,7 @@
 import type { Extents, Frame, GridLine, PlanColumn, Support } from "./types";
 
 export type Layer = "geom" | "axial" | "react";
-export type ValMode = "gov" | "comp" | "tens";
+export type ValMode = "gov" | "comp" | "tens" | "range";
 export type MeasureMode = "dist" | "area" | "perim" | "angle" | null;
 type P = { x: number; y: number };
 
@@ -109,22 +109,35 @@ export class PlanRenderer {
   }
 
   // ---- color scales (per current slice) ----
-  private maxP = 1; private maxFz = 1;
+  private maxP = 1; private maxFz = 1; private maxRange = 1; private maxFzRange = 1;
   private computeScales() {
     this.maxP = Math.max(1, ...this.columns.flatMap(c =>
       [Math.abs(c.pmin ?? 0), Math.abs(c.pmax ?? 0)]));
     this.maxFz = Math.max(1, ...this.supports.map(s => Math.abs(s.fz)));
+    this.maxRange = Math.max(1, ...this.columns.map(c =>
+      (c.pmin != null && c.pmax != null) ? c.pmax - c.pmin : 0));
+    this.maxFzRange = Math.max(1, ...this.supports.map(s =>
+      (s.fzmax != null && s.fzmin != null) ? s.fzmax - s.fzmin : 0));
+  }
+  colMax() { return this.vmode === "range" ? this.maxRange : this.maxP; }
+  fzMax() { return this.vmode === "range" ? this.maxFzRange : this.maxFz; }
+  /** Support value under the current mode: signed Fz, or the max−min swing across steps. */
+  supVal(s: Support): number {
+    return (this.vmode === "range" && s.fzmax != null && s.fzmin != null) ? s.fzmax - s.fzmin : s.fz;
   }
   private colP(c: PlanColumn): number | null {
     if (c.pmin == null || c.pmax == null) return null;
+    if (this.vmode === "range") return c.pmax - c.pmin;   // total swing across steps (≥0)
     if (this.vmode === "comp") return c.pmin;
     if (this.vmode === "tens") return c.pmax;
     return Math.abs(c.pmin) >= Math.abs(c.pmax) ? c.pmin : c.pmax;
   }
   ramp(v: number, max: number) {
     const t = Math.min(1, Math.abs(v) / max);
-    if (this.colorScheme === "sign") return v < 0 ? `hsl(214,80%,${72 - 40 * t}%)` : `hsl(4,74%,${70 - 34 * t}%)`;
-    if (this.colorScheme === "mag") return `hsl(${210 - 210 * t},74%,${62 - 16 * t}%)`;
+    // a range/swing is unsigned → the diverging "sign" scheme is meaningless, fall back to magnitude
+    const scheme = (this.vmode === "range" && this.colorScheme === "sign") ? "mag" : this.colorScheme;
+    if (scheme === "sign") return v < 0 ? `hsl(214,80%,${72 - 40 * t}%)` : `hsl(4,74%,${70 - 34 * t}%)`;
+    if (scheme === "mag") return `hsl(${210 - 210 * t},74%,${62 - 16 * t}%)`;
     return viridis(t);
   }
   private rad(v: number, max: number, lo: number, hi: number) { return (lo + (hi - lo) * Math.min(1, Math.abs(v) / max)) * this.markerScale; }
@@ -252,7 +265,7 @@ export class PlanRenderer {
     for (const c of this.columns) {
       const x = this.wx(c.ix), y = this.wy(c.iy), on = c === this.pick || c === this.hover;
       let color: string, r: number, val: number | null = null;
-      if (axial) { val = this.colP(c); if (val == null) { color = css("--ink-faint"); r = (on ? 5 : 3) * this.markerScale; } else { color = this.ramp(val, this.maxP); r = this.rad(val, this.maxP, 3.2, 9.5); } }
+      if (axial) { const mx = this.colMax(); val = this.colP(c); if (val == null) { color = css("--ink-faint"); r = (on ? 5 : 3) * this.markerScale; } else { color = this.ramp(val, mx); r = this.rad(val, mx, 3.2, 9.5); } }
       else { color = css("--accent"); r = (on ? 6.5 : 4.6) * this.markerScale; }
       ctx.beginPath(); ctx.fillStyle = color; ctx.globalAlpha = on ? 1 : this.fillAlpha; ctx.arc(x, y, on ? r + 1.5 : r, 0, 7); ctx.fill();
       if (on) { ctx.globalAlpha = 1; ctx.lineWidth = 2; ctx.strokeStyle = css("--ink"); ctx.stroke(); }
@@ -262,15 +275,16 @@ export class PlanRenderer {
     this.declutterLabels(drawn);
   }
   private drawReactions() {
-    const { ctx } = this;
+    const { ctx } = this, range = this.vmode === "range", mx = this.fzMax();
     const drawn: { x: number; y: number; r: number; val: number; on: boolean; label: string }[] = [];
     for (const s of this.supports) {
       const x = this.wx(s.x), y = this.wy(s.y), on = s === this.pick || s === this.hover;
-      const r = this.rad(s.fz, this.maxFz, 3.5, 11);
-      ctx.beginPath(); ctx.fillStyle = s.fz >= 0 ? css("--up") : css("--tens"); ctx.globalAlpha = on ? 1 : this.fillAlpha;
+      const val = this.supVal(s);
+      const r = this.rad(val, mx, 3.5, 11);
+      ctx.beginPath(); ctx.fillStyle = range ? this.ramp(val, mx) : (s.fz >= 0 ? css("--up") : css("--tens")); ctx.globalAlpha = on ? 1 : this.fillAlpha;
       ctx.arc(x, y, on ? r + 1.5 : r, 0, 7); ctx.fill();
       if (on) { ctx.lineWidth = 2; ctx.strokeStyle = css("--ink"); ctx.stroke(); } ctx.globalAlpha = 1;
-      drawn.push({ x, y, r, val: s.fz, on, label: String(Math.round(Math.abs(s.fz))) });
+      drawn.push({ x, y, r, val, on, label: String(Math.round(Math.abs(val))) });
     }
     this.declutterLabels(drawn);
   }

@@ -140,6 +140,17 @@ function buildResults(filter = "", setDefault = false) {
   cs.value = result;
   updateComboBox();
 }
+// value dropdown options depend on the layer; "range" = Δ (max−min) across steps
+function buildValOptions() {
+  const sel = $("valSel") as HTMLSelectElement;
+  const opts: [string, string][] = layer === "react"
+    ? [["gov", "Governing Fz"], ["range", "Δ max−min"]]
+    : [["gov", "Governing |P|"], ["comp", "Compression"], ["tens", "Tension"], ["range", "Δ max−min"]];
+  if (!opts.some(([v]) => v === R.vmode)) R.vmode = "gov";
+  sel.innerHTML = "";
+  for (const [v, t] of opts) { const o = document.createElement("option"); o.value = v; o.textContent = t; sel.appendChild(o); }
+  sel.value = R.vmode;
+}
 function updateComboBox() {
   const box = $("comboBox"), sect = $("comboSect");
   const def = meta?.combos?.[result];
@@ -166,7 +177,7 @@ function buildStepSel() {
   opt("", "Envelope (all)");
   for (const s of stepList) opt(s, s);
   sel.value = curStep ?? "";
-  $("stepGrp").classList.toggle("hide", !(layer !== "geom" && stepList.length > 1));
+  $("stepGrp").classList.toggle("hide", R.vmode === "range" || !(layer !== "geom" && stepList.length > 1));
 }
 function cycleStep(dir: number) {
   const opts: (string | null)[] = [null, ...stepList];
@@ -190,14 +201,15 @@ async function refresh() {
   } else {
     await ensureExtracted(result);
     await loadSteps(result);
-    const stepArg = curStep ?? undefined;
+    const stepArg = R.vmode === "range" ? undefined : (curStep ?? undefined);  // Δ needs the full step envelope
     if (layer === "axial") {
       const r = await api.plan(sid, level, result, stepArg); R.columns = r.columns; R.supports = [];
     } else {
       const r = await api.reactions(sid, result, stepArg); R.supports = r.supports; R.columns = [];
     }
   }
-  const stepSfx = curStep && layer !== "geom" ? ` · ${curStep}` : "";
+  const stepSfx = R.vmode === "range" && layer !== "geom" ? " · Δ(max−min)"
+    : (curStep && layer !== "geom" ? ` · ${curStep}` : "");
   R.title = (layer === "react" ? `Base Reactions — ${result}` : layer === "axial" ? `Column Axial (base) — ${level} — ${result}` : `Column Plan — ${level}`) + stepSfx;
   R.draw(); updateSummary(); updateLegend();
   } finally { busy(false); }
@@ -221,20 +233,40 @@ function updateSummary() {
   if (layer === "react") {
     $("sumTitle").textContent = "Reactions summary";
     const fz = R.supports.map(s => s.fz); const sum = fz.reduce((a, b) => a + b, 0);
+    let rExtra = "";
+    if (R.vmode === "range") {
+      const rs = R.supports.filter(s => s.fzmax != null && s.fzmin != null).map(s => s.fzmax! - s.fzmin!);
+      if (rs.length) rExtra = `<dt>Max ΔFz</dt><dd>${Math.max(...rs).toFixed(0)} k</dd><dt>Mean ΔFz</dt><dd>${(rs.reduce((a, b) => a + b, 0) / rs.length).toFixed(0)} k</dd>`;
+    }
     el.innerHTML = `<dt>Result</dt><dd style="font-size:11px">${result}</dd><dt>Supports</dt><dd>${R.supports.length}</dd>
-      <dt>Σ Fz</dt><dd>${sum.toFixed(0)} k</dd><dt>Max Fz</dt><dd>${Math.max(0, ...fz).toFixed(0)} k</dd><dt>Min Fz</dt><dd>${Math.min(0, ...fz).toFixed(0)} k</dd>`;
+      <dt>Σ Fz</dt><dd>${sum.toFixed(0)} k</dd><dt>Max Fz</dt><dd>${Math.max(0, ...fz).toFixed(0)} k</dd><dt>Min Fz</dt><dd>${Math.min(0, ...fz).toFixed(0)} k</dd>${rExtra}`;
     return;
   }
   $("sumTitle").textContent = "Level summary";
   let extra = "";
   if (layer === "axial") {
-    const ps = R.columns.map(c => c.pmin).filter((v): v is number => v != null);
-    if (ps.length) extra = `<dt>Axial min</dt><dd>${Math.min(...ps).toFixed(0)} k</dd><dt>Axial max</dt><dd>${Math.max(...R.columns.map(c => c.pmax ?? 0)).toFixed(0)} k</dd><dt>With result</dt><dd>${ps.length}/${R.columns.length}</dd>`;
+    const cols = R.columns.filter(c => c.pmin != null && c.pmax != null);
+    if (R.vmode === "range") {
+      const rs = cols.map(c => c.pmax! - c.pmin!);
+      if (rs.length) extra = `<dt>Δ max</dt><dd>${Math.max(...rs).toFixed(0)} k</dd><dt>Δ mean</dt><dd>${(rs.reduce((a, b) => a + b, 0) / rs.length).toFixed(0)} k</dd><dt>With result</dt><dd>${rs.length}/${R.columns.length}</dd>`;
+    } else if (cols.length) {
+      extra = `<dt>Axial min</dt><dd>${Math.min(...cols.map(c => c.pmin!)).toFixed(0)} k</dd><dt>Axial max</dt><dd>${Math.max(...cols.map(c => c.pmax!)).toFixed(0)} k</dd><dt>With result</dt><dd>${cols.length}/${R.columns.length}</dd>`;
+    }
   }
   el.innerHTML = `<dt>Elevation</dt><dd>${st?.elev.toFixed(2)} ft</dd><dt>Columns</dt><dd>${R.columns.length}</dd>${extra}`;
 }
 function updateLegend() {
   const el = $("legend");
+  if (R.vmode === "range" && layer !== "geom") {
+    const isReact = layer === "react";
+    const vals = isReact
+      ? R.supports.filter(s => s.fzmax != null && s.fzmin != null).map(s => s.fzmax! - s.fzmin!)
+      : R.columns.filter(c => c.pmin != null && c.pmax != null).map(c => c.pmax! - c.pmin!);
+    const m = Math.max(1, ...vals);
+    const stops: string[] = []; for (let i = 0; i <= 6; i++) stops.push(R.ramp((i / 6) * m, m));
+    el.innerHTML = `<div class="note"><b>Δ max−min</b> across steps, <b>${result}</b> (kip). Size ∝ Δ.</div><div class="grad" style="background:linear-gradient(90deg,${stops.join(",")})"></div><div class="gradrow"><span>0</span><span>Δ</span><span>${m.toFixed(0)}</span></div>`;
+    return;
+  }
   if (layer === "axial") {
     const m = Math.max(1, ...R.columns.flatMap(c => [Math.abs(c.pmin ?? 0), Math.abs(c.pmax ?? 0)]));
     const stops: string[] = []; for (let i = 0; i <= 6; i++) { const t = i / 6; stops.push(R.ramp(R.colorScheme === "sign" ? t * 2 - 1 : t, 1)); }
@@ -419,7 +451,8 @@ $("zfit").onclick = () => R.fit();
 ($("layerSel") as HTMLSelectElement).onchange = e => {
   layer = (e.target as HTMLSelectElement).value as Layer;
   $("caseGrp").classList.toggle("hide", layer === "geom");
-  $("valGrp").classList.toggle("hide", layer !== "axial");
+  $("valGrp").classList.toggle("hide", layer === "geom");
+  if (layer !== "geom") buildValOptions();
   if (layer === "geom") $("stepGrp").classList.add("hide");
   $("hudTag").textContent = layer === "react" ? "Reactions" : "Plan @";
   refresh();
@@ -429,7 +462,11 @@ $("zfit").onclick = () => R.fit();
 $("stepPrev").onclick = () => cycleStep(-1);
 $("stepNext").onclick = () => cycleStep(1);
 ($("stepSel") as HTMLSelectElement).onchange = e => { curStep = (e.target as HTMLSelectElement).value || null; refresh(); };
-($("valSel") as HTMLSelectElement).onchange = e => { R.vmode = (e.target as HTMLSelectElement).value as ValMode; R.draw(); updateSummary(); };
+($("valSel") as HTMLSelectElement).onchange = e => {
+  R.vmode = (e.target as HTMLSelectElement).value as ValMode;
+  if (R.vmode === "range") { curStep = null; ($("stepSel") as HTMLSelectElement).value = ""; }
+  refresh();   // re-fetch envelope when needed, then redraw + summary + legend
+};
 $("lyBeams").addEventListener("change", e => { R.showBeams = (e.target as HTMLInputElement).checked; R.draw(); });
 $("lyGrids").addEventListener("change", e => { R.showGrids = (e.target as HTMLInputElement).checked; R.draw(); });
 $("lyLabels").addEventListener("change", e => { R.showLabels = (e.target as HTMLInputElement).checked; R.draw(); });

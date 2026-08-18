@@ -159,12 +159,22 @@ function updateComboBox() {
   box.innerHTML = (def.type ? `<div class="combo-type">${def.type}</div>` : "") +
     def.items.map(it => `<div class="combo-row"><span class="cn">${it.case}</span><span class="cf">${fmt(it.sf)}</span></div>`).join("");
 }
+function buildValOptions() {
+  const sel = $("valSel") as HTMLSelectElement;
+  const opts: [string, string][] = layer === "react"
+    ? [["gov", "Governing Fz"], ["range", "Δ max−min"]]
+    : [["gov", "Governing |P|"], ["comp", "Compression"], ["tens", "Tension"], ["range", "Δ max−min"]];
+  if (!opts.some(([v]) => v === R.vmode)) R.vmode = "gov";
+  sel.innerHTML = "";
+  for (const [v, t] of opts) { const o = document.createElement("option"); o.value = v; o.textContent = t; sel.appendChild(o); }
+  sel.value = R.vmode;
+}
 function buildStepSel() {
   const sel = $("stepSel") as HTMLSelectElement; sel.innerHTML = "";
   const opt = (v: string, t: string) => { const o = document.createElement("option"); o.value = v; o.textContent = t; sel.appendChild(o); };
   opt("", "Envelope (all)"); for (const s of stepList) opt(s, s);
   sel.value = curStep ?? "";
-  $("stepGrp").classList.toggle("hide", !(layer !== "geom" && stepList.length > 1));
+  $("stepGrp").classList.toggle("hide", R.vmode === "range" || !(layer !== "geom" && stepList.length > 1));
 }
 function cycleStep(dir: number) {
   const opts: (string | null)[] = [null, ...stepList];
@@ -180,10 +190,12 @@ function refresh() {
   if (layer === "geom") { R.columns = (colsByStory.get(level) ?? []).map(frameToPlan); R.supports = []; }
   else {
     stepList = stepsFor(forces, result); buildStepSel();
-    if (layer === "axial") { R.columns = planColumns(forces, geom.frames, level, result, curStep); R.supports = []; }
-    else { R.supports = reactionSupports(forces, result, curStep); R.columns = []; }
+    const stepArg = R.vmode === "range" ? null : curStep;   // Δ needs the full step envelope
+    if (layer === "axial") { R.columns = planColumns(forces, geom.frames, level, result, stepArg); R.supports = []; }
+    else { R.supports = reactionSupports(forces, result, stepArg); R.columns = []; }
   }
-  const sfx = curStep && layer !== "geom" ? ` · ${curStep}` : "";
+  const sfx = R.vmode === "range" && layer !== "geom" ? " · Δ(max−min)"
+    : (curStep && layer !== "geom" ? ` · ${curStep}` : "");
   R.title = (layer === "react" ? `Base Reactions — ${result}` : layer === "axial" ? `Column Axial (base) — ${level} — ${result}` : `Column Plan — ${level}`) + sfx;
   R.draw(); updateSummary(); updateLegend();
 }
@@ -192,17 +204,40 @@ function updateSummary() {
   if (layer === "react") {
     $("sumTitle").textContent = "Reactions summary";
     const fz = R.supports.map(s => s.fz), sum = fz.reduce((a, b) => a + b, 0);
+    let rExtra = "";
+    if (R.vmode === "range") {
+      const rs = R.supports.filter(s => s.fzmax != null && s.fzmin != null).map(s => s.fzmax! - s.fzmin!);
+      if (rs.length) rExtra = `<dt>Max ΔFz</dt><dd>${Math.max(...rs).toFixed(0)} k</dd><dt>Mean ΔFz</dt><dd>${(rs.reduce((a, b) => a + b, 0) / rs.length).toFixed(0)} k</dd>`;
+    }
     el.innerHTML = `<dt>Result</dt><dd style="font-size:11px">${result}${curStep ? " · " + curStep : ""}</dd><dt>Supports</dt><dd>${R.supports.length}</dd>
-      <dt>Σ Fz</dt><dd>${sum.toFixed(0)} k</dd><dt>Max Fz</dt><dd>${Math.max(0, ...fz).toFixed(0)} k</dd><dt>Min Fz</dt><dd>${Math.min(0, ...fz).toFixed(0)} k</dd>`;
+      <dt>Σ Fz</dt><dd>${sum.toFixed(0)} k</dd><dt>Max Fz</dt><dd>${Math.max(0, ...fz).toFixed(0)} k</dd><dt>Min Fz</dt><dd>${Math.min(0, ...fz).toFixed(0)} k</dd>${rExtra}`;
     return;
   }
   $("sumTitle").textContent = "Level summary";
   let extra = "";
-  if (layer === "axial") { const ps = R.columns.map(c => c.pmin).filter((v): v is number => v != null); if (ps.length) extra = `<dt>Axial min</dt><dd>${Math.min(...ps).toFixed(0)} k</dd><dt>Axial max</dt><dd>${Math.max(...R.columns.map(c => c.pmax ?? 0)).toFixed(0)} k</dd>`; }
+  if (layer === "axial") {
+    const cols = R.columns.filter(c => c.pmin != null && c.pmax != null);
+    if (R.vmode === "range") {
+      const rs = cols.map(c => c.pmax! - c.pmin!);
+      if (rs.length) extra = `<dt>Δ max</dt><dd>${Math.max(...rs).toFixed(0)} k</dd><dt>Δ mean</dt><dd>${(rs.reduce((a, b) => a + b, 0) / rs.length).toFixed(0)} k</dd>`;
+    } else if (cols.length) {
+      extra = `<dt>Axial min</dt><dd>${Math.min(...cols.map(c => c.pmin!)).toFixed(0)} k</dd><dt>Axial max</dt><dd>${Math.max(...cols.map(c => c.pmax!)).toFixed(0)} k</dd>`;
+    }
+  }
   el.innerHTML = `<dt>Elevation</dt><dd>${st?.elev.toFixed(2)} ft</dd><dt>Columns</dt><dd>${R.columns.length}</dd>${extra}`;
 }
 function updateLegend() {
   const el = $("legend");
+  if (R.vmode === "range" && layer !== "geom") {
+    const isReact = layer === "react";
+    const vals = isReact
+      ? R.supports.filter(s => s.fzmax != null && s.fzmin != null).map(s => s.fzmax! - s.fzmin!)
+      : R.columns.filter(c => c.pmin != null && c.pmax != null).map(c => c.pmax! - c.pmin!);
+    const m = Math.max(1, ...vals);
+    const stops: string[] = []; for (let i = 0; i <= 6; i++) stops.push(R.ramp((i / 6) * m, m));
+    el.innerHTML = `<div class="note"><b>Δ max−min</b> across steps, <b>${result}</b> (kip). Size ∝ Δ.</div><div class="grad" style="background:linear-gradient(90deg,${stops.join(",")})"></div><div class="gradrow"><span>0</span><span>Δ</span><span>${m.toFixed(0)}</span></div>`;
+    return;
+  }
   if (layer === "axial") {
     const m = Math.max(1, ...R.columns.flatMap(c => [Math.abs(c.pmin ?? 0), Math.abs(c.pmax ?? 0)]));
     const stops: string[] = []; for (let i = 0; i <= 6; i++) { const t = i / 6; stops.push(R.ramp(R.colorScheme === "sign" ? t * 2 - 1 : t, 1)); }
@@ -239,10 +274,10 @@ R.onMeasure = (text) => { $("status").textContent = text ?? "Read-only shared vi
 $("zin").onclick = () => R.zoomAt(R.W() / 2, R.H() / 2, 1.2);
 $("zout").onclick = () => R.zoomAt(R.W() / 2, R.H() / 2, 1 / 1.2);
 $("zfit").onclick = () => R.fit();
-($("layerSel") as HTMLSelectElement).onchange = e => { layer = (e.target as HTMLSelectElement).value as Layer; $("caseGrp").classList.toggle("hide", layer === "geom"); $("valGrp").classList.toggle("hide", layer !== "axial"); if (layer === "geom") $("stepGrp").classList.add("hide"); $("hudTag").textContent = layer === "react" ? "Reactions" : "Plan @"; refresh(); };
+($("layerSel") as HTMLSelectElement).onchange = e => { layer = (e.target as HTMLSelectElement).value as Layer; $("caseGrp").classList.toggle("hide", layer === "geom"); $("valGrp").classList.toggle("hide", layer === "geom"); if (layer !== "geom") buildValOptions(); if (layer === "geom") $("stepGrp").classList.add("hide"); $("hudTag").textContent = layer === "react" ? "Reactions" : "Plan @"; refresh(); };
 ($("caseSel") as HTMLSelectElement).onchange = e => { result = (e.target as HTMLSelectElement).value; curStep = null; updateComboBox(); refresh(); };
 ($("caseSearch") as HTMLInputElement).addEventListener("input", e => buildResults((e.target as HTMLInputElement).value));
-($("valSel") as HTMLSelectElement).onchange = e => { R.vmode = (e.target as HTMLSelectElement).value as ValMode; R.draw(); updateSummary(); };
+($("valSel") as HTMLSelectElement).onchange = e => { R.vmode = (e.target as HTMLSelectElement).value as ValMode; if (R.vmode === "range") { curStep = null; ($("stepSel") as HTMLSelectElement).value = ""; } refresh(); };
 $("stepPrev").onclick = () => cycleStep(-1); $("stepNext").onclick = () => cycleStep(1);
 ($("stepSel") as HTMLSelectElement).onchange = e => { curStep = (e.target as HTMLSelectElement).value || null; refresh(); };
 $("lyBeams").addEventListener("change", e => { R.showBeams = (e.target as HTMLInputElement).checked; R.draw(); });

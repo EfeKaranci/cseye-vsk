@@ -109,6 +109,20 @@ def staged_labels(sm) -> dict:
         for k, col in (("name", "StageName"), ("comment", "Comments"), ("output", "Output")):
             if not e[k] and r.get(col) not in (None, "None"):
                 e[k] = r.get(col)
+    def _num(st):
+        try:
+            return str(int(float(st)))
+        except Exception:
+            return str(st)
+
+    def _lbl(s):
+        parts = [_num(s["stage"])]
+        for k in ("name", "comment"):
+            v = s.get(k)
+            if v not in (None, "", "None"):
+                parts.append(str(v))
+        return " - ".join(parts)
+
     labels: dict = {}
     for name, stages in by_case.items():
         try:
@@ -116,7 +130,7 @@ def staged_labels(sm) -> dict:
         except Exception:
             ordered = list(stages.values())
         outs = [s for s in ordered if str(s.get("output")).lower() == "yes"]
-        labels[name] = [(s.get("comment") or s.get("name") or f"Stage {s['stage']}") for s in outs]
+        labels[name] = [_lbl(s) for s in outs]
     return labels
 
 
