@@ -17,7 +17,7 @@ let geom!: GeomBundle;
 let forces!: Bundle;
 let colsByStory = new Map<string, Frame[]>();
 let level = "", layer: Layer = "geom", result = "", curStep: string | null = null, stepList: string[] = [];
-let pdfScale = 2;   // PDF export resolution multiplier (screen density ×)
+let pdfScale = 0;   // PDF export mode: 0 = vector (scalable), >0 = raster ×density
 let underlaysList: any[] = [];
 const imgCache = new Map<string, HTMLCanvasElement>();
 let shareBase = "";

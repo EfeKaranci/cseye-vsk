@@ -4,6 +4,7 @@ export type Layer = "geom" | "axial" | "react";
 export type ValMode = "gov" | "comp" | "tens" | "range";
 export type MeasureMode = "dist" | "area" | "perim" | "angle" | null;
 type P = { x: number; y: number };
+type Marker = { x: number; y: number; r: number; val: number | null; on: boolean; color: string; label: string };
 
 const css = (v: string) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
@@ -260,47 +261,64 @@ export class PlanRenderer {
     }
     ctx.restore();
   }
-  private drawColumns() {
-    const { ctx } = this, axial = this.layer === "axial";
-    const drawn: { x: number; y: number; r: number; val: number | null; on: boolean; label: string }[] = [];
+  private columnMarkers(): Marker[] {
+    const axial = this.layer === "axial", out: Marker[] = [];
     for (const c of this.columns) {
       const x = this.wx(c.ix), y = this.wy(c.iy), on = c === this.pick || c === this.hover;
       let color: string, r: number, val: number | null = null;
       if (axial) { const mx = this.colMax(); val = this.colP(c); if (val == null) { color = css("--ink-faint"); r = (on ? 5 : 3) * this.markerScale; } else { color = this.ramp(val, mx); r = this.rad(val, mx, 3.2, 9.5); } }
       else { color = css("--accent"); r = (on ? 6.5 : 4.6) * this.markerScale; }
-      ctx.beginPath(); ctx.fillStyle = color; ctx.globalAlpha = on ? 1 : this.fillAlpha; ctx.arc(x, y, on ? r + 1.5 : r, 0, 7); ctx.fill();
-      if (on) { ctx.globalAlpha = 1; ctx.lineWidth = 2; ctx.strokeStyle = css("--ink"); ctx.stroke(); }
-      ctx.globalAlpha = 1;
-      drawn.push({ x, y, r, val, on, label: axial ? (val == null ? "–" : String(Math.round(Math.abs(val)))) : c.label });
+      out.push({ x, y, r, val, on, color, label: axial ? (val == null ? "–" : String(Math.round(Math.abs(val)))) : c.label });
     }
-    this.declutterLabels(drawn);
+    return out;
   }
-  private drawReactions() {
-    const { ctx } = this, range = this.vmode === "range", mx = this.fzMax();
-    const drawn: { x: number; y: number; r: number; val: number; on: boolean; label: string }[] = [];
+  private drawColumns() {
+    const { ctx } = this, M = this.columnMarkers();
+    for (const d of M) {
+      ctx.beginPath(); ctx.fillStyle = d.color; ctx.globalAlpha = d.on ? 1 : this.fillAlpha; ctx.arc(d.x, d.y, d.on ? d.r + 1.5 : d.r, 0, 7); ctx.fill();
+      if (d.on) { ctx.globalAlpha = 1; ctx.lineWidth = 2; ctx.strokeStyle = css("--ink"); ctx.stroke(); }
+      ctx.globalAlpha = 1;
+    }
+    this.declutterLabels(M);
+  }
+  private reactionMarkers(): Marker[] {
+    const range = this.vmode === "range", mx = this.fzMax(), out: Marker[] = [];
     for (const s of this.supports) {
       const x = this.wx(s.x), y = this.wy(s.y), on = s === this.pick || s === this.hover;
-      const val = this.supVal(s);
-      const r = this.rad(val, mx, 3.5, 11);
-      ctx.beginPath(); ctx.fillStyle = range ? this.ramp(val, mx) : (s.fz >= 0 ? css("--up") : css("--tens")); ctx.globalAlpha = on ? 1 : this.fillAlpha;
-      ctx.arc(x, y, on ? r + 1.5 : r, 0, 7); ctx.fill();
-      if (on) { ctx.lineWidth = 2; ctx.strokeStyle = css("--ink"); ctx.stroke(); } ctx.globalAlpha = 1;
-      drawn.push({ x, y, r, val, on, label: String(Math.round(Math.abs(val))) });
+      const val = this.supVal(s), r = this.rad(val, mx, 3.5, 11);
+      const color = range ? this.ramp(val, mx) : (s.fz >= 0 ? css("--up") : css("--tens"));
+      out.push({ x, y, r, val, on, color, label: String(Math.round(Math.abs(val))) });
     }
-    this.declutterLabels(drawn);
+    return out;
   }
-  private declutterLabels(items: { x: number; y: number; r: number; val: number | null; on: boolean; label: string }[]) {
-    if (!this.showLabels) return;
-    const { ctx } = this; ctx.font = `600 ${(10 * this.labelScale).toFixed(1)}px ` + css("--font-mono"); ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+  private drawReactions() {
+    const { ctx } = this, M = this.reactionMarkers();
+    for (const d of M) {
+      ctx.beginPath(); ctx.fillStyle = d.color; ctx.globalAlpha = d.on ? 1 : this.fillAlpha;
+      ctx.arc(d.x, d.y, d.on ? d.r + 1.5 : d.r, 0, 7); ctx.fill();
+      if (d.on) { ctx.lineWidth = 2; ctx.strokeStyle = css("--ink"); ctx.stroke(); } ctx.globalAlpha = 1;
+    }
+    this.declutterLabels(M);
+  }
+  /** Decluttered label placements (screen coords), shared by the canvas and the vector PDF. */
+  private labelLayout(items: Marker[]): { x: number; y: number; label: string; on: boolean }[] {
+    if (!this.showLabels) return [];
     const order = items.slice().sort((a, b) => (+b.on - +a.on) || (Math.abs(b.val ?? 0) - Math.abs(a.val ?? 0)));
     const placed: [number, number][] = []; const GX = 30 * this.labelScale, GY = 13 * this.labelScale;
+    const out: { x: number; y: number; label: string; on: boolean }[] = [];
     for (const d of order) {
       if (d.x < -30 || d.x > this.W() + 30 || d.y < -20 || d.y > this.H() + 20) continue;
       let ok = d.on;
       if (!ok) { ok = true; for (const p of placed) if (Math.abs(p[0] - d.x) < GX && Math.abs(p[1] - d.y) < GY) { ok = false; break; } }
       if (!ok) continue; placed.push([d.x, d.y]);
-      ctx.fillStyle = d.on ? css("--ink") : css("--ink-soft"); ctx.fillText(d.label, d.x, d.y - d.r - 2);
+      out.push({ x: d.x, y: d.y - d.r - 2, label: d.label, on: d.on });
     }
+    return out;
+  }
+  private declutterLabels(items: Marker[]) {
+    const L = this.labelLayout(items); if (!L.length) return;
+    const { ctx } = this; ctx.font = `600 ${(10 * this.labelScale).toFixed(1)}px ` + css("--font-mono"); ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    for (const d of L) { ctx.fillStyle = d.on ? css("--ink") : css("--ink-soft"); ctx.fillText(d.label, d.x, d.y); }
   }
   private drawScaleBar() {
     const target = 90 / this.scale, pow = Math.pow(10, Math.floor(Math.log10(target)));
@@ -460,7 +478,7 @@ export class PlanRenderer {
   // ---- PDF export (self-contained; sandbox-safe) ----
   /** Capture the current view (title header + plan) as a JPEG at `scale`× the
    *  screen pixel density. Caller sets the theme/state; higher scale = higher DPI. */
-  snapshotJPEG(scale = 1): PdfPage {
+  snapshotJPEG(scale = 1): PdfImage {
     const prevDpr = this.dpr;
     if (scale > 1) { this.dpr = Math.min(prevDpr * scale, 8); this.resize(); } else this.draw();
     const headH = 72, Wc = this.W(), Hc = this.H();
@@ -474,6 +492,95 @@ export class PlanRenderer {
     const jpg = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) jpg[i] = bin.charCodeAt(i);
     return { jpg, w: oc.width, h: oc.height };
   }
+
+  // CSS color string → "r g b" in 0..1 (optionally composited over white at `alpha`).
+  private _cc?: CanvasRenderingContext2D;
+  private rgb01(color: string, alpha = 1): string {
+    if (!this._cc) this._cc = document.createElement("canvas").getContext("2d")!;
+    const cc = this._cc; cc.clearRect(0, 0, 1, 1); cc.fillStyle = "#000"; cc.fillStyle = color; cc.fillRect(0, 0, 1, 1);
+    const d = cc.getImageData(0, 0, 1, 1).data, bl = (ch: number) => alpha * (ch / 255) + (1 - alpha);
+    return `${bl(d[0]).toFixed(3)} ${bl(d[1]).toFixed(3)} ${bl(d[2]).toFixed(3)}`;
+  }
+  private textWidth(s: string, size: number) { return s.length * size * 0.53; }   // Helvetica avg estimate
+  private textOp(s: string, x: number, y: number, size: number, align: "center" | "left", baseline: "middle" | "bottom"): string {
+    let tx = x; if (align === "center") tx -= this.textWidth(s, size) / 2;
+    const ty = baseline === "middle" ? y - size * 0.34 : y;
+    return `1 0 0 1 ${nn(tx)} ${nn(ty)} Tm (${pdfEsc(s)}) Tj`;
+  }
+
+  /** Render the current view as a scalable, vector PDF page (grids/beams/markers/labels
+   *  are true vector paths + text; background PDF underlays remain embedded images). */
+  vectorPage(): PdfPageSpec {
+    this.draw();
+    const Wc = this.W(), Hc = this.H(), headH = 72, PW = Wc, PH = Hc + headH;
+    const Y = (sy: number) => Hc - sy;            // screen-y (down) → plan PDF-y (up), plan at page bottom
+    const c: string[] = []; const images: PdfImage[] = [];
+
+    c.push(`1 1 1 rg 0 0 ${nn(PW)} ${nn(PH)} re f`);
+
+    for (const u of this.underlays) {              // background PDF underlays (opacity baked over white)
+      if (!u.visible) continue;
+      const oc = document.createElement("canvas"); oc.width = u.w; oc.height = u.h;
+      const octx = oc.getContext("2d")!; octx.fillStyle = "#fff"; octx.fillRect(0, 0, u.w, u.h);
+      octx.globalAlpha = u.opacity; octx.drawImage(u.img, 0, 0);
+      const b64 = oc.toDataURL("image/jpeg", 0.92).split(",")[1], bin = atob(b64);
+      const jpg = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) jpg[i] = bin.charCodeAt(i);
+      const idx = images.length; images.push({ jpg, w: u.w, h: u.h });
+      const cs = this.cornersScreen(u).map(p => ({ x: p.x, y: Y(p.y) }));
+      const [TL, , BR, BL] = cs;                   // image maps unit(0,0)=BL, (1,0)=BR, (0,1)=TL
+      c.push(`q ${nn(BR.x - BL.x)} ${nn(BR.y - BL.y)} ${nn(TL.x - BL.x)} ${nn(TL.y - BL.y)} ${nn(BL.x)} ${nn(BL.y)} cm /Im${idx} Do Q`);
+    }
+
+    if (this.showGrids) {                          // grid lines + id bubbles
+      const gcol = this.rgb01(css("--grid"), 0.8), gstrong = this.rgb01(css("--grid-strong")),
+        gink = this.rgb01(css("--ink-soft")), gcanvas = this.rgb01(css("--canvas"));
+      const bubbles: { x: number; y: number; id: string }[] = [];
+      c.push(`${gcol} RG 1 w [7 5] 0 d`);
+      for (const g of this.grids) {
+        if (!g.visible || (g.sys && this.hiddenGridSystems.has(g.sys))) continue;
+        let bx: number, by: number;
+        if (g.dir === "X") { const sx = this.wx(g.x1); if (sx < -1 || sx > Wc + 1) continue; c.push(`${nn(sx)} ${nn(Y(0))} m ${nn(sx)} ${nn(Y(Hc))} l S`); bx = sx; by = 13; }
+        else if (g.dir === "Y") { const sy = this.wy(g.y1); if (sy < -1 || sy > Hc + 1) continue; c.push(`0 ${nn(Y(sy))} m ${nn(Wc)} ${nn(Y(sy))} l S`); bx = 13; by = sy; }
+        else { const x1 = this.wx(g.x1), y1 = this.wy(g.y1); c.push(`${nn(x1)} ${nn(Y(y1))} m ${nn(this.wx(g.x2))} ${nn(Y(this.wy(g.y2)))} l S`); bx = x1; by = y1; }
+        bubbles.push({ x: bx, y: by, id: g.id.slice(0, 4) });
+      }
+      c.push(`[] 0 d`);
+      for (const b of bubbles) c.push(`${gcanvas} rg ${gstrong} RG 1 w ${circlePath(b.x, Y(b.y), 10)} B`);
+      c.push(`BT /F1 11 Tf ${gink} rg`);
+      for (const b of bubbles) c.push(this.textOp(b.id, b.x, Y(b.y), 11, "center", "middle"));
+      c.push(`ET`);
+    }
+
+    if (this.showBeams && this.beams.length) {     // context beams
+      c.push(`${this.rgb01(css("--grid"), 0.8)} RG 1 w`);
+      for (const f of this.beams) c.push(`${nn(this.wx(f.ix))} ${nn(Y(this.wy(f.iy)))} m ${nn(this.wx(f.jx))} ${nn(Y(this.wy(f.jy)))} l S`);
+    }
+
+    const markers = this.layer === "react" ? this.reactionMarkers() : this.columnMarkers();
+    for (const d of markers) c.push(`${this.rgb01(d.color, this.fillAlpha)} rg ${circlePath(d.x, Y(d.y), d.r)} f`);
+
+    const L = this.labelLayout(markers);
+    if (L.length) {
+      const size = 10 * this.labelScale, soft = this.rgb01(css("--ink-soft")), ink = this.rgb01(css("--ink"));
+      c.push(`BT /F1 ${nn(size)} Tf`); let cur = "";
+      for (const d of L) { const col = d.on ? ink : soft; if (col !== cur) { c.push(`${col} rg`); cur = col; } c.push(this.textOp(d.label, d.x, Y(d.y), size, "center", "bottom")); }
+      c.push(`ET`);
+    }
+
+    c.push(`1 1 1 rg 0 ${nn(Hc)} ${nn(PW)} ${nn(headH)} re f`);   // header band over top
+    c.push(`0.055 0.486 0.525 rg 0 ${nn(PH - 3)} ${nn(PW)} 3 re f`);
+    c.push(`BT /F2 22 Tf 0.067 0.094 0.129 rg 18 ${nn(PH - 36)} Td (${pdfEsc(this.title)}) Tj ET`);
+
+    return { wpt: PW, hpt: PH, content: c.join("\n"), images };
+  }
+
+  private rasterPage(scale: number): PdfPageSpec {
+    const p = this.snapshotJPEG(scale), PW = 792, PH = Math.round(PW * p.h / p.w);
+    return { wpt: PW, hpt: PH, content: `q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`, images: [p] };
+  }
+  /** A single export page: vector when scale<=0, else a raster image at `scale`× density. */
+  snapshotPage(scale: number): PdfPageSpec { return scale <= 0 ? this.vectorPage() : this.rasterPage(scale); }
+
   /** Force the light theme for export; returns the previous value to restore with restoreTheme(). */
   setLightForExport(): string | null {
     const prev = document.documentElement.getAttribute("data-theme");
@@ -484,40 +591,78 @@ export class PlanRenderer {
     if (prev) document.documentElement.setAttribute("data-theme", prev); else document.documentElement.removeAttribute("data-theme");
     this.draw();
   }
-  exportPDF(fname: string, scale = 2) {
+  exportPDF(fname: string, scale = 0) {          // scale 0 = vector (default), >0 = raster ×density
     const prev = this.setLightForExport();
-    const page = this.snapshotJPEG(scale);
+    const page = this.snapshotPage(scale);
     this.restoreTheme(prev);
-    this.onNotify?.(deliverPDF(buildImagePDF([page]), fname));
+    this.onNotify?.(deliverPDF(buildPDF([page]), fname));
   }
 }
 
-export interface PdfPage { jpg: Uint8Array; w: number; h: number; }
+export interface PdfImage { jpg: Uint8Array; w: number; h: number; }
+export interface PdfPageSpec { wpt: number; hpt: number; content: string; images?: PdfImage[]; }
 
-/** Build a (possibly multi-page) PDF, one JPEG image per page. */
-export function buildImagePDF(pages: PdfPage[]): Uint8Array {
+const nn = (v: number) => { const r = Math.round(v * 100) / 100; return Object.is(r, -0) ? "0" : String(r); };
+
+function circlePath(cx: number, cy: number, r: number): string {
+  const k = 0.5523 * r;
+  return `${nn(cx + r)} ${nn(cy)} m ` +
+    `${nn(cx + r)} ${nn(cy + k)} ${nn(cx + k)} ${nn(cy + r)} ${nn(cx)} ${nn(cy + r)} c ` +
+    `${nn(cx - k)} ${nn(cy + r)} ${nn(cx - r)} ${nn(cy + k)} ${nn(cx - r)} ${nn(cy)} c ` +
+    `${nn(cx - r)} ${nn(cy - k)} ${nn(cx - k)} ${nn(cy - r)} ${nn(cx)} ${nn(cy - r)} c ` +
+    `${nn(cx + k)} ${nn(cy - r)} ${nn(cx + r)} ${nn(cy - k)} ${nn(cx + r)} ${nn(cy)} c`;
+}
+
+function pdfEsc(s: string): string {
+  let out = "";
+  for (const ch of s) {
+    const code = ch.codePointAt(0)!;
+    if (ch === "(" || ch === ")" || ch === "\\") out += "\\" + ch;
+    else if (code === 0x2212 || code === 0x2012 || code === 0x2013) out += "-";   // minus / figure / en dash → hyphen
+    else if (code === 0x0394) out += "D";                                          // Δ → D
+    else if (code === 0x2014) out += "\\227";                                      // em dash (WinAnsi)
+    else if (code === 0x2022 || code === 0x00B7) out += "\\267";                   // bullet / middot
+    else if (code === 0x00D7) out += "\\327";                                      // ×
+    else if (code < 0x20) out += " ";
+    else if (code < 0x7F) out += ch;
+    else if (code <= 0xFF) out += "\\" + code.toString(8).padStart(3, "0");        // Latin-1 ≈ WinAnsi
+    else out += "?";
+  }
+  return out;
+}
+
+/** Build a PDF from page specs (vector content and/or embedded JPEG images), sharing base fonts. */
+export function buildPDF(pages: PdfPageSpec[]): Uint8Array {
   const enc = (s: string) => { const a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i) & 255; return a; };
   const parts: Uint8Array[] = []; let off = 0; const xr: number[] = [];
   const put = (u: Uint8Array) => { parts.push(u); off += u.length; }; const puts = (s: string) => put(enc(s));
-  const obj = (n: number, b: string) => { xr[n] = off; puts(`${n} 0 obj\n` + b + "\nendobj\n"); };
-  puts("%PDF-1.3\n");
-  const nObj = 2 + pages.length * 3;
-  obj(1, "<</Type/Catalog/Pages 2 0 R>>");
-  const kids = pages.map((_, i) => `${3 + i * 3} 0 R`).join(" ");
-  obj(2, `<</Type/Pages/Kids[${kids}]/Count ${pages.length}>>`);
-  pages.forEach((pg, i) => {
-    const pageN = 3 + i * 3, imgN = 4 + i * 3, contN = 5 + i * 3;
-    const PW = 792, PH = Math.round(PW * pg.h / pg.w);
-    obj(pageN, `<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${PW} ${PH}]/Resources<</XObject<</Im0 ${imgN} 0 R>>>>/Contents ${contN} 0 R>>`);
-    xr[imgN] = off; puts(`${imgN} 0 obj\n<</Type/XObject/Subtype/Image/Width ${pg.w}/Height ${pg.h}/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length ${pg.jpg.length}>>\nstream\n`);
-    put(pg.jpg); puts("\nendstream\nendobj\n");
-    const content = `q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;
-    xr[contN] = off; puts(`${contN} 0 obj\n<</Length ${content.length}>>\nstream\n` + content + "\nendstream\nendobj\n");
+  const obj = (num: number, body: string) => { xr[num] = off; puts(`${num} 0 obj\n` + body + "\nendobj\n"); };
+  const streamObj = (num: number, head: string, data: Uint8Array) => { xr[num] = off; puts(`${num} 0 obj\n` + head + "\nstream\n"); put(data); puts("\nendstream\nendobj\n"); };
+  // object numbering: 1 Catalog, 2 Pages, 3 F1, 4 F2, then per-page image/content/page objects
+  let n = 4; const CAT = 1, PAGES = 2, F1 = 3, F2 = 4;
+  const info = pages.map(pg => {
+    const imgs = (pg.images ?? []).map(im => ({ num: ++n, im }));
+    const contentNum = ++n, pageNum = ++n;
+    return { imgs, contentNum, pageNum, pg };
   });
-  const xs = off; let x = `xref\n0 ${nObj + 1}\n0000000000 65535 f \n`;
-  for (let i = 1; i <= nObj; i++) x += String(xr[i]).padStart(10, "0") + " 00000 n \n";
-  puts(x); puts(`trailer\n<</Size ${nObj + 1}/Root 1 0 R>>\nstartxref\n${xs}\n%%EOF`);
-  const tot = parts.reduce((n, p) => n + p.length, 0), out = new Uint8Array(tot); let p = 0;
+  const total = n;
+  puts("%PDF-1.4\n");
+  obj(CAT, `<</Type/Catalog/Pages ${PAGES} 0 R>>`);
+  obj(PAGES, `<</Type/Pages/Kids[${info.map(i => `${i.pageNum} 0 R`).join(" ")}]/Count ${pages.length}>>`);
+  obj(F1, `<</Type/Font/Subtype/Type1/BaseFont/Helvetica/Encoding/WinAnsiEncoding>>`);
+  obj(F2, `<</Type/Font/Subtype/Type1/BaseFont/Helvetica-Bold/Encoding/WinAnsiEncoding>>`);
+  for (const it of info) {
+    for (const { num, im } of it.imgs)
+      streamObj(num, `<</Type/XObject/Subtype/Image/Width ${im.w}/Height ${im.h}/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length ${im.jpg.length}>>`, im.jpg);
+    const cdata = enc(it.pg.content);
+    streamObj(it.contentNum, `<</Length ${cdata.length}>>`, cdata);
+    const xobj = it.imgs.length ? `/XObject<<${it.imgs.map((x, i) => `/Im${i} ${x.num} 0 R`).join("")}>>` : "";
+    obj(it.pageNum, `<</Type/Page/Parent ${PAGES} 0 R/MediaBox[0 0 ${nn(it.pg.wpt)} ${nn(it.pg.hpt)}]/Resources<</Font<</F1 ${F1} 0 R/F2 ${F2} 0 R>>${xobj}>>/Contents ${it.contentNum} 0 R>>`);
+  }
+  const xs = off; let x = `xref\n0 ${total + 1}\n0000000000 65535 f \n`;
+  for (let i = 1; i <= total; i++) x += String(xr[i]).padStart(10, "0") + " 00000 n \n";
+  puts(x); puts(`trailer\n<</Size ${total + 1}/Root ${CAT} 0 R>>\nstartxref\n${xs}\n%%EOF`);
+  const tot = parts.reduce((a, p) => a + p.length, 0), out = new Uint8Array(tot); let p = 0;
   for (const u of parts) { out.set(u, p); p += u.length; } return out;
 }
 

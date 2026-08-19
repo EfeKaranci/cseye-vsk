@@ -1,5 +1,5 @@
 import { api } from "./api";
-import { PlanRenderer, buildImagePDF, deliverPDF, type Layer, type ValMode, type Hit, type MeasureMode, type Underlay, type PdfPage } from "./render";
+import { PlanRenderer, buildPDF, deliverPDF, type Layer, type ValMode, type Hit, type MeasureMode, type Underlay, type PdfPageSpec } from "./render";
 import type { Meta, Geometry, PlanColumn, Frame, ModelInfo, Support } from "./types";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
@@ -28,7 +28,7 @@ let selDoc: UDoc | null = null;
 let stepList: string[] = [];
 let curStep: string | null = null;   // null = envelope (aggregate across steps)
 const stepsCache = new Map<string, string[]>();
-let pdfScale = 2;                     // PDF export resolution multiplier (screen density ×)
+let pdfScale = 0;                     // PDF export mode: 0 = vector (scalable), >0 = raster ×density
 
 // ---------- connect / models ----------
 function setConn(ok: boolean) {
@@ -588,7 +588,7 @@ $("batchGo").onclick = async () => {
   const saved = { vmode: R.vmode, cols: R.columns, sup: R.supports, title: R.title };
   R.vmode = vmode;
   const prevTheme = R.setLightForExport();
-  const pages: PdfPage[] = [];
+  const pages: PdfPageSpec[] = [];
   try {
     for (const nm of names) {
       status(`Rendering ${nm}… (${pages.length + 1}/${names.length})`);
@@ -599,11 +599,11 @@ $("batchGo").onclick = async () => {
       else { const r = await api.reactions(sid!, nm, useStep); R.supports = r.supports; R.columns = []; }
       const sfx = vmode === "range" ? " · Δ(max−min)" : (useStep ? " · " + useStep : "");
       R.title = (layer === "react" ? `Base Reactions — ${nm}` : `Column Axial (base) — ${level} — ${nm}`) + sfx;
-      pages.push(R.snapshotJPEG(scale));
+      pages.push(R.snapshotPage(scale));
     }
     R.restoreTheme(prevTheme);
     const fname = `CSEYE_batch_${layer}_${level.replace(/\s+/g, "")}_${pages.length}p.pdf`;
-    status(deliverPDF(buildImagePDF(pages), fname));
+    status(deliverPDF(buildPDF(pages), fname));
     toast(`Exported ${pages.length}-page PDF.`);
   } catch (e: any) {
     R.restoreTheme(prevTheme); toast("Batch failed: " + e.message); status(String(e.message));

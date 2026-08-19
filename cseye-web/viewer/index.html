@@ -94,7 +94,7 @@
           <div class="pdfrow"><span class="lbl" style="width:56px">Label</span><input type="range" id="dLabel" min="60" max="220" value="100" /></div>
           <div class="pdfrow"><span class="lbl" style="width:56px">Fill</span><input type="range" id="dFill" min="15" max="100" value="90" /></div>
           <div class="pdfrow"><span class="lbl" style="width:56px">Colors</span><select class="sel" id="dScheme"><option value="sign">Comp / Tension</option><option value="mag">Magnitude</option><option value="magv" selected>Magnitude · viridis</option></select></div>
-          <div class="pdfrow"><span class="lbl" style="width:56px">PDF res</span><select class="sel" id="pdfRes"><option value="1">Standard (1×)</option><option value="2" selected>High (2×)</option><option value="3">Very high (3×)</option><option value="4">Max (4×)</option></select></div>
+          <div class="pdfrow"><span class="lbl" style="width:56px">PDF</span><select class="sel" id="pdfRes"><option value="0" selected>Vector (scalable)</option><option value="1">Raster 1×</option><option value="2">Raster 2×</option><option value="3">Raster 3×</option><option value="4">Raster 4×</option></select></div>
         </div>
         <div class="sect">
           <h3>Background PDF <span class="lbl" style="float:right;text-transform:none">this level</span></h3>
@@ -150,7 +150,7 @@
       <p class="note" id="batchScope">Pick load combinations — one page per combination in a single PDF.</p>
       <div class="pdfrow"><span class="lbl" style="width:64px">Value</span><select class="sel" id="batchVal"></select>
         <span class="lbl" style="width:40px;margin-left:8px">Step</span><select class="sel" id="batchStep"></select>
-        <span class="lbl" style="width:56px;margin-left:8px">PDF res</span><select class="sel" id="batchRes"><option value="1">1×</option><option value="2" selected>2×</option><option value="3">3×</option><option value="4">4×</option></select></div>
+        <span class="lbl" style="width:40px;margin-left:8px">PDF</span><select class="sel" id="batchRes"><option value="0" selected>Vector</option><option value="1">Raster 1×</option><option value="2">Raster 2×</option><option value="3">Raster 3×</option><option value="4">Raster 4×</option></select></div>
       <div class="pubgrid" id="batchOpts"></div>
       <div class="modbtns">
         <button class="btn" id="batchAll">Select all</button>
