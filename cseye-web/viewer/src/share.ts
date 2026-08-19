@@ -53,11 +53,13 @@ function buildGridSystems() {
   const host = $("gridSys"); if (!host) return; host.innerHTML = ""; R.hiddenGridSystems.clear();
   const sys = [...new Set((geom?.grid_lines ?? []).map((g: any) => g.sys).filter(Boolean))] as string[];
   if (sys.length < 2) return;
+  const hdr = document.createElement("div"); hdr.className = "gsys-hdr"; hdr.textContent = `Grid systems (${sys.length}) — pick which to show`;
+  host.appendChild(hdr);
   for (const s of sys) {
     const row = document.createElement("label"); row.className = "gsys";
     const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = true;
     cb.onchange = () => { cb.checked ? R.hiddenGridSystems.delete(s) : R.hiddenGridSystems.add(s); R.draw(); };
-    const t = document.createElement("span"); t.textContent = "grid: " + s;
+    const t = document.createElement("span"); t.textContent = s;
     row.appendChild(cb); row.appendChild(t); host.appendChild(row);
   }
 }

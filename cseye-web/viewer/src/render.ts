@@ -235,29 +235,27 @@ export class PlanRenderer {
     for (const f of this.beams) { ctx.moveTo(this.wx(f.ix), this.wy(f.iy)); ctx.lineTo(this.wx(f.jx), this.wy(f.jy)); }
     ctx.stroke(); ctx.restore();
   }
+  // Screen-space geometry of one grid line: the true global segment extended far
+  // along its own direction so it spans the view at any zoom, plus the bubble anchor.
+  private gridScreen(g: GridLine) {
+    const ax = this.wx(g.x1), ay = this.wy(g.y1), cx = this.wx(g.x2), cy = this.wy(g.y2);
+    let dx = cx - ax, dy = cy - ay; const len = Math.hypot(dx, dy) || 1; dx /= len; dy /= len;
+    const BIG = (this.W() + this.H()) * 4;
+    return { ax, ay, s1x: ax - dx * BIG, s1y: ay - dy * BIG, s2x: cx + dx * BIG, s2y: cy + dy * BIG };
+  }
   private drawGrids() {
-    // Grid lines span the whole viewport (stay visible at any zoom/pan) and the
-    // labelled bubbles are pinned to the top/left edge so they never scroll away.
     const { ctx } = this, W = this.W(), H = this.H();
     ctx.save(); ctx.lineWidth = 1; ctx.font = "600 11px " + css("--font-mono");
     for (const g of this.grids) {
-      if (!g.visible) continue;
-      if (g.sys && this.hiddenGridSystems.has(g.sys)) continue;
-      let bx: number, by: number;
-      ctx.setLineDash([7, 5]); ctx.strokeStyle = css("--grid"); ctx.globalAlpha = .8; ctx.beginPath();
-      if (g.dir === "X") {                 // constant X → vertical line across the view
-        const sx = this.wx(g.x1); if (sx < -1 || sx > W + 1) continue;
-        ctx.moveTo(sx, 0); ctx.lineTo(sx, H); ctx.stroke(); bx = sx; by = 13;
-      } else if (g.dir === "Y") {          // constant Y → horizontal line across the view
-        const sy = this.wy(g.y1); if (sy < -1 || sy > H + 1) continue;
-        ctx.moveTo(0, sy); ctx.lineTo(W, sy); ctx.stroke(); bx = 13; by = sy;
-      } else {                             // general segment
-        ctx.moveTo(this.wx(g.x1), this.wy(g.y1)); ctx.lineTo(this.wx(g.x2), this.wy(g.y2)); ctx.stroke();
-        bx = this.wx(g.x1); by = this.wy(g.y1);
-      }
+      if (!g.visible || (g.sys && this.hiddenGridSystems.has(g.sys))) continue;
+      const G = this.gridScreen(g);
+      ctx.setLineDash([7, 5]); ctx.strokeStyle = css("--grid"); ctx.globalAlpha = .8;
+      ctx.beginPath(); ctx.moveTo(G.s1x, G.s1y); ctx.lineTo(G.s2x, G.s2y); ctx.stroke();
       ctx.setLineDash([]); ctx.globalAlpha = 1;
-      ctx.beginPath(); ctx.fillStyle = css("--canvas"); ctx.strokeStyle = css("--grid-strong"); ctx.arc(bx, by, 10, 0, 7); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = css("--ink-soft"); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(g.id.slice(0, 4), bx, by);
+      if (G.ax > -20 && G.ax < W + 20 && G.ay > -20 && G.ay < H + 20) {   // bubble at the line's origin end
+        ctx.beginPath(); ctx.fillStyle = css("--canvas"); ctx.strokeStyle = css("--grid-strong"); ctx.arc(G.ax, G.ay, 10, 0, 7); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = css("--ink-soft"); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(g.id.slice(0, 4), G.ax, G.ay);
+      }
     }
     ctx.restore();
   }
@@ -538,11 +536,9 @@ export class PlanRenderer {
       c.push(`${gcol} RG 1 w [7 5] 0 d`);
       for (const g of this.grids) {
         if (!g.visible || (g.sys && this.hiddenGridSystems.has(g.sys))) continue;
-        let bx: number, by: number;
-        if (g.dir === "X") { const sx = this.wx(g.x1); if (sx < -1 || sx > Wc + 1) continue; c.push(`${nn(sx)} ${nn(Y(0))} m ${nn(sx)} ${nn(Y(Hc))} l S`); bx = sx; by = 13; }
-        else if (g.dir === "Y") { const sy = this.wy(g.y1); if (sy < -1 || sy > Hc + 1) continue; c.push(`0 ${nn(Y(sy))} m ${nn(Wc)} ${nn(Y(sy))} l S`); bx = 13; by = sy; }
-        else { const x1 = this.wx(g.x1), y1 = this.wy(g.y1); c.push(`${nn(x1)} ${nn(Y(y1))} m ${nn(this.wx(g.x2))} ${nn(Y(this.wy(g.y2)))} l S`); bx = x1; by = y1; }
-        bubbles.push({ x: bx, y: by, id: g.id.slice(0, 4) });
+        const G = this.gridScreen(g);
+        c.push(`${nn(G.s1x)} ${nn(Y(G.s1y))} m ${nn(G.s2x)} ${nn(Y(G.s2y))} l S`);
+        if (G.ax > -20 && G.ax < Wc + 20 && G.ay > -20 && G.ay < Hc + 20) bubbles.push({ x: G.ax, y: G.ay, id: g.id.slice(0, 4) });
       }
       c.push(`[] 0 d`);
       for (const b of bubbles) c.push(`${gcanvas} rg ${gstrong} RG 1 w ${circlePath(b.x, Y(b.y), 10)} B`);

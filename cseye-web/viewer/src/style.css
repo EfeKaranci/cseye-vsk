@@ -46,6 +46,7 @@ header{display:flex;align-items:center;gap:16px;padding:0 16px;height:52px;backg
 .urow .unm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .urow .ulv{color:var(--ink-faint);font-size:10px}
 .urow input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);flex:none}
+.gsys-hdr{padding:6px 0 2px 20px;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);font-weight:600}
 .gsys{display:flex;align-items:center;gap:8px;padding:4px 0 4px 20px;font-size:12px}
 .gsys input{width:15px;height:15px;accent-color:var(--accent)}
 .pdfrow{display:flex;align-items:center;gap:6px;margin:7px 0;font-size:12px}

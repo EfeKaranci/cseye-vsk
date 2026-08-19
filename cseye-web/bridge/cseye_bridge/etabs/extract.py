@@ -4,6 +4,7 @@ Mirrors the validated standalone scripts: geometry, result sets, column base
 forces (cases AND combos), and support reactions. Read-only.
 """
 from __future__ import annotations
+import math
 from collections import defaultdict
 
 R = lambda v: round(float(v), 4)
@@ -48,7 +49,7 @@ def geometry(sm) -> dict:
         })
     xs = [p[0] for p in points.values()]; ys = [p[1] for p in points.values()]
     extents = {"xmin": R(min(xs)), "xmax": R(max(xs)), "ymin": R(min(ys)), "ymax": R(max(ys))}
-    grids = _grid_lines(_table(sm, "Grid Definitions - Grid Lines"), extents)
+    grids = _grid_lines(_table(sm, "Grid Definitions - Grid Lines"), extents, _grid_systems(sm))
     return {
         "model": sm.GetModelFilename(), "etabs_version": sm.GetVersion()[0], "units": "kip, ft",
         "locked": bool(sm.GetModelIsLocked()), "extents": extents,
@@ -56,21 +57,62 @@ def geometry(sm) -> dict:
     }
 
 
-def _grid_lines(rows, e):
+def _grid_systems(sm) -> dict:
+    """Per grid system: global origin (ux,uy), rotation (deg), and the local
+    ordinate span, so grid lines can be placed in GLOBAL coordinates."""
+    out: dict = {}
+    try:
+        names = sm.GridSys.GetNameList()[1]
+    except Exception:
+        return out
+    for nm in names:
+        try:
+            r = sm.GridSys.GetGridSys_2(nm, 0.0, 0.0, 0.0)
+        except Exception:
+            continue
+        try:
+            xo = [float(v) for v in (r[8] or [])]; yo = [float(v) for v in (r[9] or [])]
+        except Exception:
+            xo, yo = [], []
+        out[str(nm).strip()] = {
+            "ux": float(r[0]), "uy": float(r[1]), "rz": float(r[2]),
+            "xmin": min(xo) if xo else 0.0, "xmax": max(xo) if xo else 0.0,
+            "ymin": min(yo) if yo else 0.0, "ymax": max(yo) if yo else 0.0,
+        }
+    return out
+
+
+def _to_global(S, lx, ly):
+    """Local (grid-system) coords -> global, via origin + rotation."""
+    th = math.radians(S["rz"]); c = math.cos(th); s = math.sin(th)
+    return R(S["ux"] + lx * c - ly * s), R(S["uy"] + lx * s + ly * c)
+
+
+def _grid_lines(rows, e, systems):
     out = []
     def num(v):
         try: return float(v)
         except Exception: return None
     for g in rows:
         lt = g.get("LineType", ""); vis = g.get("Visible") == "Yes"; gid = str(g.get("ID", "")).strip()
-        sysn = str(g.get("Name", "")).strip()
+        sysn = str(g.get("Name", "")).strip(); S = systems.get(sysn)
         if lt.startswith("X"):
             o = num(g.get("Ordinate"))
-            if o is not None: out.append({"id": gid, "dir": "X", "x1": o, "y1": e["ymin"], "x2": o, "y2": e["ymax"], "visible": vis, "sys": sysn})
+            if o is None: continue
+            if S is not None:
+                x1, y1 = _to_global(S, o, S["ymin"]); x2, y2 = _to_global(S, o, S["ymax"])
+            else:                                        # no system transform available → global axis-aligned
+                x1, y1, x2, y2 = o, e["ymin"], o, e["ymax"]
+            out.append({"id": gid, "dir": "G", "x1": x1, "y1": y1, "x2": x2, "y2": y2, "visible": vis, "sys": sysn})
         elif lt.startswith("Y"):
             o = num(g.get("Ordinate"))
-            if o is not None: out.append({"id": gid, "dir": "Y", "x1": e["xmin"], "y1": o, "x2": e["xmax"], "y2": o, "visible": vis, "sys": sysn})
-        else:
+            if o is None: continue
+            if S is not None:
+                x1, y1 = _to_global(S, S["xmin"], o); x2, y2 = _to_global(S, S["xmax"], o)
+            else:
+                x1, y1, x2, y2 = e["xmin"], o, e["xmax"], o
+            out.append({"id": gid, "dir": "G", "x1": x1, "y1": y1, "x2": x2, "y2": y2, "visible": vis, "sys": sysn})
+        else:                                            # general / free grid line: already global
             x1, y1, x2, y2 = num(g.get("X1")), num(g.get("Y1")), num(g.get("X2")), num(g.get("Y2"))
             if None not in (x1, y1, x2, y2): out.append({"id": gid, "dir": "G", "x1": x1, "y1": y1, "x2": x2, "y2": y2, "visible": vis, "sys": sysn})
     return out
